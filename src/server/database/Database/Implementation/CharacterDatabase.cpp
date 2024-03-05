@@ -634,6 +634,24 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_DEL_NPCBOT_GROUP_MEMBER_ALL, "DELETE FROM characters_npcbot_group_member WHERE guid = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_UPD_NPCBOT_GROUP_MEMBER_FLAG, "UPDATE characters_npcbot_group_member SET memberFlags = ? WHERE entry = ?", CONNECTION_ASYNC);
     // End NPCBots
+    // player NPCBots
+    PrepareStatement(CHAR_INS_PLAYER_NPCBOT, "INSERT INTO characters_player_npcbot (entry, roles, spec, faction,owner) VALUES (?, ?, ?, ?,?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_PLAYER_NPCBOT_OWNER, "UPDATE characters_player_npcbot SET owner = ? WHERE entry = ? AND owner = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PLAYER_NPCBOT_TRANSMOG, "DELETE FROM characters_player_npcbot_transmog WHERE entry = ? AND owner=?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_PLAYER_NPCBOT_ROLES, "UPDATE characters_player_npcbot SET roles = ? WHERE entry = ? AND owner = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_PLAYER_NPCBOT_SPEC, "UPDATE characters_player_npcbot SET spec = ? WHERE entry = ? AND owner = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_PLAYER_NPCBOT_FACTION, "UPDATE characters_player_npcbot SET faction = ? WHERE entry = ? AND owner =?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_PLAYER_NPCBOT_DISABLED_SPELLS, "UPDATE characters_player_npcbot SET spells_disabled = ? WHERE entry = ? AND owner =?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_PLAYER_NPCBOT_EQUIP, "UPDATE characters_player_npcbot SET equipMhEx = ?, equipOhEx = ?, equipRhEx = ?, "
+           "equipHead = ?, equipShoulders = ?, equipChest = ?, equipWaist = ?, equipLegs = ?, equipFeet = ?, equipWrist = ?, equipHands = ?, equipBack = ?, equipBody = ?, equipFinger1 = ?, equipFinger2 = ?, equipTrinket1 = ?, equipTrinket2 = ?, equipNeck = ? WHERE entry = ? AND owner = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PLAYER_NPCBOT, "DELETE FROM characters_player_npcbot WHERE entry = ? AND owner = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_UPD_PLAYER_NPCBOT_OWNER_ALL, "UPDATE characters_player_npcbot SET owner = ? WHERE owner = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_DEL_PLAYER_NPCBOT_TRANSMOG_ALL, "DELETE FROM characters_player_npcbot_transmog WHERE owner = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_REP_PLAYER_NPCBOT_STATS, "REPLACE INTO characters_player_npcbot_stats "
+        "(entry, maxhealth, maxpower, strength, agility, stamina, intellect, spirit, armor, defense, resHoly, resFire, resNature, resFrost, resShadow, resArcane, blockPct, dodgePct, parryPct, critPct, attackPower, spellPower, spellPen, hastePct, hitBonusPct, expertise, armorPenPct,owner) VALUES "
+        "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_REP_PLAYER_NPCBOT_TRANSMOG, "REPLACE INTO characters_player_npcbot_transmog (entry, slot, item_id, fake_id,owner) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+
 }
 
 CharacterDatabaseConnection::CharacterDatabaseConnection(MySQLConnectionInfo& connInfo) : MySQLConnection(connInfo)

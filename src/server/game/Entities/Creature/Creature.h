@@ -50,7 +50,33 @@ class CreatureGroup;
 
 class Creature : public Unit, public GridObject<Creature>, public MovableMapObject
 {
+/*player_npcbot*/
+private:
+    bool mIsPlayerNpcBot;
+    uint32 mPlayerNpcBot_OwnerId;
 public:
+    void SetPlayerNpcBot(bool IsBot = true)
+    {
+        mIsPlayerNpcBot = IsBot;
+    };
+
+    bool IsPlayerNpcBot() const
+    {
+        return mIsPlayerNpcBot;
+    };
+
+    uint32 GetPlayerNpcBotOwnerId() const
+    {
+        return mPlayerNpcBot_OwnerId;
+    };
+
+    void SetNpcBotOwnerId(uint32 owner_id)
+    {
+        mPlayerNpcBot_OwnerId = owner_id;
+    };
+/*player_npcbot end*/
+public:
+
     explicit Creature(bool isWorldObject = false);
     ~Creature() override;
 
