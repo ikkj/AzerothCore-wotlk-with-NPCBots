@@ -40,6 +40,68 @@ void SpellMgr::LoadSpellInfoCorrections()
 {
     uint32 oldMSTime = getMSTime();
 
+    //npcbot: corrections for Life Tap (see Trinity-Bots issue #239)
+    ApplySpellFix({1454}, [](SpellInfo* spellInfo) // Life Tap (Rank 1)
+    {
+        spellInfo->SpellLevel = 6;
+        spellInfo->BaseLevel = 6;
+        spellInfo->MaxLevel = 16;
+    });
+    ApplySpellFix({1455}, [](SpellInfo* spellInfo) // Life Tap (Rank 2)
+    {
+        spellInfo->SpellLevel = 16;
+        spellInfo->BaseLevel = 16;
+        spellInfo->MaxLevel = 26;
+    });
+    ApplySpellFix({1456}, [](SpellInfo* spellInfo) // Life Tap (Rank 3)
+    {
+        spellInfo->SpellLevel = 26;
+        spellInfo->BaseLevel = 26;
+        spellInfo->MaxLevel = 36;
+    });
+    ApplySpellFix({11687}, [](SpellInfo* spellInfo) // Life Tap (Rank 4)
+    {
+        spellInfo->SpellLevel = 36;
+        spellInfo->BaseLevel = 36;
+        spellInfo->MaxLevel = 46;
+    });
+    ApplySpellFix({11688}, [](SpellInfo* spellInfo) // Life Tap (Rank 5)
+    {
+        spellInfo->SpellLevel = 46;
+        spellInfo->BaseLevel = 46;
+        spellInfo->MaxLevel = 56;
+    });
+    ApplySpellFix({11689}, [](SpellInfo* spellInfo) // Life Tap (Rank 6)
+    {
+        spellInfo->SpellLevel = 56;
+        spellInfo->BaseLevel = 56;
+        spellInfo->MaxLevel = 68;
+    });
+    ApplySpellFix({27222}, [](SpellInfo* spellInfo) // Life Tap (Rank 7)
+    {
+        spellInfo->SpellLevel = 68;
+        spellInfo->BaseLevel = 68;
+        spellInfo->MaxLevel = 78;
+    });
+    ApplySpellFix({57946}, [](SpellInfo* spellInfo) // Life Tap (Rank 8)
+    {
+        spellInfo->SpellLevel = 80;
+        spellInfo->BaseLevel = 80;
+        spellInfo->MaxLevel = 90;
+    });
+    //npcbot: corrections for Gunship Battle Shoot: should be able to target creatures (Hurl Axe can)
+    ApplySpellFix({
+        70162,  // Shoot 10N
+        72566,  // Shoot 25N
+        72567,  // Shoot 10H
+        72568   // Shoot 25H
+        }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx3 &= ~SPELL_ATTR3_ONLY_ON_PLAYER;
+        spellInfo->TargetAuraSpell = 0;
+    });
+    //end npcbot
+
     ApplySpellFix({
         467,    // Thorns (Rank 1)
         782,    // Thorns (Rank 2)
@@ -212,11 +274,17 @@ void SpellMgr::LoadSpellInfoCorrections()
     ApplySpellFix({
         37790,  // Spread Shot
         54172,  // Divine Storm (heal)
-        66588,  // Flaming Spear
-        54171   // Divine Storm
+        66588  // Flaming Spear
         }, [](SpellInfo* spellInfo)
     {
         spellInfo->MaxAffectedTargets = 3;
+    });
+
+    // Divine Storm
+    ApplySpellFix({ 54171 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->MaxAffectedTargets = 3;
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
     });
 
     // Divine Storm (Damage)
@@ -566,12 +634,6 @@ void SpellMgr::LoadSpellInfoCorrections()
         spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
     });
 
-    // Light's Beacon, Beacon of Light
-    ApplySpellFix({ 53651 }, [](SpellInfo* spellInfo)
-    {
-        spellInfo->AttributesEx3 |= SPELL_ATTR3_DOT_STACKING_RULE;
-    });
-
     // Hand of Reckoning
     ApplySpellFix({ 62124 }, [](SpellInfo* spellInfo)
     {
@@ -854,6 +916,7 @@ void SpellMgr::LoadSpellInfoCorrections()
     ApplySpellFix({ 57330, 57623 }, [](SpellInfo* spellInfo)
     {
         spellInfo->Effects[EFFECT_1].TargetA = 0;
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
     });
 
     // Scourge Strike trigger
@@ -1213,6 +1276,7 @@ void SpellMgr::LoadSpellInfoCorrections()
     ApplySpellFix({ 59725 }, [](SpellInfo* spellInfo)
     {
         spellInfo->Effects[EFFECT_0].TargetA = SpellImplicitTargetInfo(TARGET_UNIT_CASTER_AREA_PARTY);
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
     });
 
     // Hymn of Hope
@@ -4033,6 +4097,8 @@ void SpellMgr::LoadSpellInfoCorrections()
     ApplySpellFix({ 53651 }, [](SpellInfo* spellInfo)
     {
         spellInfo->AttributesEx |= SPELL_ATTR1_NO_THREAT;
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+        spellInfo->AttributesEx3 |= SPELL_ATTR3_DOT_STACKING_RULE;
     });
 
     // Shadow Hunter Vosh'gajin - Hex
@@ -4648,6 +4714,156 @@ void SpellMgr::LoadSpellInfoCorrections()
     ApplySpellFix({ 36478 }, [](SpellInfo* spellInfo)
     {
         spellInfo->ProcChance = 100;
+    });
+
+    // Commanding Shout
+    ApplySpellFix({ 469, 47439, 47440 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Battle Shout
+    ApplySpellFix({ 2048, 5242, 6192, 6673, 11549, 11550, 11551, 25289, 47436 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Plague Effect
+    ApplySpellFix({ 19594, 26557 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Prayer of Fortitude
+    ApplySpellFix({ 21562, 21564, 25392, 48162 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Gift of the Wild
+    ApplySpellFix({ 21849, 21850, 26991, 48470, 69381 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Arcane Brilliance
+    ApplySpellFix({ 23028, 27127, 43002 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Prayer of Spirit
+    ApplySpellFix({ 27681, 32999, 48074 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Prayer of Shadow Protection
+    ApplySpellFix({ 27683, 39374, 48170 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Nagrand Fort Buff Reward Raid
+    ApplySpellFix({ 33006 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Demonic Pact
+    ApplySpellFix({ 48090 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Ancestral Awakening
+    ApplySpellFix({ 52759 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Turn the Tables
+    ApplySpellFix({ 52910, 52914, 52915 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Judgements of the Wise
+    ApplySpellFix({ 54180 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Replenishment
+    ApplySpellFix({ 57669 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Dalaran Brilliance
+    ApplySpellFix({ 61316 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // [DND] Dalaran Brilliance
+    ApplySpellFix({ 61332 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Infinite Replenishment + Wisdom
+    ApplySpellFix({ 61782 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Renewed Hope
+    ApplySpellFix({ 63944 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Fortitude
+    ApplySpellFix({ 69377 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Blessing of Forgotten Kings
+    ApplySpellFix({ 69378 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Lucky Charm
+    ApplySpellFix({ 69511 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Shiny Shard of the Scale Heal Targeter
+    ApplySpellFix({ 69749 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Purified Shard of the Scale Heal Targeter
+    ApplySpellFix({ 69754 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Brilliance
+    ApplySpellFix({ 69994 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+
+    // Domination
+    ApplySpellFix({ 37135 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->MaxAffectedTargets = 5;
     });
 
     for (uint32 i = 0; i < GetSpellInfoStoreSize(); ++i)
