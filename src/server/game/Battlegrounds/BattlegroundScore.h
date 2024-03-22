@@ -59,6 +59,7 @@ struct AC_GAME_API BattlegroundScore
 {
     friend class Arena;
     friend class Battleground;
+    friend class BgItemRewardScript;
 
 protected:
     BattlegroundScore(ObjectGuid playerGuid) : PlayerGuid(playerGuid) { }

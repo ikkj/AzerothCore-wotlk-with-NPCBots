@@ -12757,6 +12757,10 @@ uint32 Player::GetResurrectionSpellId()
         }
     }
 
+    // 起死回升技能                                                  // 起死回生耗材
+    if (prio < 1 && HasSpell(102002) && !HasSpellCooldown(102003) && HasItemCount(60203))
+        spell_id = 102003;
+
     // Reincarnation (passive spell)  // prio: 1                  // Glyph of Renewed Life
     if (prio < 1 && HasSpell(20608) && !HasSpellCooldown(21169) && (HasAura(58059) || HasItemCount(17030)))
         spell_id = 21169;

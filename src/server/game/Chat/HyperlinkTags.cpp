@@ -146,7 +146,7 @@ bool Acore::Hyperlinks::LinkTags::item::StoreTo(ItemLinkData& val, std::string_v
         val.IsBuggedInspectLink = true;
     }
 
-    if (randomPropertyId < 0)
+    if (randomPropertyId < 0 && randomPropertyId > -10000)
     {
         if (!val.Item->RandomSuffix)
             return false;

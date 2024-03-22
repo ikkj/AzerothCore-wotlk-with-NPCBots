@@ -1081,7 +1081,8 @@ public:                                                 // opcodes handlers
 
     void InitializeSession();
     void InitializeSessionCallback(CharacterDatabaseQueryHolder const& realmHolder, uint32 clientCacheVersion);
-
+    void SendTrainerList(ObjectGuid guid, uint32 npcspelli);
+    void SendTrainerList(ObjectGuid guid, std::string const& strTitle, uint32 npcspelli);
 private:
     void ProcessQueryCallbacks();
 

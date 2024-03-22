@@ -300,11 +300,6 @@ void WorldSession::HandleWhoOpcode(WorldPacket& recvData)
                 continue;
             }
 
-            // 禁止查询GM号
-            if (target.GetPlayerName() == "猫猫"|| target.GetPlayerName() == "爱玩玩不玩滚"|| target.GetPlayerName() == "你们都白打工"|| target.GetPlayerName() == "水兵月"|| target.GetPlayerName() == "谁在水里跳" || target.GetPlayerName() == "菜鸡")
-            {
-                continue;
-            }
         }
 
         // check if target is globally visible for player
@@ -417,7 +412,7 @@ void WorldSession::HandleWhoOpcode(WorldPacket& recvData)
 
     if ((matchCount > displaycount) && (AccountMgr::IsPlayerAccount(security)))
     {
-        matchCount = 999000+ matchCount/100+ matchCount%100/10*10+ matchCount%10*100;//超过人数后修改
+      //  matchCount = 999000+ matchCount/100+ matchCount%100/10*10+ matchCount%10*100;//超过人数后修改
     }
 
     data.put(4, matchCount);                              // insert right count, count of matches

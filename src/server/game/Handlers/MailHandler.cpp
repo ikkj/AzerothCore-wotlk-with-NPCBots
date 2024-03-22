@@ -30,6 +30,7 @@
 #include "ScriptMgr.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
+#include "Chat.h"//硬核模式修改
 
 #define MAX_INBOX_CLIENT_CAPACITY 50
 
@@ -118,8 +119,27 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
     if (player->GetLevel() < sWorld->getIntConfig(CONFIG_MAIL_LEVEL_REQ))
     {
         SendNotification(GetAcoreString(LANG_MAIL_SENDER_REQ), sWorld->getIntConfig(CONFIG_MAIL_LEVEL_REQ));
+        _player->SendMailResult(0, MAIL_SEND, MAIL_ERR_INTERNAL_ERROR);//硬核模式修改
         return;
     }
+
+
+    if (_player->getClass() == CLASS_DEATH_KNIGHT && _player->GetLevel() == 55)
+    {
+        ChatHandler(_player->GetSession()).PSendSysMessage("死亡骑士，需要大于55级才能使用邮件功能");
+        _player->GetSession()->SendNotification("死亡骑士，需要大于55级才能使用邮件功能");
+        _player->SendMailResult(0, MAIL_SEND, MAIL_ERR_INTERNAL_ERROR);
+        return;
+    }
+
+    if (_player->GetPlayerSetting("mod-challenge-modes", 0).value) {
+        ChatHandler(_player->GetSession()).PSendSysMessage("|cFFFF0000 硬核模式下无法发送邮件");
+        _player->GetSession()->SendNotification("|cFFFF00FF 硬核模式下无法发送邮件");
+        _player->SendMailResult(0, MAIL_SEND, MAIL_ERR_INTERNAL_ERROR);
+        return;
+    }
+
+
 
     ObjectGuid receiverGuid;
     if (normalizePlayerName(receiver))
@@ -318,7 +338,7 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
             needItemDelay = GetAccountId() != rc_account;
         }
 
-        if( money >= 10 * GOLD )
+        if (money >= 10 * GOLD)
         {
             CleanStringForMysqlQuery(subject);
             CharacterDatabase.Execute("INSERT INTO log_money VALUES({}, {}, \"{}\", \"{}\", {}, \"{}\", {}, \"{}\", NOW(), {})",
@@ -335,9 +355,9 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
 
     // will delete item or place to receiver mail list
     draft
-    .AddMoney(money)
-    .AddCOD(COD)
-    .SendMailTo(trans, MailReceiver(receive, receiverGuid.GetCounter()), MailSender(player), body.empty() ? MAIL_CHECK_MASK_COPIED : MAIL_CHECK_MASK_HAS_BODY, deliver_delay);
+        .AddMoney(money)
+        .AddCOD(COD)
+        .SendMailTo(trans, MailReceiver(receive, receiverGuid.GetCounter()), MailSender(player), body.empty() ? MAIL_CHECK_MASK_COPIED : MAIL_CHECK_MASK_HAS_BODY, deliver_delay);
 
     player->SaveInventoryAndGoldToDB(trans);
     CharacterDatabase.CommitTransaction(trans);
@@ -490,6 +510,32 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recvData)
     if (!CanOpenMailBox(mailbox))
         return;
 
+    /*硬核模式 不允许打开邮箱*/
+    if (_player->GetLevel() < sWorld->getIntConfig(CONFIG_MAIL_LEVEL_REQ))
+    {
+        SendNotification(GetAcoreString(LANG_MAIL_SENDER_REQ), sWorld->getIntConfig(CONFIG_MAIL_LEVEL_REQ));
+        _player->SendMailResult(0, MAIL_SEND, MAIL_ERR_INTERNAL_ERROR);
+        return;
+    }
+
+    if (_player->getClass() == CLASS_DEATH_KNIGHT && _player->GetLevel() == 55)
+    {
+        ChatHandler(_player->GetSession()).PSendSysMessage("死亡骑士，需要大于55级才能使用邮件功能");
+        _player->GetSession()->SendNotification("死亡骑士，需要大于55级才能使用邮件功能");
+        _player->SendMailResult(0, MAIL_SEND, MAIL_ERR_INTERNAL_ERROR);
+        return;
+    }
+
+    /*硬核模式 不允许打开邮箱*/
+    if (_player->GetPlayerSetting("mod-challenge-modes", 0).value) {
+        ChatHandler(_player->GetSession()).PSendSysMessage("|cFFFF0000 硬核模式下无法收取邮件内物品");
+        _player->GetSession()->SendNotification("|cFFFF00FF 硬核模式下无法收取邮件内物品");
+        _player->SendMailResult(mailId, MAIL_ITEM_TAKEN, MAIL_ERR_INTERNAL_ERROR);
+        return;
+    }
+    /*硬核模式 不允许打开邮箱*/
+
+
     Player* player = _player;
 
     Mail* m = player->GetMail(mailId);
@@ -547,10 +593,10 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recvData)
             if (sender || sender_accId)
             {
                 MailDraft(m->subject, "")
-                .AddMoney(m->COD)
-                .SendMailTo(trans, MailReceiver(sender, m->sender), MailSender(MAIL_NORMAL, m->receiver), MAIL_CHECK_MASK_COD_PAYMENT);
+                    .AddMoney(m->COD)
+                    .SendMailTo(trans, MailReceiver(sender, m->sender), MailSender(MAIL_NORMAL, m->receiver), MAIL_CHECK_MASK_COD_PAYMENT);
 
-                if( m->COD >= 10 * GOLD )
+                if (m->COD >= 10 * GOLD)
                 {
                     std::string senderName;
                     if (!sCharacterCache->GetCharacterNameByGuid(ObjectGuid(HighGuid::Player, m->sender), senderName))
@@ -595,6 +641,30 @@ void WorldSession::HandleMailTakeMoney(WorldPacket& recvData)
 
     if (!CanOpenMailBox(mailbox))
         return;
+    //硬核模式 DK邮箱功能
+    if (_player->GetLevel() < sWorld->getIntConfig(CONFIG_MAIL_LEVEL_REQ))
+    {
+        SendNotification(GetAcoreString(LANG_MAIL_SENDER_REQ), sWorld->getIntConfig(CONFIG_MAIL_LEVEL_REQ));
+        _player->SendMailResult(0, MAIL_SEND, MAIL_ERR_INTERNAL_ERROR);
+        return;
+    }
+
+    if (_player->getClass() == CLASS_DEATH_KNIGHT && _player->GetLevel() == 55)
+    {
+        ChatHandler(_player->GetSession()).PSendSysMessage("死亡骑士，需要大于55级才能使用邮件功能");
+        _player->GetSession()->SendNotification("死亡骑士，需要大于55级才能使用邮件功能");
+        _player->SendMailResult(0, MAIL_SEND, MAIL_ERR_INTERNAL_ERROR);
+        return;
+    }
+
+    if (_player->GetPlayerSetting("mod-challenge-modes", 0).value) {
+        ChatHandler(_player->GetSession()).PSendSysMessage("|cFFFF0000 硬核模式下无法收取邮件内金币");
+        _player->GetSession()->SendNotification("|cFFFF00FF 硬核模式下无法收取邮件内金币");
+        _player->SendMailResult(mailId, MAIL_MONEY_TAKEN, MAIL_ERR_INTERNAL_ERROR);
+        return;
+    }
+    //硬核模式 DK邮箱功能
+
 
     Player* player = _player;
 
@@ -674,15 +744,15 @@ void WorldSession::HandleGetMailList(WorldPacket& recvData)
 
         switch (mail->messageType)
         {
-            case MAIL_NORMAL:                               // sender guid
-                data << ObjectGuid::Create<HighGuid::Player>(mail->sender);
-                break;
-            case MAIL_CREATURE:
-            case MAIL_GAMEOBJECT:
-            case MAIL_AUCTION:
-            case MAIL_CALENDAR:
-                data << uint32(mail->sender);            // creature/gameobject entry, auction id, calendar event id?
-                break;
+        case MAIL_NORMAL:                               // sender guid
+            data << ObjectGuid::Create<HighGuid::Player>(mail->sender);
+            break;
+        case MAIL_CREATURE:
+        case MAIL_GAMEOBJECT:
+        case MAIL_AUCTION:
+        case MAIL_CALENDAR:
+            data << uint32(mail->sender);            // creature/gameobject entry, auction id, calendar event id?
+            break;
         }
 
         // prevent client crash
