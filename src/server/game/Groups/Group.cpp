@@ -712,7 +712,10 @@ bool Group::RemoveMember(ObjectGuid guid, const RemoveMethod& method /*= GROUP_R
         //npcbot: skip group size check before removing a bot
         if (guid.IsCreature())
         {
-            if (Creature const* cbot = BotDataMgr::FindBot(guid.GetEntry()))
+            /*player_npcbot*/
+            // if (Creature const* cbot = BotDataMgr::FindBot(guid.GetEntry()))
+            if (Creature const* cbot = BotDataMgr::FindBotByGuid(guid))
+                /*player_npcbot end*/
             {
                 Creature* bot = const_cast<Creature*>(cbot);
                 if (isBGGroup() || isBFGroup())
@@ -979,7 +982,11 @@ void Group::Disband(bool hideDestroy /* = false */)
         //npcbot: set bot's group
         if (citr->guid.IsCreature())
         {
-            if (Creature const* cbot = BotDataMgr::FindBot(citr->guid.GetEntry()))
+
+                /*player_npcbot*/
+                    //  if (Creature const* cbot = BotDataMgr::FindBot(citr->guid.GetEntry()))
+           if (Creature const* cbot = BotDataMgr::FindBotByGuid(citr->guid))
+                            /*player_npcbot end*/
             {
                 Creature* bot = const_cast<Creature*>(cbot);
                 if (isBGGroup() || isBFGroup())
@@ -2105,8 +2112,12 @@ void Group::ChangeMembersGroup(ObjectGuid guid, uint8 group)
     //npcbot
     if (guid.IsCreature())
     {
-        Creature const* cbot = BotDataMgr::FindBot(guid.GetEntry());
+        /*player_npcbot*/
+        Creature const* cbot = BotDataMgr::FindBotByGuid(guid);
+        // Creature const* cbot = BotDataMgr::FindBot(guid.GetEntry());
+        /*player_npcbot end*/
         if (Creature* bot = cbot ? const_cast<Creature*>(cbot) : nullptr)
+
         {
             if (bot->GetBotGroup() == this)
                 bot->SetOriginalSubGroup(group);

@@ -651,7 +651,6 @@ void CharacterDatabaseConnection::DoPrepareStatements()
         "(entry, maxhealth, maxpower, strength, agility, stamina, intellect, spirit, armor, defense, resHoly, resFire, resNature, resFrost, resShadow, resArcane, blockPct, dodgePct, parryPct, critPct, attackPower, spellPower, spellPen, hastePct, hitBonusPct, expertise, armorPenPct,owner) VALUES "
         "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)", CONNECTION_ASYNC);
     PrepareStatement(CHAR_REP_PLAYER_NPCBOT_TRANSMOG, "REPLACE INTO characters_player_npcbot_transmog (entry, slot, item_id, fake_id,owner) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-
 }
 
 CharacterDatabaseConnection::CharacterDatabaseConnection(MySQLConnectionInfo& connInfo) : MySQLConnection(connInfo)

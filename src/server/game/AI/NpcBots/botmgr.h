@@ -227,6 +227,9 @@ class AC_GAME_API BotMgr
         static void CleanupsBeforeBotDelete(Creature* bot);
         void RemoveAllBots(uint8 removetype = BOT_REMOVE_LOGOUT);
         void RemoveBot(ObjectGuid guid, uint8 removetype = BOT_REMOVE_LOGOUT);
+        /*player_npcbot*/
+        void Player_RemoveBot(ObjectGuid guid);
+        /*player_npcbot end*/
         void UnbindBot(ObjectGuid guid);
         [[nodiscard]] BotAddResult RebindBot(Creature* bot);
         [[nodiscard]] BotAddResult AddBot(Creature* bot);

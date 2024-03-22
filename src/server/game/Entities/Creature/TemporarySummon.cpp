@@ -338,7 +338,7 @@ void TempSummon::RemoveFromWorld()
     if (!IsInWorld())
         return;
 
-    if (m_Properties)
+    if (m_Properties && !IsPlayerNpcBot())
         if (uint32 slot = m_Properties->Slot)
             if (Unit* owner = GetSummonerUnit())
                 if (owner->m_SummonSlot[slot] == GetGUID())
@@ -388,6 +388,7 @@ void Minion::InitStats(uint32 duration)
         SetFaction(owner->GetFaction());
         owner->SetMinion(this, true);
     }
+
 }
 
 void Minion::RemoveFromWorld()
@@ -403,6 +404,11 @@ void Minion::RemoveFromWorld()
 
 Unit* Minion::GetOwner() const
 {
+    if(IsPlayerNpcBot())
+    {
+        return ObjectAccessor::FindPlayer(m_owner);
+    }
+
     return ObjectAccessor::GetUnit(*this, m_owner);
 }
 
@@ -533,5 +539,10 @@ void Puppet::RemoveFromWorld()
 
 Player* Puppet::GetOwner() const
 {
+    if(IsPlayerNpcBot())
+    {
+        return ObjectAccessor::FindPlayer(m_owner);
+    }
+
     return ObjectAccessor::GetPlayer(*this, m_owner);
 }

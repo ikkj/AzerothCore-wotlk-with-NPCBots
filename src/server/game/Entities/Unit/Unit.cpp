@@ -11210,7 +11210,9 @@ void Unit::SetOwnerGUID(ObjectGuid owner)
 Unit* Unit::GetOwner() const
 {
     if (ObjectGuid ownerGUID = GetOwnerGUID())
+    {
         return ObjectAccessor::GetUnit(*this, ownerGUID);
+    }
 
     return nullptr;
 }

@@ -52,8 +52,9 @@ class Creature : public Unit, public GridObject<Creature>, public MovableMapObje
 {
 /*player_npcbot*/
 private:
-    bool mIsPlayerNpcBot;
+    bool mIsPlayerNpcBot ;
     uint32 mPlayerNpcBot_OwnerId;
+
 public:
     void SetPlayerNpcBot(bool IsBot = true)
     {
@@ -74,6 +75,28 @@ public:
     {
         mPlayerNpcBot_OwnerId = owner_id;
     };
+
+    std::string GetPlayerBotName() const
+    {
+        std::string name = GetName();
+        std::string color = "";
+
+        switch (getClass())
+        {
+        case CLASS_DEATH_KNIGHT: color = "|cffC41F3B"; break;
+        case CLASS_DRUID:        color = "|cffFF7D0A"; break;
+        case CLASS_HUNTER:       color = "|cffABD473"; break;
+        case CLASS_MAGE:         color = "|cff69CCF0"; break;
+        case CLASS_PALADIN:      color = "|cffF58CBA"; break;
+        case CLASS_PRIEST:       color = "|cffFFFFFF"; break;
+        case CLASS_ROGUE:        color = "|cffFFF569"; break;
+        case CLASS_SHAMAN:       color = "|cff0070DE"; break;
+        case CLASS_WARLOCK:      color = "|cff9482C9"; break;
+        case CLASS_WARRIOR:      color = "|cffC79C6E"; break;
+        }
+
+        return "|Hplayer:" + name + "|h" + color + name + "|h|r";
+    }
 /*player_npcbot end*/
 public:
 
@@ -253,7 +276,11 @@ public:
     bool LoadCreatureFromDB(ObjectGuid::LowType guid, Map* map, bool addToMap = true, bool allowDuplicate = false);
     void SaveToDB();
     // overriden in Pet
+    /*player_npcbot*/
+     void player_npcbot_init(uint32 mapid, uint8 spawnMask, uint32 phaseMask);
+    /*player_npcbot end*/
     virtual void SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask);
+
     virtual void DeleteFromDB();                        // overriden in Pet
 
     Loot loot;

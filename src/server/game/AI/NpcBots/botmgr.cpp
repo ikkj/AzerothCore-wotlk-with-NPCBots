@@ -955,13 +955,14 @@ void BotMgr::Update(uint32 diff)
 
 bool BotMgr::RestrictBots(Creature const* bot, bool add) const
 {
+
     if (!_owner->FindMap())
         return true;
 
     if (_owner->IsInFlight())
         return true;
 
-    if (_botsHidden)
+    if (_botsHidden )
         return true;
 
     Map const* currMap = _owner->GetMap();
@@ -1108,7 +1109,9 @@ void BotMgr::_reviveBot(Creature* bot, WorldLocation* dest)
     bot->SetDisplayId(bot->GetNativeDisplayId());
     bot->ReplaceAllNpcFlags(NPCFlags(bot->GetCreatureTemplate()->npcflag));
     bot->ClearUnitState(uint32(UNIT_STATE_ALL_STATE & ~(UNIT_STATE_IGNORE_PATHFINDING | UNIT_STATE_NO_ENVIRONMENT_UPD)));
+
     bot->ReplaceAllUnitFlags(UnitFlags(0));
+
     bot->SetLootRecipient(nullptr);
     bot->ResetPlayerDamageReq();
     bot->SetPvP(bot->GetBotOwner()->IsPvP());
@@ -1124,6 +1127,21 @@ void BotMgr::_reviveBot(Creature* bot, WorldLocation* dest)
 
     if (!bot->GetBotAI()->IAmFree() && !bot->GetBotAI()->HasBotCommandState(BOT_COMMAND_MASK_UNMOVING))
         bot->GetBotAI()->SetBotCommandState(BOT_COMMAND_FOLLOW, true);
+
+    /*player_npcbot*/
+    if(bot->IsPlayerNpcBot())
+    {
+        bot->SetUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED);
+        // if(bot->GetBotAI()->GetBotOwner())
+        // {
+        //     // bot->GetBotAI()->GetBotOwner()->SetMinion((Minion*)bot,true);
+        //     const ObjectGuid ownerGuid = bot->GetBotAI()->GetBotOwner()->GetGUID();
+        //     bot->SetOwnerGUID(ownerGuid);
+        //     ((Minion*)bot)->InitStats(0);
+        // }
+    }
+    /*player_npcbot*/
+
 }
 
 Creature* BotMgr::GetBot(ObjectGuid guid) const
@@ -1357,7 +1375,15 @@ void BotMgr::_teleportBot(Creature* bot, Map* newMap, float x, float y, float z,
                 gr->SendUpdate();
 
         TeleportFinishEvent* finishEvent = new TeleportFinishEvent(bot->GetBotAI(), reset);
+
         uint64 delay = quick ? urand(500, 1500) : urand(5000, 8000);
+        /*player_npcbot */
+        if(bot->IsPlayerNpcBot())
+        {
+            delay = urand(500, 1000);
+        }
+        /*player_npcbot end */
+
         bot->GetBotAI()->GetEvents()->AddEvent(finishEvent, bot->GetBotAI()->GetEvents()->CalculateTime(delay));
         bot->GetBotAI()->SetTeleportFinishEvent(finishEvent);
     });
@@ -1463,12 +1489,55 @@ void BotMgr::RemoveBot(ObjectGuid guid, uint8 removetype)
     bot->SetFaction(bot->GetCreatureTemplate()->faction);
     bot->SetLevel(bot->GetCreatureTemplate()->minlevel);
 
+    /*player_npcbot*/
+    if(itr->second->IsPlayerNpcBot())
+    {
+        return;
+    }
+
     if (removetype == BOT_REMOVE_DISMISS)
     {
         BotDataMgr::ResetNpcBotTransmogData(bot->GetEntry(), false);
         uint32 newOwner = 0;
         BotDataMgr::UpdateNpcBotData(bot->GetEntry(), NPCBOT_UPDATE_OWNER, &newOwner);
     }
+}
+
+void BotMgr::Player_RemoveBot(ObjectGuid guid)
+{
+    Creature const* bot = _bots[guid];
+
+   if(bot && bot->IsPlayerNpcBot())
+   {
+       // bot->GetBotAI()->GetBotOwner()->GetBotMgr()->UnbindBot(_bots[guid]->GetGUID());
+       // // _bots[guid]->GetBotAI()->SetBotCommandState(BOT_COMMAND_STAY);
+       // bot->GetBotAI()->TeleportHomeStart(true);
+       // Position po;
+       // po.m_positionX = 16254.311f;
+       // po.m_positionY = 16305.019f;
+       // po.m_positionZ = 20.844324f;
+       // Creature* nbot = const_cast<Creature*>(bot);
+       // TeleportBot(nbot, sMapMgr->CreateBaseMap(1), &po, true);
+   }
+
+    // if(_bots[guid] && _bots[guid]->IsPlayerNpcBot())
+    // {
+    //     _bots[guid]->GetMotionMaster()->MovePoint(1, 16254.311f, 16305.019f,20.844324f, false);
+    //     // Map* GMMap =  sMapMgr->FindBaseMap(1);
+    //     // TeleportBot(_bots[guid], GMMap, _bots);
+    //     _bots[guid]->CombatStop();
+    //     _bots[guid]->GetBotAI()->canUpdate = false;
+    //     if(_bots[guid]->GetBotAI()->GetBotsPet() && _bots[guid]->GetBotAI()->GetBotsPet()->GetBotPetAI())
+    //     {
+    //         _bots[guid]->GetBotAI()->GetBotsPet()->GetBotPetAI()->canUpdate = false;
+    //         _bots[guid]->GetBotAI()->GetBotsPet()->AddObjectToRemoveList();
+    //     }
+    //
+    //     //BotDataMgr::Player_UpdateNpcBotData(_bots[guid]->GetPlayerNpcBotOwnerId(),_bots[guid]->GetEntry(),NPCBOT_UPDATE_ERASE);
+    //     // if(_bots[guid]->GetMap()->IsDungeon()){}
+    //     _bots[guid]->AddObjectToRemoveList();
+    //     _bots.erase(guid);
+    // }
 }
 
 void BotMgr::UnbindBot(ObjectGuid guid)
@@ -1650,6 +1719,15 @@ bool BotMgr::RemoveBotFromGroup(Creature* bot)
     if (!gr || !gr->IsMember(bot->GetGUID()))
         return false;
 
+    /*player_npcbot*/
+    // if(bot->IsPlayerNpcBot())
+    // {
+    //     gr->RemoveMember(bot->GetGUID());
+    //     Player_RemoveBot(bot->GetGUID());
+    //     return true;
+    // }
+    /*player_npcbot*/
+
     RemoveBotFromBGQueue(bot);
 
     if (bot->GetBotAI()->HasRole(BOT_ROLE_PARTY) && !_owner->GetSession()->PlayerLogout())
@@ -1666,6 +1744,8 @@ bool BotMgr::RemoveBotFromGroup(Creature* bot)
     //if removed from group while in instance / bg then remove from world immediately
     if (bot->IsInWorld() && RestrictBots(bot, true))
         TeleportBot(bot, bot->GetMap(), bot);
+
+
 
     return true;
 }

@@ -213,13 +213,12 @@ public:
     static void Player_ResetNpcBotTransmogData(uint32 player_guid,uint32 entry, bool update_db = true);
 
     static ObjectGuid Player_GetNPCBotGuid(uint32 player_guid,uint32 entry);
-    static std::vector<uint32> Player_GetExistingNPCBotIds(uint32 player_guid);
+    static std::vector<uint32> Player_GetExistingNPCBotIds();
     static Creature const* Player_FindBot(uint32 player_guid,uint32 entry);
+
     static Creature const* Player_FindBot(uint32 player_guid,std::string_view name, LocaleConstant loc, std::vector<uint32> const* not_ids =nullptr);
     static uint8 Player_GetOwnedBotsCount(ObjectGuid owner_guid, uint32 class_mask = 0);
-
-asdhflkjasdhflkashflkjhaslkdfhaskljhfdlkjashdflkjh
-
+    static Creature const* FindBotByGuid(ObjectGuid guid);
     //------------------------------------玩家独立技能机器人
 
 public:

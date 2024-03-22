@@ -957,8 +957,8 @@ void Map::RemoveFromMap(T* obj, bool remove)
     if (!inWorld) // pussywizard: if was in world, RemoveFromWorld() called DestroyForNearbyPlayers()
         obj->DestroyForNearbyPlayers(); // pussywizard: previous player->UpdateObjectVisibility()
 
-    obj->RemoveFromGrid();
 
+    obj->RemoveFromGrid();
     obj->ResetMap();
 
     if (remove)
@@ -2734,6 +2734,15 @@ void Map::RemoveAllObjectsInRemoveList()
                 // make sure that like sources auras/etc removed before destructor start
                 obj->ToCreature()->CleanupsBeforeDelete();
                 RemoveFromMap(obj->ToCreature(), true);
+                /*player_npcbot */
+                // if(obj->ToCreature() && obj->ToCreature()->IsPlayerNpcBot())
+                // {
+                //
+                // }else
+                // {
+                //
+                // }
+
                 break;
             default:
                 LOG_ERROR("maps", "Non-grid object (TypeId: {}) is in grid object remove list, ignored.", obj->GetTypeId());

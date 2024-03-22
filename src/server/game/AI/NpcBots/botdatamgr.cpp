@@ -602,8 +602,11 @@ public:
 /*Player_NpcBots*/
 void BotDataMgr::Player_LoadNpcBots()
 {
+    QueryResult result;
+    Field* field;
+    int index ;
     //                                       0      1      2      3     4        5          6          7          8          9               10          11          12         13
-    QueryResult result = CharacterDatabase.Query("SELECT entry, owner, roles, spec, faction, equipMhEx, equipOhEx, equipRhEx, equipHead, equipShoulders, equipChest, equipWaist, equipLegs, equipFeet,"
+    result = CharacterDatabase.Query("SELECT entry, owner, roles, spec, faction, equipMhEx, equipOhEx, equipRhEx, equipHead, equipShoulders, equipChest, equipWaist, equipLegs, equipFeet,"
      //   14          15          16         17         18            19            20             21             22         23
          "equipWrist, equipHands, equipBack, equipBody, equipFinger1, equipFinger2, equipTrinket1, equipTrinket2, equipNeck, spells_disabled FROM characters_player_npcbot");
 
@@ -613,8 +616,8 @@ void BotDataMgr::Player_LoadNpcBots()
 
         do
         {
-            Field* field = result->Fetch();
-            int index = 0;
+             field = result->Fetch();
+             index = 0;
             uint32 entry =          field[  index].Get<uint32>();
             uint32 owner =          field[  1].Get<uint32>();
 
@@ -626,13 +629,13 @@ void BotDataMgr::Player_LoadNpcBots()
 
             if (!sObjectMgr->GetCreatureTemplate(entry))
             {
-                LOG_ERROR("server.loading", "Bot entry {} doesn't exist in `creature_template` table! Skipped.", entry);
+                LOG_ERROR("server.loading", "机器人 {} 不存在 `creature_template` 表中! 跳过.", entry);
                 continue;
             }
 
             //load data
             NpcBotData* PlayerBotData = new NpcBotData(0, 0);
-            PlayerBotData->owner =        owner;
+            PlayerBotData->owner =        field[++index].Get<uint32>();
             PlayerBotData->roles =        field[++index].Get<uint32>();
             PlayerBotData->spec =         field[++index].Get<uint8>();
             PlayerBotData->faction =      field[++index].Get<uint32>();
@@ -653,9 +656,54 @@ void BotDataMgr::Player_LoadNpcBots()
 
         } while (result->NextRow());
 
-        LOG_INFO("server.loading", ">> Loaded {} bot data entries", data_counter);
+        LOG_INFO("server.loading", ">> 加载 {} 条玩家机器人数据", data_counter);
 
+    }else
+    {
+        LOG_INFO("server.loading", ">> 没有玩家机器人数据！");
     }
+
+
+    result = CharacterDatabase.Query("SELECT entry, slot, item_id, fake_id,owner FROM characters_player_npcbot_transmog");
+    if (result)
+    {
+        do
+        {
+            field = result->Fetch();
+            index = 0;
+            uint32 entry =          field[  index].Get<uint32>();
+            uint32 owner =          field[  4].Get<uint32>();
+            if(owner == 0)
+            {
+                LOG_ERROR("server.loading", "玩家NPCBOT 存在无效幻化数据 {}-{}",owner, entry);
+                continue;
+            }
+
+            if (!sObjectMgr->GetCreatureTemplate(entry))
+            {
+                LOG_ERROR("server.loading", "Bot entry {} has transmog data but doesn't exist in `creature_template` table! Skipped.", entry);
+                continue;
+            }
+
+            if (_playerbotsTransmogData.count(Player_MapKey(owner,entry)) == 0)
+                _playerbotsTransmogData[Player_MapKey(owner,entry)] = new NpcBotTransmogData();
+
+            //load data
+            uint8 slot =            field[++index].Get<uint8>();
+            uint32 item_id =        field[++index].Get<uint32>();
+            int32 fake_id =         field[++index].Get<int32>();
+
+            _playerbotsTransmogData[Player_MapKey(owner,entry)]->transmogs[slot] = { item_id, fake_id };
+
+        } while (result->NextRow());
+
+        LOG_INFO("server.loading", ">> 玩家机器人幻化数据加载完毕");
+    }
+    else
+        LOG_INFO("server.loading", ">> 没有玩家机器人幻化数据！");
+
+
+    Player_allBotsLoaded = true;
 }
 
 uint32 BotDataMgr::Player_MapKey(uint32 player_guid, uint32 entry)
@@ -677,7 +725,7 @@ void BotDataMgr::Player_AddNpcBotData(uint32 player_guid, uint32 entry,
     if (itr == _playerBotsData.end())
     {
         NpcBotData* botData = new NpcBotData(player_guid,entry,roles, faction, spec);
-        _playerBotsData[entry] = botData;
+        _playerBotsData[Player_MapKey(player_guid,entry)] = botData;
 
         CharacterDatabasePreparedStatement* bstmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_PLAYER_NPCBOT);
         //"INSERT INTO characters_npcbot (entry, roles, spec, faction,owner) VALUES (?, ?, ?, ?,?)", CONNECTION_ASYNC);
@@ -860,11 +908,11 @@ void BotDataMgr::Player_UpdateNpcBotData(uint32 player_guid, uint32 entry,NpcBot
             ASSERT(bitr != _playerBotsData.end());
             delete bitr->second;
             _playerBotsData.erase(bitr);
-            bstmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_PLAYER_NPCBOT);
-            //"DELETE FROM characters_player_npcbot WHERE entry = ? AND owner = ?", CONNECTION_ASYNC
-            bstmt->SetData(0, entry);
-            bstmt->SetData(1, player_guid);
-            CharacterDatabase.Execute(bstmt);
+            // bstmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_PLAYER_NPCBOT);
+            // //"DELETE FROM characters_player_npcbot WHERE entry = ? AND owner = ?", CONNECTION_ASYNC
+            // bstmt->SetData(0, entry);
+            // bstmt->SetData(1, player_guid);
+            // CharacterDatabase.Execute(bstmt);
             break;
         }
         default:
@@ -1022,7 +1070,7 @@ ObjectGuid BotDataMgr::Player_GetNPCBotGuid(uint32 player_guid, uint32 entry)
     return ObjectGuid::Empty;
 }
 
-std::vector<uint32> BotDataMgr::Player_GetExistingNPCBotIds(uint32 player_guid)
+std::vector<uint32> BotDataMgr::Player_GetExistingNPCBotIds()
 {
     ASSERT(Player_AllBotsLoaded());
 
@@ -1033,6 +1081,7 @@ std::vector<uint32> BotDataMgr::Player_GetExistingNPCBotIds(uint32 player_guid)
 
     return existing_ids;
 }
+
 
 Creature const* BotDataMgr::Player_FindBot(uint32 player_guid, uint32 entry)
 {
@@ -1094,6 +1143,18 @@ uint8 BotDataMgr::Player_GetOwnedBotsCount(ObjectGuid owner_guid,uint32 class_ma
             ++count;
 
     return count;
+}
+
+Creature const* BotDataMgr::FindBotByGuid(ObjectGuid guid)
+{
+    std::shared_lock<std::shared_mutex> lock(*GetLock());
+
+    for (NpcBotRegistry::const_iterator ci = _existingBots.cbegin(); ci != _existingBots.cend(); ++ci)
+    {
+        if ((*ci)->GetGUID() == guid)
+            return *ci;
+    }
+    return nullptr;
 }
 
 /*Player_NpcBots end*/
@@ -1418,6 +1479,11 @@ void BotDataMgr::LoadNpcBots(bool spawn)
     }
     else
         LOG_INFO("server.loading", ">> Loaded 0 npcbots. Table `characters_npcbot` is empty!");
+
+
+    /*player_npcbot*/
+    Player_LoadNpcBots();
+    /*player_npcbot end*/
 
     allBotsLoaded = true;
 }
@@ -3114,8 +3180,7 @@ void BotDataMgr::UnregisterBot(Creature const* bot)
 {
     if (_existingBots.find(bot) == _existingBots.end())
     {
-        LOG_ERROR("entities.unit", "BotDataMgr::UnregisterBot: bot {} ({}) not found!",
-            bot->GetEntry(), bot->GetName().c_str());
+        LOG_ERROR("entities.unit", "BotDataMgr::UnregisterBot: bot {} ({}) {} not found!", bot->GetEntry(), bot->GetName().c_str(),bot->GetGUID().GetCounter());
         return;
     }
 
@@ -3180,8 +3245,15 @@ void BotDataMgr::GetNPCBotGuidsByOwner(std::vector<ObjectGuid> &guids_vec, Objec
 
     for (NpcBotRegistry::const_iterator ci = _existingBots.cbegin(); ci != _existingBots.cend(); ++ci)
     {
-        if (_botsData[(*ci)->GetEntry()]->owner == owner_guid.GetCounter())
-            guids_vec.push_back((*ci)->GetGUID());
+        if((*ci)->IsPlayerNpcBot())
+        {
+            if (_playerBotsData[Player_MapKey((*ci)->GetPlayerNpcBotOwnerId(),(*ci)->GetEntry())]->owner == owner_guid.GetCounter())
+                guids_vec.push_back((*ci)->GetGUID());
+        }else
+        {
+            if (_botsData[(*ci)->GetEntry()]->owner == owner_guid.GetCounter())
+                guids_vec.push_back((*ci)->GetGUID());
+        }
     }
 }
 
