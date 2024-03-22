@@ -55,6 +55,7 @@ struct NpcBotData
 public:
     uint32 owner;
     uint32 entry;
+    uint64 hire_time;
     uint32 roles;
     uint32 faction;
     uint8 spec;
@@ -63,8 +64,9 @@ public:
 
 private:
     explicit
-    NpcBotData(uint32 iroles, uint32 ifaction, uint8 ispec = 1) : owner(0),entry(0),
+    NpcBotData(uint32 iroles, uint32 ifaction, uint8 ispec = 1) : owner(0),entry(0), hire_time(0),
         roles(iroles), faction(ifaction), spec(ispec)
+
     {
         for (uint8 i = 0; i != BOT_INVENTORY_SIZE; ++i)
             equips[i] = 0;
