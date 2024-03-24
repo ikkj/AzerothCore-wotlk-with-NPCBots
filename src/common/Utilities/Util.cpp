@@ -80,19 +80,19 @@ std::string secsToTimeString(uint64 timeInSecs, bool shortText)
     std::ostringstream ss;
     if (days)
     {
-        ss << days << (shortText ? "d" : " day(s) ");
+        ss << days << (shortText ? "d" : " 天 ");
     }
     if (hours)
     {
-        ss << hours << (shortText ? "h" : " hour(s) ");
+        ss << hours << (shortText ? "h" : " 小时 ");
     }
     if (minutes)
     {
-        ss << minutes << (shortText ? "m" : " minute(s) ");
+        ss << minutes << (shortText ? "m" : " 分钟 ");
     }
     if (secs || (!days && !hours && !minutes) )
     {
-        ss << secs << (shortText ? "s" : " second(s) ");
+        ss << secs << (shortText ? "s" : " 秒 ");
     }
 
     std::string str = ss.str();
