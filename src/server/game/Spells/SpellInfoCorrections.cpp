@@ -3919,7 +3919,7 @@ void SpellMgr::LoadSpellInfoCorrections()
 
     // Savory Deviate Delight (transformations), allow to mount while transformed
      // 变形卡变形状态上坐骑
-    ApplySpellFix({ 8219, 8220, 8221, 8222, 110004, 110005, 110006, 110007 }, [](SpellInfo* spellInfo)
+    ApplySpellFix({ 8219, 8220, 8221, 8222, 110004, 110005, 110006, 110007 , 110008 }, [](SpellInfo* spellInfo)
         {
             spellInfo->Attributes &= ~SPELL_ATTR0_NO_IMMUNITIES;
     });
