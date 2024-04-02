@@ -2023,7 +2023,7 @@ public:
 
         void ApplyClassPassives() const override
         {
-            uint8 level = master->GetLevel();
+            uint8 level = master?master->GetLevel():80;
             bool isArms = GetSpec() == BOT_SPEC_WARRIOR_ARMS;
             bool isFury = GetSpec() == BOT_SPEC_WARRIOR_FURY;
             bool isProt = GetSpec() == BOT_SPEC_WARRIOR_PROTECTION;

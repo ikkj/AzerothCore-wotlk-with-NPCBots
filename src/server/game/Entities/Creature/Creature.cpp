@@ -253,6 +253,12 @@ Creature::Creature(bool isWorldObject): Unit(isWorldObject), MovableMapObject(),
     //npcbot
     bot_AI = nullptr;
     bot_pet_AI = nullptr;
+
+    /*player_npcbot*/
+    mIsPlayerNpcBot = false;
+    mPlayerNpcBot_OwnerId = 0;
+    /*player_npcbot end*/
+
     //end npcbot
 }
 
@@ -1429,6 +1435,77 @@ void Creature::SaveToDB()
     SaveToDB(mapId, data->spawnMask, GetPhaseMask());
 }
 
+void Creature::player_npcbot_init(uint32 mapid, uint8 spawnMask,uint32 phaseMask)
+{
+     //npcbot: disallow saving generated bots
+    if (IsNPCBot() && GetBotAI() && GetBotAI()->IsWanderer())
+        return;
+    //end npcbot
+
+    // update in loaded data
+    if (!m_spawnId)
+        m_spawnId = sObjectMgr->GenerateCreatureSpawnId();
+
+    CreatureData& data = sObjectMgr->NewOrExistCreatureData(m_spawnId);
+
+    uint32 displayId = GetNativeDisplayId();
+    uint32 npcflag = GetNpcFlags();
+    uint32 unit_flags = GetUnitFlags();
+    uint32 dynamicflags = GetDynamicFlags();
+
+    // check if it's a custom model and if not, use 0 for displayId
+    CreatureTemplate const* cinfo = GetCreatureTemplate();
+    if (cinfo)
+    {
+        if (displayId == cinfo->Modelid1 || displayId == cinfo->Modelid2 ||
+                displayId == cinfo->Modelid3 || displayId == cinfo->Modelid4)
+            displayId = 0;
+
+        if (npcflag == cinfo->npcflag)
+            npcflag = 0;
+
+        if (unit_flags == cinfo->unit_flags)
+            unit_flags = 0;
+
+        if (dynamicflags == cinfo->dynamicflags)
+            dynamicflags = 0;
+    }
+
+    data.id1 = GetEntry();
+    data.mapid = mapid;
+    data.phaseMask = phaseMask;
+    data.displayid = displayId;
+    data.equipmentId = GetCurrentEquipmentId();
+    if (!GetTransport())
+    {
+        data.posX = GetPositionX();
+        data.posY = GetPositionY();
+        data.posZ = GetPositionZ();
+        data.orientation = GetOrientation();
+    }
+    else
+    {
+        data.posX = GetTransOffsetX();
+        data.posY = GetTransOffsetY();
+        data.posZ = GetTransOffsetZ();
+        data.orientation = GetTransOffsetO();
+    }
+
+    data.spawntimesecs = m_respawnDelay;
+    // prevent add data integrity problems
+    data.wander_distance = GetDefaultMovementType() == IDLE_MOTION_TYPE ? 0.0f : m_wanderDistance;
+    data.currentwaypoint = 0;
+    data.curhealth = GetHealth();
+    data.curmana = GetPower(POWER_MANA);
+    // prevent add data integrity problems
+    data.movementType = !m_wanderDistance && GetDefaultMovementType() == RANDOM_MOTION_TYPE
+                        ? IDLE_MOTION_TYPE : GetDefaultMovementType();
+    data.spawnMask = spawnMask;
+    data.npcflag = npcflag;
+    data.unit_flags = unit_flags;
+    data.dynamicflags = dynamicflags;
+}
+
 void Creature::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
 {
     //npcbot: disallow saving generated bots
@@ -1507,7 +1584,6 @@ void Creature::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
     trans->Append(stmt);
 
     uint8 index = 0;
-
     stmt = WorldDatabase.GetPreparedStatement(WORLD_INS_CREATURE);
     stmt->SetData(index++, m_spawnId);
     stmt->SetData(index++, GetEntry());

@@ -28,12 +28,13 @@ struct PvPDifficultyEntry;
 
 enum LocaleConstant : uint8;
 
-constexpr float MIN_WANDER_NODE_DISTANCE = 50.0f; // VISIBILITY_DISTANCE_NORMAL * 0.5f;
+constexpr float MIN_WANDER_NODE_DISTANCE = 50.0f;
+// VISIBILITY_DISTANCE_NORMAL * 0.5f;
 constexpr float MAX_WANDER_NODE_DISTANCE = 800.0f; //SIZE_OF_GRIDS * 1.5f;
 
 enum NpcBotDataUpdateType
 {
-    NPCBOT_UPDATE_OWNER                 = 1,
+    NPCBOT_UPDATE_OWNER = 1,
     NPCBOT_UPDATE_ROLES,
     NPCBOT_UPDATE_SPEC,
     NPCBOT_UPDATE_DISABLED_SPELLS,
@@ -50,8 +51,10 @@ struct NpcBotData
 
     friend class BotDataMgr;
     friend struct WanderingBotsGenerator;
+
 public:
     uint32 owner;
+    uint32 entry;
     uint64 hire_time;
     uint32 roles;
     uint32 faction;
@@ -60,18 +63,32 @@ public:
     DisabledSpellsContainer disabled_spells;
 
 private:
-    explicit NpcBotData(uint32 iroles, uint32 ifaction, uint8 ispec = 1) : owner(0), hire_time(0), roles(iroles), faction(ifaction), spec(ispec)
+    explicit
+    NpcBotData(uint32 iroles, uint32 ifaction, uint8 ispec = 1) : owner(0),entry(0), hire_time(0),
+        roles(iroles), faction(ifaction), spec(ispec)
+
     {
         for (uint8 i = 0; i != BOT_INVENTORY_SIZE; ++i)
             equips[i] = 0;
     }
+
     NpcBotData(NpcBotData const&);
+
+    /*player_nocbot*/
+    NpcBotData(uint32 iowner,uint32 ientry,uint32 iroles, uint32 ifaction, uint8 ispec = 1) : owner(iowner),entry(ientry),
+       roles(iroles), faction(ifaction), spec(ispec)
+    {
+        for (uint8 i = 0; i != BOT_INVENTORY_SIZE; ++i)
+            equips[i] = 0;
+    }
+    /*player_nocbot*/
 };
 
 struct NpcBotAppearanceData
 {
     friend class BotDataMgr;
     friend struct WanderingBotsGenerator;
+
 public:
     uint8 gender;
     uint8 skin;
@@ -79,8 +96,12 @@ public:
     uint8 hair;
     uint8 haircolor;
     uint8 features;
+
 private:
-    explicit NpcBotAppearanceData() {}
+    explicit NpcBotAppearanceData()
+    {
+    }
+
     NpcBotAppearanceData(NpcBotAppearanceData const&);
 };
 
@@ -88,32 +109,43 @@ struct NpcBotExtras
 {
     friend class BotDataMgr;
     friend struct WanderingBotsGenerator;
+
 public:
     uint8 race;
     uint8 bclass;
+
 private:
-    explicit NpcBotExtras() {}
+    explicit NpcBotExtras()
+    {
+    }
+
     NpcBotExtras(NpcBotExtras const&);
 };
 
 struct NpcBotTransmogData
 {
     friend class BotDataMgr;
+
 public:
-    std::pair<uint32 /*item_id*/, int32 /*fake_id*/> transmogs[BOT_TRANSMOG_INVENTORY_SIZE];
+    std::pair<uint32 /*item_id*/, int32 /*fake_id*/> transmogs[
+        BOT_TRANSMOG_INVENTORY_SIZE];
+
 private:
     explicit NpcBotTransmogData()
     {
         for (uint8 i = 0; i != BOT_TRANSMOG_INVENTORY_SIZE; ++i)
-            transmogs[i] = { 0, -1 };
+            transmogs[i] = {0, -1};
     }
+
     NpcBotTransmogData(NpcBotTransmogData const&);
 };
 
 struct NpcBotStats
 {
 public:
-    NpcBotStats() {}
+    NpcBotStats()
+    {
+    }
 
     uint32 entry;
     uint32 maxhealth;
@@ -146,7 +178,11 @@ public:
 
 typedef std::set<Creature const*> NpcBotRegistry;
 
-struct BotBankItemCompare{ bool operator()(Item const* item1, Item const* item2) const; };
+struct BotBankItemCompare
+{
+    bool operator()(Item const* item1, Item const* item2) const;
+};
+
 typedef std::multiset<Item*, BotBankItemCompare> BotBankItemContainer;
 
 constexpr uint8 ITEM_SORTING_LEVEL_STEP = 5;
@@ -158,70 +194,124 @@ typedef std::array<ItemPerSlot, BOT_CLASS_END> ItemPerBotClassMap;
 
 class BotDataMgr
 {
-    public:
-        static void Update(uint32 diff);
 
-        static void LoadNpcBots(bool spawn = true);
-        static void LoadNpcBotGroupData();
-        static void LoadNpcBotGearStorage();
+    //------------------------------------玩家独立技能机器人
+public:
+    //todo 加上读取幻化数据 和初始化完成的标记
+    static void Player_LoadNpcBots();
+    static uint32 Player_MapKey(uint32 player_guid, uint32 entry);
+    static bool Player_AllBotsLoaded();
 
-        static void AddNpcBotData(uint32 entry, uint32 roles, uint8 spec, uint32 faction);
-        static NpcBotData const* SelectNpcBotData(uint32 entry);
-        static void UpdateNpcBotData(uint32 entry, NpcBotDataUpdateType updateType, void* data = nullptr);
-        static void UpdateNpcBotDataAll(uint32 playerGuid, NpcBotDataUpdateType updateType, void* data = nullptr);
-        static void SaveNpcBotStats(NpcBotStats const* stats);
+    /*bot数据*/
+    static void  Player_AddNpcBotData(uint32 player_guid,uint32 entry, uint32 roles, uint8 spec,uint32 faction);
+    static NpcBotData const*  Player_SelectNpcBotData(uint32 player_guid,uint32 entry);
+    static void  Player_UpdateNpcBotData(uint32 player_guid,uint32 entry, NpcBotDataUpdateType updateType,void* data = nullptr);
+    static void  Player_UpdateNpcBotDataAll(uint32 playerGuid,NpcBotDataUpdateType updateType,void* data = nullptr);
+    static void  Player_SaveNpcBotStats(uint32 player_guid,NpcBotStats const* stats);
 
-        static NpcBotAppearanceData const* SelectNpcBotAppearance(uint32 entry);
-        static NpcBotExtras const* SelectNpcBotExtras(uint32 entry);
+    /*幻化*/
+    static NpcBotTransmogData const* Player_SelectNpcBotTransmogs(uint32 player_guid,uint32 entry);
+    static void Player_UpdateNpcBotTransmogData(uint32 player_guid,uint32 entry, uint8 slot,uint32 item_id, int32 fake_id,bool update_db = true);
+    static void Player_ResetNpcBotTransmogData(uint32 player_guid,uint32 entry, bool update_db = true);
 
-        static NpcBotTransmogData const* SelectNpcBotTransmogs(uint32 entry);
-        static void UpdateNpcBotTransmogData(uint32 entry, uint8 slot, uint32 item_id, int32 fake_id, bool update_db = true);
-        static void ResetNpcBotTransmogData(uint32 entry, bool update_db = true);
+    static ObjectGuid Player_GetNPCBotGuid(uint32 player_guid,uint32 entry);
+    static std::vector<uint32> Player_GetExistingNPCBotIds();
+    static Creature const* Player_FindBot(uint32 player_guid,uint32 entry);
 
-        static bool AllBotsLoaded();
+    static Creature const* Player_FindBot(uint32 player_guid,std::string_view name, LocaleConstant loc, std::vector<uint32> const* not_ids =nullptr);
+    static uint8 Player_GetOwnedBotsCount(ObjectGuid owner_guid, uint32 class_mask = 0);
+    static Creature const* FindBotByGuid(ObjectGuid guid);
+    //------------------------------------玩家独立技能机器人
 
-        static void RegisterBot(Creature const* bot);
-        static void UnregisterBot(Creature const* bot);
-        static Creature const* FindBot(uint32 entry);
-        static Creature const* FindBot(std::string_view name, LocaleConstant loc, std::vector<uint32> const* not_ids = nullptr);
-        static NpcBotRegistry const& GetExistingNPCBots();
-        static void GetNPCBotGuidsByOwner(std::vector<ObjectGuid> &guids_vec, ObjectGuid owner_guid);
-        static ObjectGuid GetNPCBotGuid(uint32 entry);
-        static std::vector<uint32> GetExistingNPCBotIds();
-        static uint8 GetOwnedBotsCount(ObjectGuid owner_guid, uint32 class_mask = 0);
+public:
+    static void Update(uint32 diff);
 
-        static void DespawnWandererBot(uint32 entry);
-        static void LoadWanderMap(bool reload = false);
-        static void GenerateWanderingBots();
-        static bool GenerateBattlegroundBots(Player const* groupLeader, Group const* group, BattlegroundQueue* queue, PvPDifficultyEntry const* bracketEntry, GroupQueueInfo const* gqinfo);
-        static void CreateWanderingBotsSortedGear();
-        static ItemPerBotClassMap const& GetWanderingBotsSortedGearMap();
-        static Item* GenerateWanderingBotItem(uint8 slot, uint8 botclass, uint8 level, std::function<bool(ItemTemplate const*)>&& check);
-        static bool GenerateWanderingBotItemEnchants(Item* item, uint8 slot, uint8 spec);
-        static CreatureTemplate const* GetBotExtraCreatureTemplate(uint32 entry);
-        static EquipmentInfo const* GetBotEquipmentInfo(uint32 entry);
+    static void LoadNpcBots(bool spawn = true);
+    static void LoadNpcBotGroupData();
+    static void LoadNpcBotGearStorage();
 
-        static uint8 GetLevelBonusForBotRank(uint32 rank);
-        static uint8 GetMinLevelForMapId(uint32 mapId);
-        static uint8 GetMaxLevelForMapId(uint32 mapId);
-        static uint8 GetMinLevelForBotClass(uint8 m_class);
-        static int32 GetBotBaseReputation(Creature const* bot, FactionEntry const* factionEntry);
-        static TeamId GetTeamIdForFaction(uint32 factionTemplateId);
-        static uint32 GetTeamForFaction(uint32 factionTemplateId);
-        static bool IsWanderNodeAvailableForBotFaction(WanderNode const* wp, uint32 factionTemplateId, bool teleport);
-        static WanderNode const* GetNextWanderNode(WanderNode const* curNode, WanderNode const* lastNode, Position const* fromPos, Creature const* bot, uint8 lvl, bool random);
-        static WanderNode const* GetClosestWanderNode(WorldLocation const* loc);
+    static void AddNpcBotData(uint32 entry, uint32 roles, uint8 spec,uint32 faction);
+    static NpcBotData const* SelectNpcBotData(uint32 entry);
+    static void UpdateNpcBotData(uint32 entry, NpcBotDataUpdateType updateType,void* data = nullptr);
+    static void UpdateNpcBotDataAll(uint32 playerGuid,NpcBotDataUpdateType updateType,void* data = nullptr);
+    static void SaveNpcBotStats(NpcBotStats const* stats);
 
-        static BotBankItemContainer const* GetBotBankItems(ObjectGuid playerGuid);
-        static Item* WithdrawBotBankItem(ObjectGuid playerGuid, ObjectGuid::LowType itemGuidLow);
-        static void DepositBotBankItem(ObjectGuid playerGuid, Item* item);
-        static void SaveNpcBotStoredGear(ObjectGuid playerGuid, CharacterDatabaseTransaction trans);
+    static NpcBotAppearanceData const* SelectNpcBotAppearance(uint32 entry);
+    static NpcBotExtras const* SelectNpcBotExtras(uint32 entry);
 
-        static std::shared_mutex* GetLock();
+    static NpcBotTransmogData const* SelectNpcBotTransmogs(uint32 entry);
+    static void UpdateNpcBotTransmogData(uint32 entry, uint8 slot,
+                                         uint32 item_id, int32 fake_id,
+                                         bool update_db = true);
+    static void ResetNpcBotTransmogData(uint32 entry, bool update_db = true);
 
-    private:
-        BotDataMgr() {}
-        BotDataMgr(BotDataMgr const&);
+    static bool AllBotsLoaded();
+
+    static void RegisterBot(Creature const* bot);
+    static void UnregisterBot(Creature const* bot);
+    static Creature const* FindBot(uint32 entry);
+    static Creature const* FindBot(std::string_view name, LocaleConstant loc,
+                                   std::vector<uint32> const* not_ids =
+                                       nullptr);
+    static NpcBotRegistry const& GetExistingNPCBots();
+    static void GetNPCBotGuidsByOwner(std::vector<ObjectGuid>& guids_vec,
+                                      ObjectGuid owner_guid);
+    static ObjectGuid GetNPCBotGuid(uint32 entry);
+    static std::vector<uint32> GetExistingNPCBotIds();
+    static uint8
+    GetOwnedBotsCount(ObjectGuid owner_guid, uint32 class_mask = 0);
+
+    static void DespawnWandererBot(uint32 entry);
+    static void LoadWanderMap(bool reload = false);
+    static void GenerateWanderingBots();
+    static bool GenerateBattlegroundBots(Player const* groupLeader,
+                                         Group const* group,
+                                         BattlegroundQueue* queue,
+                                         PvPDifficultyEntry const* bracketEntry,
+                                         GroupQueueInfo const* gqinfo);
+    static void CreateWanderingBotsSortedGear();
+    static ItemPerBotClassMap const& GetWanderingBotsSortedGearMap();
+    static Item* GenerateWanderingBotItem(uint8 slot, uint8 botclass,
+                                          uint8 level,
+                                          std::function<bool(
+                                              ItemTemplate const*)>&& check);
+    static bool GenerateWanderingBotItemEnchants(
+        Item* item, uint8 slot, uint8 spec);
+    static CreatureTemplate const* GetBotExtraCreatureTemplate(uint32 entry);
+    static EquipmentInfo const* GetBotEquipmentInfo(uint32 entry);
+
+    static uint8 GetLevelBonusForBotRank(uint32 rank);
+    static uint8 GetMinLevelForMapId(uint32 mapId);
+    static uint8 GetMaxLevelForMapId(uint32 mapId);
+    static uint8 GetMinLevelForBotClass(uint8 m_class);
+    static int32 GetBotBaseReputation(Creature const* bot,
+                                      FactionEntry const* factionEntry);
+    static TeamId GetTeamIdForFaction(uint32 factionTemplateId);
+    static uint32 GetTeamForFaction(uint32 factionTemplateId);
+    static bool IsWanderNodeAvailableForBotFaction(
+        WanderNode const* wp, uint32 factionTemplateId, bool teleport);
+    static WanderNode const* GetNextWanderNode(WanderNode const* curNode,
+                                               WanderNode const* lastNode,
+                                               Position const* fromPos,
+                                               Creature const* bot, uint8 lvl,
+                                               bool random);
+    static WanderNode const* GetClosestWanderNode(WorldLocation const* loc);
+
+    static BotBankItemContainer const* GetBotBankItems(ObjectGuid playerGuid);
+    static Item* WithdrawBotBankItem(ObjectGuid playerGuid,
+                                     ObjectGuid::LowType itemGuidLow);
+    static void DepositBotBankItem(ObjectGuid playerGuid, Item* item);
+    static void SaveNpcBotStoredGear(ObjectGuid playerGuid,
+                                     CharacterDatabaseTransaction trans);
+
+    static std::shared_mutex* GetLock();
+
+private:
+    BotDataMgr()
+    {
+    }
+
+    BotDataMgr(BotDataMgr const&);
 };
 
 #endif

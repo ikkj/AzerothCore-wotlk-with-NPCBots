@@ -12,6 +12,8 @@
 #include <tuple>
 #include <unordered_set>
 
+#include "botdatamgr.h"
+
 /*
 NpcBot System by Trickerer (onlysuffering@gmail.com)
 */
@@ -46,6 +48,28 @@ class WanderNode;
 
 class bot_ai : public CreatureAI
 {
+    /*player_npcbot*/
+    public:
+        NpcBotData const* NewSelectNpcBotData() const;
+        void NewUpdateNpcBotData(NpcBotDataUpdateType updateType, void* data) const;
+        NpcBotTransmogData const* NewSelectNpcBotTransmogs() const;
+        uint8 NewGetOwnedBotsCount(ObjectGuid owner_guid,uint32 class_mask= 0) const;
+        void NewUpdateNpcBotTransmogData(uint8 slot,uint32 item_id, int32 fake_id,bool update_db = true) const;
+        void NewSaveNpcBotStats(NpcBotStats const* stats) const;
+        void Player_SetAttackTarget(ObjectGuid guid)
+        {
+            Player_target = guid;
+        };
+
+        void Player_ResetAttackTarget()
+        {
+            Player_target = ObjectGuid::Empty;
+        }
+private:
+        ObjectGuid Player_target = ObjectGuid::Empty;
+        bool waitDestory = false;
+    /*player_npcbot end*/
+
     public:
         virtual ~bot_ai();
 
@@ -355,6 +379,8 @@ class bot_ai : public CreatureAI
 
         virtual void ReduceCD(uint32 /*diff*/) {}
         bool GlobalUpdate(uint32 diff);
+
+        bool CheckBotGroup();
 
         virtual bool HealTarget(Unit* /*target*/, uint32 /*diff*/) { return false; }
         virtual bool BuffTarget(Unit* /*target*/, uint32 /*diff*/) { return false; }

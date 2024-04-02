@@ -39,9 +39,11 @@ typedef std::unordered_map<uint32 /*entry*/, NpcBotAppearanceData*> NpcBotAppear
 typedef std::unordered_map<uint32 /*entry*/, NpcBotExtras*> NpcBotExtrasMap;
 typedef std::unordered_map<uint32 /*entry*/, NpcBotTransmogData*> NpcBotTransmogDataMap;
 NpcBotDataMap _botsData;
+NpcBotDataMap _playerBotsData;
 NpcBotAppearanceDataMap _botsAppearanceData;
 NpcBotExtrasMap _botsExtras;
 NpcBotTransmogDataMap _botsTransmogData;
+NpcBotTransmogDataMap _playerbotsTransmogData;
 NpcBotRegistry _existingBots;
 
 std::map<uint32, uint8> _wpMinSpawnLevelPerMapId;
@@ -58,6 +60,7 @@ typedef std::unordered_map<ObjectGuid /*playerGuid*/, BotBankItemContainer> BotG
 BotGearStorageMap _botStoredGearMap;
 
 static bool allBotsLoaded = false;
+static bool Player_allBotsLoaded = false;
 
 static uint32 next_wandering_bot_spawn_delay = 0;
 
@@ -604,6 +607,565 @@ public:
 };
 #define sBotGen WanderingBotsGenerator::instance()
 
+/*Player_NpcBots*/
+void BotDataMgr::Player_LoadNpcBots()
+{
+    QueryResult result;
+    Field* field;
+    int index ;
+    //                                       0      1      2      3     4        5          6          7          8          9               10          11          12         13
+    result = CharacterDatabase.Query("SELECT entry, owner, roles, spec, faction, equipMhEx, equipOhEx, equipRhEx, equipHead, equipShoulders, equipChest, equipWaist, equipLegs, equipFeet,"
+     //   14          15          16         17         18            19            20             21             22         23
+         "equipWrist, equipHands, equipBack, equipBody, equipFinger1, equipFinger2, equipTrinket1, equipTrinket2, equipNeck, spells_disabled FROM characters_player_npcbot");
+
+    if (result)
+    {
+        uint32 data_counter = 0;
+
+        do
+        {
+             field = result->Fetch();
+             index = 0;
+            uint32 entry =          field[  index].Get<uint32>();
+            uint32 owner =          field[  1].Get<uint32>();
+
+            if(!owner)
+            {
+                LOG_ERROR("server.loading", "玩家NPCBOT 存在无效数据 {}-{}",owner, entry);
+                continue;
+            }
+
+            if (!sObjectMgr->GetCreatureTemplate(entry))
+            {
+                LOG_ERROR("server.loading", "机器人 {} 不存在 `creature_template` 表中! 跳过.", entry);
+                continue;
+            }
+
+            //load data
+            NpcBotData* PlayerBotData = new NpcBotData(0, 0);
+            PlayerBotData->owner =        field[++index].Get<uint32>();
+            PlayerBotData->roles =        field[++index].Get<uint32>();
+            PlayerBotData->spec =         field[++index].Get<uint8>();
+            PlayerBotData->faction =      field[++index].Get<uint32>();
+
+            for (uint8 i = BOT_SLOT_MAINHAND; i != BOT_INVENTORY_SIZE; ++i)
+                PlayerBotData->equips[i] = field[++index].Get<uint32>();
+
+            std::string disabled_spells_str = field[++index].Get<std::string>();
+            if (!disabled_spells_str.empty())
+            {
+                std::vector<std::string_view> tok = Acore::Tokenize(disabled_spells_str, ' ', false);
+                for (std::vector<std::string_view>::size_type i = 0; i != tok.size(); ++i)
+                    PlayerBotData->disabled_spells.insert(*(Acore::StringTo<uint32>(tok[i])));
+            }
+
+            _playerBotsData[Player_MapKey(PlayerBotData->owner,entry)] = PlayerBotData;
+            ++data_counter;
+
+        } while (result->NextRow());
+
+        LOG_INFO("server.loading", ">> 加载 {} 条玩家机器人数据", data_counter);
+
+    }else
+    {
+        LOG_INFO("server.loading", ">> 没有玩家机器人数据！");
+    }
+
+
+    result = CharacterDatabase.Query("SELECT entry, slot, item_id, fake_id,owner FROM characters_player_npcbot_transmog");
+    if (result)
+    {
+        do
+        {
+            field = result->Fetch();
+            index = 0;
+            uint32 entry =          field[  index].Get<uint32>();
+            uint32 owner =          field[  4].Get<uint32>();
+            if(owner == 0)
+            {
+                LOG_ERROR("server.loading", "玩家NPCBOT 存在无效幻化数据 {}-{}",owner, entry);
+                continue;
+            }
+
+            if (!sObjectMgr->GetCreatureTemplate(entry))
+            {
+                LOG_ERROR("server.loading", "Bot entry {} has transmog data but doesn't exist in `creature_template` table! Skipped.", entry);
+                continue;
+            }
+
+            if (_playerbotsTransmogData.count(Player_MapKey(owner,entry)) == 0)
+                _playerbotsTransmogData[Player_MapKey(owner,entry)] = new NpcBotTransmogData();
+
+            //load data
+            uint8 slot =            field[++index].Get<uint8>();
+            uint32 item_id =        field[++index].Get<uint32>();
+            int32 fake_id =         field[++index].Get<int32>();
+
+            _playerbotsTransmogData[Player_MapKey(owner,entry)]->transmogs[slot] = { item_id, fake_id };
+
+        } while (result->NextRow());
+
+        LOG_INFO("server.loading", ">> 玩家机器人幻化数据加载完毕");
+    }
+    else
+        LOG_INFO("server.loading", ">> 没有玩家机器人幻化数据！");
+
+
+    Player_allBotsLoaded = true;
+}
+
+uint32 BotDataMgr::Player_MapKey(uint32 player_guid, uint32 entry)
+{
+    return std::atoi((std::to_string(player_guid)+std::to_string(entry)).c_str());
+}
+
+bool BotDataMgr::Player_AllBotsLoaded()
+{
+    return Player_allBotsLoaded;
+}
+
+void BotDataMgr::Player_AddNpcBotData(uint32 player_guid, uint32 entry,
+                                      uint32 roles, uint8 spec, uint32 faction)
+{
+    //botData must be allocated explicitly
+
+    NpcBotDataMap::iterator itr = _playerBotsData.find(Player_MapKey(player_guid,entry));
+    if (itr == _playerBotsData.end())
+    {
+        NpcBotData* botData = new NpcBotData(player_guid,entry,roles, faction, spec);
+        _playerBotsData[Player_MapKey(player_guid,entry)] = botData;
+
+        CharacterDatabasePreparedStatement* bstmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_PLAYER_NPCBOT);
+        //"INSERT INTO characters_npcbot (entry, roles, spec, faction,owner) VALUES (?, ?, ?, ?,?)", CONNECTION_ASYNC);
+        bstmt->SetData(0, entry);
+        bstmt->SetData(1, roles);
+        bstmt->SetData(2, spec);
+        bstmt->SetData(3, faction);
+        bstmt->SetData(4, player_guid);
+        CharacterDatabase.Execute(bstmt);
+
+        return;
+    }
+
+    LOG_ERROR("sql.sql", "BotMgr::AddNpcBotData(): trying to add new data but entry already exists! entry = {}", entry);
+
+}
+
+NpcBotData const* BotDataMgr::Player_SelectNpcBotData(uint32 player_guid,uint32 entry)
+{
+    NpcBotDataMap::const_iterator itr = _playerBotsData.find(Player_MapKey(player_guid,entry));
+    return itr != _playerBotsData.cend() ? itr->second : nullptr;
+}
+
+void BotDataMgr::Player_UpdateNpcBotData(uint32 player_guid, uint32 entry,NpcBotDataUpdateType updateType, void* data)
+{
+    NpcBotDataMap::iterator itr = _playerBotsData.find(Player_MapKey(player_guid,entry));
+    if (itr == _playerBotsData.end())
+        return;
+
+    CharacterDatabasePreparedStatement* bstmt;
+    switch (updateType)
+    {
+        case NPCBOT_UPDATE_OWNER:
+            if (itr->second->owner == *(uint32*)(data))
+                break;
+            itr->second->owner = *(uint32*)(data);
+            bstmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_PLAYER_NPCBOT_OWNER);
+            //"UPDATE characters_player_npcbot SET owner = ? WHERE entry = ? AND owner = ?", CONNECTION_ASYNC
+            bstmt->SetData(0, itr->second->owner);
+            bstmt->SetData(1, entry);
+            bstmt->SetData(2, player_guid);
+            CharacterDatabase.Execute(bstmt);
+            //break; //no break: erase transmogs
+
+        [[fallthrough]];
+        case NPCBOT_UPDATE_TRANSMOG_ERASE:
+            bstmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_PLAYER_NPCBOT_TRANSMOG);
+            //"DELETE FROM characters_player_npcbot_transmog WHERE entry = ? AND owner=?", CONNECTION_ASYNC
+            bstmt->SetData(0, entry);
+            bstmt->SetData(1, player_guid);
+            CharacterDatabase.Execute(bstmt);
+            break;
+        case NPCBOT_UPDATE_ROLES:
+            itr->second->roles = *(uint32*)(data);
+            bstmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_PLAYER_NPCBOT_ROLES);
+            //"UPDATE characters_player_npcbot SET roles = ? WHERE entry = ? AND owner = ?", CONNECTION_ASYNC
+            bstmt->SetData(0, itr->second->roles);
+            bstmt->SetData(1, entry);
+            bstmt->SetData(2, player_guid);
+            CharacterDatabase.Execute(bstmt);
+            break;
+
+        case NPCBOT_UPDATE_SPEC:
+            itr->second->spec = *(uint8*)(data);
+            bstmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_PLAYER_NPCBOT_SPEC);
+            //"UPDATE characters_player_npcbot SET spec = ? WHERE entry = ? AND owner = ?", CONNECTION_ASYNCH
+            bstmt->SetData(0, itr->second->spec);
+            bstmt->SetData(1, entry);
+            bstmt->SetData(2, player_guid);
+            CharacterDatabase.Execute(bstmt);
+            break;
+        case NPCBOT_UPDATE_FACTION:
+            itr->second->faction = *(uint32*)(data);
+            bstmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_PLAYER_NPCBOT_FACTION);
+            //"UPDATE characters_player_npcbot SET faction = ? WHERE entry = ? AND owner =?", CONNECTION_ASYNCH
+            bstmt->SetData(0, itr->second->faction);
+            bstmt->SetData(1, entry);
+            bstmt->SetData(2, player_guid);
+            CharacterDatabase.Execute(bstmt);
+            break;
+        case NPCBOT_UPDATE_DISABLED_SPELLS:
+        {
+            NpcBotData::DisabledSpellsContainer const* spells = (NpcBotData::DisabledSpellsContainer const*)(data);
+            std::ostringstream ss;
+            for (NpcBotData::DisabledSpellsContainer::const_iterator citr = spells->begin(); citr != spells->end(); ++citr)
+                ss << (*citr) << ' ';
+
+            bstmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_PLAYER_NPCBOT_DISABLED_SPELLS);
+            //"UPDATE characters_player_npcbot SET spells_disabled = ? WHERE entry = ? AND owner =?", CONNECTION_ASYNCH
+            bstmt->SetData(0, ss.str());
+            bstmt->SetData(1, entry);
+            bstmt->SetData(2, player_guid);
+            CharacterDatabase.Execute(bstmt);
+            break;
+        }
+        case NPCBOT_UPDATE_EQUIPS:
+        {
+            Item** items = (Item**)(data);
+
+            EquipmentInfo const* einfo = BotDataMgr::GetBotEquipmentInfo(entry);
+
+            CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
+
+            bstmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_PLAYER_NPCBOT_EQUIP);
+            //"UPDATE character_npcbot SET equipMhEx = ?, equipOhEx = ?, equipRhEx = ?, equipHead = ?, equipShoulders = ?, equipChest = ?, equipWaist = ?, equipLegs = ?,
+            //equipFeet = ?, equipWrist = ?, equipHands = ?, equipBack = ?, equipBody = ?, equipFinger1 = ?, equipFinger2 = ?, equipTrinket1 = ?, equipTrinket2 = ?, equipNeck = ? WHERE entry = ?", CONNECTION_ASYNC
+            CharacterDatabasePreparedStatement* stmt;
+            uint8 k;
+            for (k = BOT_SLOT_MAINHAND; k != BOT_INVENTORY_SIZE; ++k)
+            {
+                itr->second->equips[k] = items[k] ? items[k]->GetGUID().GetCounter() : 0;
+                if (Item const* botitem = items[k])
+                {
+                    bool standard = false;
+                    for (uint8 i = 0; i != MAX_EQUIPMENT_ITEMS; ++i)
+                    {
+                        if (einfo->ItemEntry[i] == botitem->GetEntry())
+                        {
+                            itr->second->equips[k] = 0;
+                            bstmt->SetData(k, uint32(0));
+                            standard = true;
+                            break;
+                        }
+                    }
+                    if (standard)
+                        continue;
+
+                    uint8 index = 0;
+                    stmt = CharacterDatabase.GetPreparedStatement(CHAR_REP_ITEM_INSTANCE);
+                    //REPLACE INTO item_instance (itemEntry, owner_guid, creatorGuid, giftCreatorGuid, count, duration, charges, flags, enchantments, randomPropertyId, durability, playedTime, text, guid)
+                    //VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC : 0-13
+                    stmt->SetData(  index, botitem->GetEntry());
+                    stmt->SetData(++index, botitem->GetOwnerGUID().GetCounter());
+                    stmt->SetData(++index, botitem->GetGuidValue(ITEM_FIELD_CREATOR).GetCounter());
+                    stmt->SetData(++index, botitem->GetGuidValue(ITEM_FIELD_GIFTCREATOR).GetCounter());
+                    stmt->SetData(++index, botitem->GetCount());
+                    stmt->SetData(++index, botitem->GetUInt32Value(ITEM_FIELD_DURATION));
+
+                    std::ostringstream ssSpells;
+                    for (uint8 i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+                        ssSpells << botitem->GetSpellCharges(i) << ' ';
+                    stmt->SetData(++index, ssSpells.str());
+
+                    stmt->SetData(++index, botitem->GetUInt32Value(ITEM_FIELD_FLAGS));
+
+                    std::ostringstream ssEnchants;
+                    for (uint8 i = 0; i < MAX_ENCHANTMENT_SLOT; ++i)
+                    {
+                        ssEnchants << botitem->GetEnchantmentId(EnchantmentSlot(i)) << ' ';
+                        ssEnchants << botitem->GetEnchantmentDuration(EnchantmentSlot(i)) << ' ';
+                        ssEnchants << botitem->GetEnchantmentCharges(EnchantmentSlot(i)) << ' ';
+                    }
+                    stmt->SetData(++index, ssEnchants.str());
+
+                    stmt->SetData (++index, int16(botitem->GetItemRandomPropertyId()));
+                    stmt->SetData(++index, uint16(botitem->GetUInt32Value(ITEM_FIELD_DURABILITY)));
+                    stmt->SetData(++index, botitem->GetUInt32Value(ITEM_FIELD_CREATE_PLAYED_TIME));
+                    stmt->SetData(++index, botitem->GetText());
+                    stmt->SetData(++index, botitem->GetGUID().GetCounter());
+
+                    trans->Append(stmt);
+
+                    Item::DeleteFromInventoryDB(trans, botitem->GetGUID().GetCounter()); //prevent duplicates
+
+                    bstmt->SetData(k, botitem->GetGUID().GetCounter());
+                }
+                else
+                    bstmt->SetData(k, uint32(0));
+            }
+
+            bstmt->SetData(k, entry);
+            bstmt->SetData(k+1, player_guid);
+            trans->Append(bstmt);
+            CharacterDatabase.CommitTransaction(trans);
+            break;
+        }
+        case NPCBOT_UPDATE_ERASE:
+        {
+            NpcBotDataMap::iterator bitr = _playerBotsData.find(Player_MapKey(player_guid,entry));
+            ASSERT(bitr != _playerBotsData.end());
+            delete bitr->second;
+            _playerBotsData.erase(bitr);
+            // bstmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_PLAYER_NPCBOT);
+            // //"DELETE FROM characters_player_npcbot WHERE entry = ? AND owner = ?", CONNECTION_ASYNC
+            // bstmt->SetData(0, entry);
+            // bstmt->SetData(1, player_guid);
+            // CharacterDatabase.Execute(bstmt);
+            break;
+        }
+        default:
+            LOG_ERROR("sql.sql", "BotDataMgr:UpdateNpcBotData: unhandled updateType {}", uint32(updateType));
+            break;
+    }
+}
+
+void BotDataMgr::Player_UpdateNpcBotDataAll(uint32 playerGuid, NpcBotDataUpdateType updateType, void* data)
+{
+    CharacterDatabasePreparedStatement* bstmt;
+    switch (updateType)
+    {
+    case NPCBOT_UPDATE_OWNER:
+        bstmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_PLAYER_NPCBOT_OWNER_ALL);
+        //"UPDATE characters_player_npcbot SET owner = ? WHERE owner = ?", CONNECTION_ASYNC
+        bstmt->SetData(0, *(uint32*)(data));
+        bstmt->SetData(1, playerGuid);
+        CharacterDatabase.Execute(bstmt);
+        //break; //no break: erase transmogs
+        [[fallthrough]];
+    case NPCBOT_UPDATE_TRANSMOG_ERASE:
+        bstmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_PLAYER_NPCBOT_TRANSMOG_ALL);
+        //"DELETE FROM characters_player_npcbot_transmog WHERE owner = ?", CONNECTION_ASYNC
+        bstmt->SetData(0, playerGuid);
+        CharacterDatabase.Execute(bstmt);
+        break;
+        //case NPCBOT_UPDATE_ROLES:
+        //case NPCBOT_UPDATE_FACTION:
+        //case NPCBOT_UPDATE_EQUIPS:
+    default:
+        LOG_ERROR("sql.sql", "BotDataMgr:UpdateNpcBotDataAll: unhandled updateType {}", uint32(updateType));
+        break;
+    }
+}
+
+void BotDataMgr::Player_SaveNpcBotStats(uint32 player_guid,NpcBotStats const* stats)
+{
+    CharacterDatabasePreparedStatement* bstmt = CharacterDatabase.GetPreparedStatement(CHAR_REP_PLAYER_NPCBOT_STATS);
+    //"REPLACE INTO characters_npcbot_stats
+    //(entry, maxhealth, maxpower, strength, agility, stamina, intellect, spirit, armor, defense,
+    //resHoly, resFire, resNature, resFrost, resShadow, resArcane, blockPct, dodgePct, parryPct, critPct,
+    //attackPower, spellPower, spellPen, hastePct, hitBonusPct, expertise, armorPenPct,owner) VALUES
+    //(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC
+
+    uint32 index = 0;
+    bstmt->SetData(  index, stats->entry);
+    bstmt->SetData(++index, stats->maxhealth);
+    bstmt->SetData(++index, stats->maxpower);
+    bstmt->SetData(++index, stats->strength);
+    bstmt->SetData(++index, stats->agility);
+    bstmt->SetData(++index, stats->stamina);
+    bstmt->SetData(++index, stats->intellect);
+    bstmt->SetData(++index, stats->spirit);
+    bstmt->SetData(++index, stats->armor);
+    bstmt->SetData(++index, stats->defense);
+    bstmt->SetData(++index, stats->resHoly);
+    bstmt->SetData(++index, stats->resFire);
+    bstmt->SetData(++index, stats->resNature);
+    bstmt->SetData(++index, stats->resFrost);
+    bstmt->SetData(++index, stats->resShadow);
+    bstmt->SetData(++index, stats->resArcane);
+    bstmt->SetData(++index, stats->blockPct);
+    bstmt->SetData(++index, stats->dodgePct);
+    bstmt->SetData(++index, stats->parryPct);
+    bstmt->SetData(++index, stats->critPct);
+    bstmt->SetData(++index, stats->attackPower);
+    bstmt->SetData(++index, stats->spellPower);
+    bstmt->SetData(++index, stats->spellPen);
+    bstmt->SetData(++index, stats->hastePct);
+    bstmt->SetData(++index, stats->hitBonusPct);
+    bstmt->SetData(++index, stats->expertise);
+    bstmt->SetData(++index, stats->armorPenPct);
+    bstmt->SetData(++index, player_guid);
+
+    CharacterDatabase.Execute(bstmt);
+}
+
+NpcBotTransmogData const* BotDataMgr::Player_SelectNpcBotTransmogs(uint32 player_guid,uint32 entry)
+{
+    NpcBotTransmogDataMap::const_iterator itr = _playerbotsTransmogData.find(Player_MapKey(player_guid,entry));
+    return itr != _playerbotsTransmogData.cend() ? itr->second : nullptr;
+}
+
+void BotDataMgr::Player_UpdateNpcBotTransmogData(uint32 player_guid, uint32 entry, uint8 slot, uint32 item_id, int32 fake_id, bool update_db)
+{
+    ASSERT(slot < BOT_TRANSMOG_INVENTORY_SIZE);
+
+    NpcBotTransmogDataMap::const_iterator itr = _playerbotsTransmogData.find(entry);
+    if (itr == _playerbotsTransmogData.cend())
+        _playerbotsTransmogData[Player_MapKey(player_guid,entry)] = new NpcBotTransmogData();
+
+    _playerbotsTransmogData[Player_MapKey(player_guid,entry)]->transmogs[slot] = { item_id, fake_id };
+
+    if (update_db)
+    {
+        CharacterDatabasePreparedStatement* bstmt = CharacterDatabase.GetPreparedStatement(CHAR_REP_PLAYER_NPCBOT_TRANSMOG);
+        //"REPLACE INTO characters_player_npcbot_transmog (entry, slot, item_id, fake_id,owner) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC
+        bstmt->SetData(0, entry);
+        bstmt->SetData(1, slot);
+        bstmt->SetData(2, item_id);
+        bstmt->SetData(3, fake_id);
+        bstmt->SetData(4, player_guid);
+        CharacterDatabase.Execute(bstmt);
+    }
+}
+
+void BotDataMgr::Player_ResetNpcBotTransmogData(uint32 player_guid,uint32 entry, bool update_db)
+{
+    NpcBotTransmogDataMap::const_iterator itr = _playerbotsTransmogData.find(Player_MapKey(player_guid,entry));
+    if (itr == _playerbotsTransmogData.cend())
+        return;
+
+    if (update_db)
+    {
+        CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
+        for (uint8 i = 0; i != BOT_TRANSMOG_INVENTORY_SIZE; ++i)
+        {
+            if (_playerbotsTransmogData[Player_MapKey(player_guid,entry)]->transmogs[i].first == 0 && _playerbotsTransmogData[Player_MapKey(player_guid,entry)]->transmogs[i].second == -1)
+                continue;
+
+            CharacterDatabasePreparedStatement* bstmt = CharacterDatabase.GetPreparedStatement(CHAR_REP_PLAYER_NPCBOT_TRANSMOG);
+            //"REPLACE INTO characters_player_npcbot_transmog (entry, slot, item_id, fake_id,owner) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC
+            bstmt->SetData(0, entry);
+            bstmt->SetData(1, i);
+            bstmt->SetData(2, 0);
+            bstmt->SetData(3, -1);
+            bstmt->SetData(4, player_guid);
+            trans->Append(bstmt);
+        }
+
+        if (trans->GetSize() > 0)
+            CharacterDatabase.CommitTransaction(trans);
+    }
+
+    for (uint8 i = 0; i != BOT_TRANSMOG_INVENTORY_SIZE; ++i)
+        _playerbotsTransmogData[Player_MapKey(player_guid,entry)]->transmogs[i] = { 0, -1 };
+}
+
+ObjectGuid BotDataMgr::Player_GetNPCBotGuid(uint32 player_guid, uint32 entry)
+{
+    ASSERT(Player_AllBotsLoaded());
+
+    std::shared_lock<std::shared_mutex> lock(*GetLock());
+
+    for (NpcBotRegistry::const_iterator ci = _existingBots.cbegin(); ci != _existingBots.cend(); ++ci)
+    {
+        if((*ci)->IsPlayerNpcBot())
+        {
+            if ((*ci)->GetEntry() == entry && (*ci)->GetPlayerNpcBotOwnerId() == player_guid )
+                return (*ci)->GetGUID();
+        }
+    }
+
+    return ObjectGuid::Empty;
+}
+
+std::vector<uint32> BotDataMgr::Player_GetExistingNPCBotIds()
+{
+    ASSERT(Player_AllBotsLoaded());
+
+    std::vector<uint32> existing_ids;
+    existing_ids.reserve(_playerBotsData.size());
+    for (decltype(_playerBotsData)::value_type const& bot_data_pair : _playerBotsData)
+        existing_ids.push_back(bot_data_pair.second->entry);
+
+    return existing_ids;
+}
+
+
+Creature const* BotDataMgr::Player_FindBot(uint32 player_guid, uint32 entry)
+{
+    std::shared_lock<std::shared_mutex> lock(*GetLock());
+
+    for (NpcBotRegistry::const_iterator ci = _existingBots.cbegin(); ci != _existingBots.cend(); ++ci)
+    {
+        if((*ci)->IsPlayerNpcBot())
+        {
+            if ((*ci)->GetEntry() == entry && (*ci)->GetPlayerNpcBotOwnerId() == player_guid)
+                return *ci;
+        }
+    }
+    return nullptr;
+}
+
+Creature const* BotDataMgr::Player_FindBot(uint32 player_guid,std::string_view name, LocaleConstant loc,std::vector<uint32> const* not_ids)
+{
+    std::wstring wname;
+    if (Utf8toWStr(name, wname))
+    {
+        wstrToLower(wname);
+        std::shared_lock<std::shared_mutex> lock(*GetLock());
+        for (NpcBotRegistry::const_iterator ci = _existingBots.cbegin(); ci != _existingBots.cend(); ++ci)
+        {
+            if (not_ids && std::find(not_ids->cbegin(), not_ids->cend(), (*ci)->GetEntry()) != not_ids->cend())
+                continue;
+
+            if(!(*ci)->IsPlayerNpcBot())
+            {
+                continue;
+            }
+
+            std::string basename = (*ci)->GetName();
+            if (CreatureLocale const* creatureInfo = sObjectMgr->GetCreatureLocale((*ci)->GetEntry()))
+            {
+                if (creatureInfo->Name.size() > loc && !creatureInfo->Name[loc].empty())
+                    basename = creatureInfo->Name[loc];
+            }
+
+            std::wstring wbname;
+            if (!Utf8toWStr(basename, wbname))
+                continue;
+
+            wstrToLower(wbname);
+            if (wbname == wname && (*ci)->GetPlayerNpcBotOwnerId() == player_guid)
+                return *ci;
+        }
+    }
+
+    return nullptr;
+}
+
+uint8 BotDataMgr::Player_GetOwnedBotsCount(ObjectGuid owner_guid,uint32 class_mask)
+{
+    uint8 count = 0;
+    for (decltype(_playerBotsData)::value_type const& bdata : _playerBotsData)
+        if (bdata.second->owner == owner_guid.GetCounter() && (!class_mask || !!(class_mask & (1u << (_botsExtras[bdata.second->entry]->bclass - 1)))))
+            ++count;
+
+    return count;
+}
+
+Creature const* BotDataMgr::FindBotByGuid(ObjectGuid guid)
+{
+    std::shared_lock<std::shared_mutex> lock(*GetLock());
+
+    for (NpcBotRegistry::const_iterator ci = _existingBots.cbegin(); ci != _existingBots.cend(); ++ci)
+    {
+        if ((*ci)->GetGUID() == guid)
+            return *ci;
+    }
+    return nullptr;
+}
+
+/*Player_NpcBots end*/
 void BotDataMgr::Update(uint32 diff)
 {
     botSpawnEvents.Update(diff);
@@ -928,6 +1490,11 @@ void BotDataMgr::LoadNpcBots(bool spawn)
     }
     else
         LOG_INFO("server.loading", ">> Loaded 0 npcbots. Table `characters_npcbot` is empty!");
+
+
+    /*player_npcbot*/
+    Player_LoadNpcBots();
+    /*player_npcbot end*/
 
     allBotsLoaded = true;
 }
@@ -2632,8 +3199,7 @@ void BotDataMgr::UnregisterBot(Creature const* bot)
 {
     if (_existingBots.find(bot) == _existingBots.end())
     {
-        LOG_ERROR("entities.unit", "BotDataMgr::UnregisterBot: bot {} ({}) not found!",
-            bot->GetEntry(), bot->GetName().c_str());
+        LOG_ERROR("entities.unit", "BotDataMgr::UnregisterBot: bot {} ({}) {} not found!", bot->GetEntry(), bot->GetName().c_str(),bot->GetGUID().GetCounter());
         return;
     }
 
@@ -2698,8 +3264,15 @@ void BotDataMgr::GetNPCBotGuidsByOwner(std::vector<ObjectGuid> &guids_vec, Objec
 
     for (NpcBotRegistry::const_iterator ci = _existingBots.cbegin(); ci != _existingBots.cend(); ++ci)
     {
-        if (_botsData[(*ci)->GetEntry()]->owner == owner_guid.GetCounter())
-            guids_vec.push_back((*ci)->GetGUID());
+        if((*ci)->IsPlayerNpcBot())
+        {
+            if (_playerBotsData[Player_MapKey((*ci)->GetPlayerNpcBotOwnerId(),(*ci)->GetEntry())]->owner == owner_guid.GetCounter())
+                guids_vec.push_back((*ci)->GetGUID());
+        }else
+        {
+            if (_botsData[(*ci)->GetEntry()]->owner == owner_guid.GetCounter())
+                guids_vec.push_back((*ci)->GetGUID());
+        }
     }
 }
 
