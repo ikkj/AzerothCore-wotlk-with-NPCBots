@@ -1733,7 +1733,7 @@ namespace lfg
                 {
                     oldGroupGUID = group->GetGUID();
                     grp = group;
-                    grp->ConvertToLFG(false);
+                    grp->ConvertToLFG(true);
                     SetState(grp->GetGUID(), LFG_STATE_PROPOSAL);
                 }
 

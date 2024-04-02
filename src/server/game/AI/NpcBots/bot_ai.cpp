@@ -286,9 +286,78 @@ bot_ai::bot_ai(Creature* creature) : CreatureAI(creature)
     if (!IsTempBot())
         BotDataMgr::RegisterBot(me);
 }
+
+NpcBotData const* bot_ai::NewSelectNpcBotData() const
+{
+    if(me && me->IsPlayerNpcBot() )
+    {
+        return BotDataMgr::Player_SelectNpcBotData(me->GetPlayerNpcBotOwnerId(),me->GetEntry());
+    }else
+    {
+        return BotDataMgr::SelectNpcBotData(me->GetEntry());
+    }
+}
+
+void bot_ai::NewUpdateNpcBotData(NpcBotDataUpdateType updateType,void* data) const
+{
+    if(me && me->IsPlayerNpcBot())
+    {
+         BotDataMgr::Player_UpdateNpcBotData(me->GetPlayerNpcBotOwnerId(),me->GetEntry(),updateType,data);
+    }else
+    {
+        BotDataMgr::UpdateNpcBotData(me->GetEntry(), updateType, data);
+    }
+}
+
+NpcBotTransmogData const* bot_ai::NewSelectNpcBotTransmogs() const
+{
+    if(me && me->IsPlayerNpcBot())
+    {
+        return BotDataMgr::Player_SelectNpcBotTransmogs(me->GetPlayerNpcBotOwnerId(),me->GetEntry());
+    }else
+    {
+       return  BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+    }
+}
+
+uint8 bot_ai::NewGetOwnedBotsCount(ObjectGuid owner_guid, uint32 class_mask) const
+{
+    if(me && me->IsPlayerNpcBot())
+    {
+        return BotDataMgr::Player_GetOwnedBotsCount(owner_guid,class_mask);
+    }else
+    {
+        return BotDataMgr::GetOwnedBotsCount(owner_guid,class_mask);
+    }
+}
+
+void bot_ai::NewUpdateNpcBotTransmogData(uint8 slot, uint32 item_id,
+    int32 fake_id, bool update_db) const
+{
+    if(me && me->IsPlayerNpcBot())
+    {
+        BotDataMgr::Player_UpdateNpcBotTransmogData(me->GetPlayerNpcBotOwnerId(),me->GetEntry(),slot,item_id,fake_id,update_db);
+    }else
+    {
+        BotDataMgr::UpdateNpcBotTransmogData(me->GetEntry(),slot,item_id,fake_id,update_db);
+    }
+}
+
+void bot_ai::NewSaveNpcBotStats(NpcBotStats const* stats) const
+{
+    if(me && me->IsPlayerNpcBot())
+    {
+        BotDataMgr::Player_SaveNpcBotStats(me->GetPlayerNpcBotOwnerId(),stats);
+    }else
+    {
+        BotDataMgr::SaveNpcBotStats(stats);
+    }
+}
+
 bot_ai::~bot_ai()
 {
     LOG_INFO("scripts", "bot_ai destructor call for {} ({})", me->GetName().c_str(), me->GetEntry());
+    LOG_ERROR("scripts", "bot_ai destructor call for {} ({})", me->GetName().c_str(), me->GetEntry());
 
     while (!_spells.empty())
     {
@@ -469,13 +538,17 @@ void bot_ai::CheckOwnerExpiry()
     if (IsTempBot())
         return;
 
-    NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot*/
+    NpcBotData const* npcBotData = NewSelectNpcBotData();
+    // old:  NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot end*/
+
     ASSERT(npcBotData, "bot_ai::CheckOwnerExpiry(): data not found!");
 
     NpcBotExtras const* npcBotExtra = BotDataMgr::SelectNpcBotExtras(me->GetEntry());
     ASSERT(npcBotExtra, "bot_ai::CheckOwnerExpiry(): extra data not found!");
 
-    if (npcBotData->owner == 0)
+    if (npcBotData->owner == 0 || me->IsPlayerNpcBot())
         return;
 
     ObjectGuid ownerGuid = ObjectGuid(HighGuid::Player, 0, npcBotData->owner);
@@ -547,23 +620,33 @@ void bot_ai::CheckOwnerExpiry()
                 draft.SendMailTo(trans, MailReceiver(npcBotData->owner), MailSender(me, MAIL_STATIONERY_GM));
             }
             CharacterDatabase.CommitTransaction(trans);
-
-            BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_EQUIPS, _equips);
+            /*player_npcbot*/
+            NewUpdateNpcBotData(NPCBOT_UPDATE_EQUIPS, _equips);
+            //old  BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_EQUIPS, _equips);
+            /*player_npcbot end*/
         }
 
         //hard reset owner
         _ownerGuid = 0;
         uint32 newOwner = 0;
-        BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_OWNER, &newOwner);
+        /*player_npcbot*/
+        NewUpdateNpcBotData(NPCBOT_UPDATE_OWNER, &newOwner);
+        // old BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_OWNER, &newOwner);
+
         //...spec
         uint8 spec = SelectSpecForClass(npcBotExtra->bclass);
-        BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_SPEC, &spec);
+        NewUpdateNpcBotData(NPCBOT_UPDATE_SPEC, &spec);
+        // old BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_SPEC, &spec);
         //...and roles
         uint32 roleMask = DefaultRolesForClass(npcBotExtra->bclass, spec);
-        BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_ROLES, &roleMask);
+
+        NewUpdateNpcBotData(NPCBOT_UPDATE_ROLES, &roleMask);
+        // old BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_ROLES, &roleMask);
+        /*player_npcbot end*/
 
         if (Group* gr = GetGroup())
             gr->RemoveMember(me->GetGUID());
+
     }
 }
 
@@ -586,6 +669,7 @@ void bot_ai::ResetBotAI(uint8 resetType)
     _reviveTimer = 0;
 
     master = reinterpret_cast<Player*>(me);
+
     if (resetType & BOTAI_RESET_MASK_ABANDON_MASTER)
         _ownerGuid = 0;
     if (resetType == BOTAI_RESET_INIT || resetType == BOTAI_RESET_LOGOUT)
@@ -1703,7 +1787,7 @@ void bot_ai::ResurrectGroup(uint32 spell_id)
         {
             target = bitr->second;
             if (!target || !target->IsInWorld() || target->IsAlive()) continue;
-            if (bitr->second->GetBotAI()->GetReviveTimer() < 15000) continue;
+            if (bitr->second->GetBotAI()->GetReviveTimer() < 5000) continue;
             if (me->GetDistance(target) < 30 && target->IsWithinLOSInMap(me, VMAP::ModelIgnoreFlags::M2, LINEOFSIGHT_ALL_CHECKS) &&
                 !player->GetBotMgr()->IsBeingResurrected(target))
                 bottargets.push_back(bitr->second);
@@ -1760,7 +1844,7 @@ void bot_ai::ResurrectGroup(uint32 spell_id)
             {
                 target = bitr->second;
                 if (!target || !target->IsInWorld() || target->IsAlive()) continue;
-                if (bitr->second->GetBotAI()->GetReviveTimer() < 15000) continue;
+                if (bitr->second->GetBotAI()->GetReviveTimer() < 5000) continue;
                 if (me->GetDistance(target) < 30 && target->IsWithinLOSInMap(me, VMAP::ModelIgnoreFlags::M2, LINEOFSIGHT_ALL_CHECKS) &&
                     !player->GetBotMgr()->IsBeingResurrected(target))
                     bottargets.push_back(bitr->second);
@@ -3884,6 +3968,27 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
 
     if (mytar && me->HasAuraType(SPELL_AURA_MOD_TAUNT))
         return { mytar, mytar };
+
+    /*player_npcbot*/
+    if(me->IsPlayerNpcBot() && Player_target != ObjectGuid::Empty)
+    {
+        if(Unit* AttackUnit = ObjectAccessor::GetUnit(*me, Player_target))
+        {
+            if(AttackUnit->isDead())
+            {
+                me->GetBotAI()->Player_ResetAttackTarget();
+                me->GetBotAI()->SetBotCommandState(BOT_COMMAND_FOLLOW, true);
+                return { nullptr, nullptr };
+            }
+
+            return { AttackUnit, AttackUnit };
+        }
+
+        me->GetBotAI()->Player_ResetAttackTarget();
+        me->GetBotAI()->SetBotCommandState(BOT_COMMAND_FOLLOW, true);
+        return { nullptr, nullptr };
+    }
+    /*player_npcbot end*/
 
     //Immediate targets
     if (!IAmFree() && me->GetMap()->GetEntry() && !me->GetMap()->GetEntry()->IsWorldMap())
@@ -6674,8 +6779,11 @@ void bot_ai::InitSpellMap(uint32 basespell, bool forceadd, bool forwardRank)
     }
 
     newSpell->spellId = spellId;
+    /*player_npcbot*/
+    NpcBotData const* npcBotData = NewSelectNpcBotData();
+    // NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot end*/
 
-    NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
     if (npcBotData && npcBotData->disabled_spells.find(basespell) != npcBotData->disabled_spells.end())
     {
         newSpell->enabled = false;
@@ -6836,7 +6944,10 @@ void bot_ai::RemoveSpell(uint32 basespell)
 //}
 void bot_ai::EnableAllSpells()
 {
-    NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
+    /*player_npcbot */
+    NpcBotData* npcBotData = const_cast<NpcBotData*>(NewSelectNpcBotData());
+    // NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
+    /*player_npcbot end*/
     npcBotData->disabled_spells.clear();
     _saveDisabledSpells = true;
 
@@ -7642,12 +7753,22 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                 reason = -1;
             if (!reason && _ownerGuid)
                 reason = 1;
-            if (!reason && BotDataMgr::GetOwnedBotsCount(player->GetGUID()) >= BotMgr::GetMaxNpcBots(player->GetLevel()))
+
+            /*player_npcbot*/
+            if (!reason && NewGetOwnedBotsCount(player->GetGUID()) >= BotMgr::GetMaxNpcBots(player->GetLevel()))
+            {
+                // if (!reason && BotDataMgr::GetOwnedBotsCount(player->GetGUID()) >= BotMgr::GetMaxNpcBots())
+
                 reason = 2;
+            }
             if (!reason && !player->HasEnoughMoney(cost))
                 reason = 3;
-            if (!reason && BotMgr::GetMaxClassBots() && BotDataMgr::GetOwnedBotsCount(player->GetGUID(), me->GetClassMask()) >= BotMgr::GetMaxClassBots())
+            if (!reason && BotMgr::GetMaxClassBots() && NewGetOwnedBotsCount(player->GetGUID(), me->GetClassMask()) >= BotMgr::GetMaxClassBots())
+            {
+                // if (!reason && BotMgr::GetMaxClassBots() && BotDataMgr::GetOwnedBotsCount(player->GetGUID(), me->GetClassMask()) >= BotMgr::GetMaxClassBots())
                 reason = 4;
+            }
+            /*player_npcbot end*/
 
             std::ostringstream message1;
             std::ostringstream message2;
@@ -7709,19 +7830,23 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                 AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_GIVE_CONSUMABLE), GOSSIP_SENDER_USEITEM, GOSSIP_ACTION_INFO_DEF + 1);
             }
 
-            if (!gr)
+            if(!me->IsPlayerNpcBot())
             {
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_CREATE_GROUP), GOSSIP_SENDER_JOIN_GROUP, GOSSIP_ACTION_INFO_DEF + 1);
-                if (player->GetNpcBotsCount() > 1)
-                    AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_CREATE_GROUP_ALL), GOSSIP_SENDER_JOIN_GROUP, GOSSIP_ACTION_INFO_DEF + 2);
+                if (!gr)
+                {
+                    AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_CREATE_GROUP), GOSSIP_SENDER_JOIN_GROUP, GOSSIP_ACTION_INFO_DEF + 1);
+                    if (player->GetNpcBotsCount() > 1)
+                        AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_CREATE_GROUP_ALL), GOSSIP_SENDER_JOIN_GROUP, GOSSIP_ACTION_INFO_DEF + 2);
+                }
+                else if (!gr->IsMember(me->GetGUID()))
+                {
+                    AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_ADD_TO_GROUP), GOSSIP_SENDER_JOIN_GROUP, GOSSIP_ACTION_INFO_DEF + 1);
+                    AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_ADD_TO_GROUP_ALL), GOSSIP_SENDER_JOIN_GROUP, GOSSIP_ACTION_INFO_DEF + 2);
+                }
+                else
+                    AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_REMOVE_FROM_GROUP), GOSSIP_SENDER_LEAVE_GROUP, GOSSIP_ACTION_INFO_DEF + 1);
             }
-            else if (!gr->IsMember(me->GetGUID()))
-            {
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_ADD_TO_GROUP), GOSSIP_SENDER_JOIN_GROUP, GOSSIP_ACTION_INFO_DEF + 1);
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_ADD_TO_GROUP_ALL), GOSSIP_SENDER_JOIN_GROUP, GOSSIP_ACTION_INFO_DEF + 2);
-            }
-            else
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_REMOVE_FROM_GROUP), GOSSIP_SENDER_LEAVE_GROUP, GOSSIP_ACTION_INFO_DEF + 1);
+
 
             //movement toggle
             if (HasBotCommandState(BOT_COMMAND_MASK_UNMOVING))
@@ -7830,10 +7955,14 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                     break;
             }
 
-            std::ostringstream astr;
-            astr << LocalizedNpcText(player, BOT_TEXT_ABANDON_WARN_1) << me->GetName() << "? " << (BotMgr::IsEnrageOnDimissEnabled() ? LocalizedNpcText(player, BOT_TEXT_ABANDON_WARN_2) : "");
-            player->PlayerTalkClass->GetGossipMenu().AddMenuItem(-1, GOSSIP_ICON_TAXI, LocalizedNpcText(player, BOT_TEXT_UR_DISMISSED),
-                GOSSIP_SENDER_DISMISS, GOSSIP_ACTION_INFO_DEF + 1, astr.str().c_str(), 0, false);
+            if(!me->IsPlayerNpcBot())
+            {
+                std::ostringstream astr;
+                astr << LocalizedNpcText(player, BOT_TEXT_ABANDON_WARN_1) << me->GetName() << "? " << (BotMgr::IsEnrageOnDimissEnabled() ? LocalizedNpcText(player, BOT_TEXT_ABANDON_WARN_2) : "");
+                player->PlayerTalkClass->GetGossipMenu().AddMenuItem(-1, GOSSIP_ICON_TAXI, LocalizedNpcText(player, BOT_TEXT_UR_DISMISSED),
+                    GOSSIP_SENDER_DISMISS, GOSSIP_ACTION_INFO_DEF + 1, astr.str().c_str(), 0, false);
+            }
+
 
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_PULL_URSELF), GOSSIP_SENDER_TROUBLESHOOTING, GOSSIP_ACTION_INFO_DEF + 1);
         }
@@ -8734,8 +8863,10 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             Item const* item = _equips[slot];
             ASSERT(item);
-
-            BotDataMgr::UpdateNpcBotTransmogData(me->GetEntry(), slot, item->GetEntry(), itemId);
+                /*player_npcbot*/
+            NewUpdateNpcBotTransmogData( slot, item->GetEntry(), itemId);
+            // BotDataMgr::UpdateNpcBotTransmogData(me->GetEntry(), slot, item->GetEntry(), itemId);
+                /*player_npcbot*/
 
             if (slot <= BOT_SLOT_RANGED)
                 me->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + slot, itemId_u ? itemId_u : item->GetEntry());
@@ -8745,8 +8876,11 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
         case GOSSIP_SENDER_EQUIP_TRANSMOG_INFO:
         {
             uint8 slot = action - GOSSIP_ACTION_INFO_DEF;
+                /*player_npcbot*/
+            NpcBotTransmogData const* tramsmogData = NewSelectNpcBotTransmogs();
+            // NpcBotTransmogData const* tramsmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+                /*player_npcbot end*/
 
-            NpcBotTransmogData const* tramsmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
             ASSERT(tramsmogData);
             ASSERT(tramsmogData->transmogs[slot].second >= 0);
 
@@ -8820,7 +8954,11 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             }
 
             //s5.2: add gossips
-            NpcBotTransmogData const* tramsmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+                /*player_npcbot*/
+            NpcBotTransmogData const* tramsmogData = NewSelectNpcBotTransmogs();
+            // NpcBotTransmogData const* tramsmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+                /*player_npcbot end*/
+
             if (tramsmogData && tramsmogData->transmogs[slot].first)
             {
                 int32 item_id = tramsmogData->transmogs[slot].second;
@@ -9805,7 +9943,10 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
         case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_HEAL:
         case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_SUPPORT:
         {
-            NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
+                /*player_npcbot*/
+            NpcBotData* npcBotData = const_cast<NpcBotData*>(NewSelectNpcBotData());
+            // NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
+                /*player_npcbot end*/
 
             uint32 basespell = action - GOSSIP_ACTION_INFO_DEF;
             BotSpellMap const& myspells = GetSpellMap();
@@ -10660,7 +10801,11 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     else
                     {
                         uint32 newOwner = 0;
-                        BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_OWNER, &newOwner);
+                        /*player_npcbot*/
+                        NewUpdateNpcBotData( NPCBOT_UPDATE_OWNER, &newOwner);
+                        // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_OWNER, &newOwner);
+                        /*player_npcbot end*/
+
                         ResetBotAI(BOTAI_RESET_DISMISS);
                     }
                     break;
@@ -12524,13 +12669,21 @@ bool bot_ai::_equip(uint8 slot, Item* newItem, ObjectGuid receiver)
     {
         if (CanChangeEquip(slot))
         {
-            NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+
+            /*player_npcbot*/
+            NpcBotTransmogData const* transmogData = NewSelectNpcBotTransmogs();
+            // NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+            /*player_npcbot end*/
+
+
             if (einfo->ItemEntry[slot] != newItemId && transmogData && BotMgr::IsTransmogEnabled() && (transmogData->transmogs[slot].first == newItemId || BotMgr::TransmogUseEquipmentSlots()) &&
                 transmogData->transmogs[slot].second >= 0)
                 me->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + slot, uint32(transmogData->transmogs[slot].second));
+
             else
                 me->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + slot, newItemId);
         }
+
         uint32 delay =
             /*einfo->ItemEntry[slot] != newItemId || */RespectEquipsAttackTime() || slot == BOT_SLOT_OFFHAND ? proto->Delay :
             slot == BOT_SLOT_RANGED ? me->GetCreatureTemplate()->RangeAttackTime : me->GetCreatureTemplate()->BaseAttackTime;
@@ -12600,7 +12753,11 @@ bool bot_ai::_equip(uint8 slot, Item* newItem, ObjectGuid receiver)
 void bot_ai::_updateEquips(uint8 slot, Item* item)
 {
     _equips[slot] = item;
-    BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_EQUIPS, _equips);
+    /*player_npcbot*/
+    NewUpdateNpcBotData( NPCBOT_UPDATE_EQUIPS, _equips);
+    // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_EQUIPS, _equips);
+    /*player_npcbot end*/
+
 }
 //Called from gossip menu only (applies only to weapons)
 bool bot_ai::_resetEquipment(uint8 slot, ObjectGuid receiver)
@@ -13832,7 +13989,10 @@ void bot_ai::_saveStats()
     stats.expertise = expertise;
     stats.armorPenPct = me->GetCreatureArmorPenetrationCoef();
 
-    BotDataMgr::SaveNpcBotStats(&stats);
+    /*player_npcbot*/
+    NewSaveNpcBotStats(&stats);
+    // BotDataMgr::SaveNpcBotStats(&stats);
+    /*player_npcbot end*/
 }
 
 //!Copied from Player::CastItemUseSpell
@@ -13907,7 +14067,11 @@ uint32 bot_ai::GetEquipDisplayId(uint8 slot) const
     int32 displayId = -1;
     if (_equips[slot])
     {
-        NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+        /*player_npcbot*/
+        NpcBotTransmogData const* transmogData = NewSelectNpcBotTransmogs();
+        // NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+        /*player_npcbot end*/
+
         if (transmogData && BotMgr::IsTransmogEnabled() &&
             (_equips[slot]->GetTemplate()->ItemId == transmogData->transmogs[slot].first || BotMgr::TransmogUseEquipmentSlots()))
         {
@@ -14042,9 +14206,17 @@ void bot_ai::ToggleRole(uint32 role, bool force)
             role |= BOT_ROLE_TANK;
 
         _roleMask |= role;
+
+        if(role == BOT_ROLE_TANK || role == BOT_ROLE_TANK_OFF)
+        {
+             _roleMask |= BOT_ROLE_DPS;
+        }
     }
 
-    BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_ROLES, &_roleMask);
+    /*player_npcbot*/
+    NewUpdateNpcBotData( NPCBOT_UPDATE_ROLES, &_roleMask);
+    // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_ROLES, &_roleMask);
+    /*player_npcbot end*/
 
     //Update passives
     shouldUpdateStats = true;
@@ -14262,7 +14434,11 @@ void bot_ai::ApplyRacials()
 
 void bot_ai::InitFaction()
 {
-    NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot*/
+    NpcBotData const* npcBotData = NewSelectNpcBotData();
+    // NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot end*/
+
     ASSERT(npcBotData, "bot_ai::InitFaction(): data not found!");
 
     uint32 faction = npcBotData->faction;
@@ -14286,7 +14462,10 @@ void bot_ai::InitRace()
 
 void bot_ai::InitOwner()
 {
-    NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot*/
+    NpcBotData const* npcBotData = NewSelectNpcBotData();
+    // NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot end*/
     ASSERT(npcBotData, "bot_ai::InitOwner(): data not found!");
 
     _ownerGuid = npcBotData->owner;
@@ -14306,7 +14485,10 @@ void bot_ai::InitRoles()
         return;
     }
 
-    NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot*/
+    NpcBotData const* npcBotData = NewSelectNpcBotData();
+    // NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    /*player_npcbot end*/
     ASSERT(npcBotData, "bot_ai::InitRoles(): data not found!");
 
     _roleMask = npcBotData->roles;
@@ -14316,16 +14498,21 @@ void bot_ai::InitSpec()
 {
     uint8 spec;
     if (IAmFree())
+    {
         spec = SelectSpecForClass(_botclass);
+    }
     else
     {
-        NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+        /*player_npcbot*/
+        NpcBotData const* npcBotData = NewSelectNpcBotData();
+        // NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+        /*player_npcbot end*/
         ASSERT(npcBotData, "bot_ai::InitSpec(): data not found!");
 
         spec = npcBotData->spec;
     }
 
-    //TC_LOG_ERROR("entities.unit", "bot_ai::InitSpec(): bot %u class %u spec: %u", me->GetEntry(), uint32(_botclass), uint32(spec));
+    // LOG_ERROR("entities.unit", "bot_ai::InitSpec(): bot {} class {} spec: {}", me->GetEntry(), uint32(_botclass), uint32(spec));
 
     if (spec < BOT_SPEC_BEGIN || spec > BOT_SPEC_END)
     {
@@ -14346,7 +14533,10 @@ void bot_ai::SetSpec(uint8 spec, bool activate)
 
     if (activate)
     {
-        BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_SPEC, &spec);
+        /*player_npcbot*/
+        NewUpdateNpcBotData( NPCBOT_UPDATE_SPEC, &spec);
+        // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_SPEC, &spec);
+        /*player_npcbot end*/
 
         UnsummonAll();
         removeShapeshiftForm();
@@ -14602,7 +14792,8 @@ void bot_ai::InitEquips()
     EquipmentInfo const* einfo = BotDataMgr::GetBotEquipmentInfo(me->GetEntry());
     ASSERT(einfo, "Trying to spawn bot with no equip info!");
 
-    NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+    NpcBotData const* npcBotData = NewSelectNpcBotData();
+    // old NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
     ASSERT(npcBotData, "bot_ai::InitEquips(): data not found!");
 
     if (IsWanderer())
@@ -14939,7 +15130,11 @@ void bot_ai::InitEquips()
     {
         if (CanChangeEquip(i) && _equips[i])
         {
-            NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+            /*player_npcbot*/
+            NpcBotTransmogData const* transmogData =NewSelectNpcBotTransmogs();
+            // old NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+            /*player_npcbot end*/
+
             if (einfo->ItemEntry[i] != _equips[i]->GetEntry() && transmogData && BotMgr::IsTransmogEnabled() && (transmogData->transmogs[i].first == _equips[i]->GetEntry() || BotMgr::TransmogUseEquipmentSlots()))
                 me->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + i, uint32(std::max<int32>(transmogData->transmogs[i].second, 0)));
             else
@@ -17066,10 +17261,46 @@ void bot_ai::UpdateDeadAI(uint32 diff)
     if (_selfrez_spell_id && (IAmFree() || !master->GetBotMgr()->IsPartyInCombat()) && Rand() < 15)
         me->CastSpell(me, _selfrez_spell_id);
 }
+
+bool bot_ai::CheckBotGroup()
+{
+    if(me->IsPlayerNpcBot() )
+    {
+        if(!_group.isValid() ||!GetBotOwner() ||!GetBotOwner()->GetGroup())
+        {
+            Map* map = me->FindMap();
+            KillEvents(true);
+            if(map && map->GetId() == 1 && me->GetAreaId() == 876 && waitDestory)
+            {
+                canUpdate = false;
+                BotMgr::CleanupsBeforeBotDelete(me);
+                map->AddObjectToRemoveList(me);
+            }
+            else
+            {
+                if(master && master->IsPlayer() && master->GetSession() && !master->GetSession()->PlayerLogout() )
+                {
+                    ChatHandler(master->GetSession()).PSendSysMessage("追随者[%s]已离开！",me->GetPlayerBotName().c_str());
+                    GetBotOwner()->GetBotMgr()->UnbindBot(me->GetGUID());
+                }
+                TeleportHomeStart(true);
+                waitDestory = true;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 //opponent unsafe
 bool bot_ai::GlobalUpdate(uint32 diff)
 {
     if (!BotMgr::IsNpcBotModEnabled() || !BotDataMgr::AllBotsLoaded())
+        return false;
+
+    if(CheckBotGroup())
         return false;
 
     if (IsWanderer())
@@ -17105,6 +17336,18 @@ bool bot_ai::GlobalUpdate(uint32 diff)
         }
     }
 
+    /*palyer_npcbot*/
+    // if(me->IsPlayerNpcBot())
+    // {
+    //     if (Player* player = ObjectAccessor::FindPlayerByLowGUID(_ownerGuid); !player)
+    //     {
+    //         me->GetBotGroup()->RemoveMember(me->GetGUID());
+    //         LOG_ERROR("aaaa","找不到 玩家下线 机器人滚蛋");
+    //         return false;
+    //     }
+    // }
+    /*palyer_npcbot*/
+
     //db saves with cd
     //  1) disabled spells
     if (_saveDisabledSpells && _saveDisabledSpellsTimer <= diff)
@@ -17114,8 +17357,13 @@ bool bot_ai::GlobalUpdate(uint32 diff)
 
         if (!IsTempBot())
         {
-            NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
-            BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_DISABLED_SPELLS, &npcBotData->disabled_spells);
+            /*player_npcbot*/
+            NpcBotData* npcBotData = const_cast<NpcBotData*>(NewSelectNpcBotData());
+            // old NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
+            NewUpdateNpcBotData(NPCBOT_UPDATE_DISABLED_SPELLS, &npcBotData->disabled_spells);
+            // old BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_DISABLED_SPELLS, &npcBotData->disabled_spells);
+
+            /*player_npcbot*/
         }
     }
 
@@ -17396,7 +17644,11 @@ bool bot_ai::GlobalUpdate(uint32 diff)
                 EquipmentInfo const* einfo = BotDataMgr::GetBotEquipmentInfo(me->GetEntry());
                 if (CanChangeEquip(BOT_SLOT_OFFHAND) && _equips[BOT_SLOT_OFFHAND])
                 {
-                    NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+                    /*player_npcbot*/
+                    NpcBotTransmogData const* transmogData = NewSelectNpcBotTransmogs();
+                    // NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+                    /*player_npcbot end*/
+
                     if (einfo->ItemEntry[BOT_SLOT_OFFHAND] != _equips[BOT_SLOT_OFFHAND]->GetEntry() &&
                         transmogData && BotMgr::IsTransmogEnabled() && (transmogData->transmogs[BOT_SLOT_OFFHAND].first == _equips[BOT_SLOT_OFFHAND]->GetEntry() || BotMgr::TransmogUseEquipmentSlots()) &&
                         transmogData->transmogs[BOT_SLOT_OFFHAND].second >= 0)
@@ -17788,6 +18040,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
     return true;
 }
 
+
 void bot_ai::CommonTimers(uint32 diff)
 {
     Events.Update(diff);
@@ -18178,7 +18431,7 @@ void bot_ai::TeleportHome(bool reset)
     uint16 mapid;
     Position pos;
     GetHomePosition(mapid, &pos);
-
+    // LOG_ERROR("aa","go GM {} {}",mapid,pos.ToString());
     Map* map = sMapMgr->CreateBaseMap(mapid);
     ASSERT(!map->Instanceable(), map->GetDebugInfo().c_str());
     BotMgr::TeleportBot(me, map, &pos, false, reset);
@@ -18207,7 +18460,24 @@ bool bot_ai::FinishTeleport(bool reset)
     BotMgr::AddDelayedTeleportCallback([this, reset]() {
         Map* map = master->FindMap();
         //2) Cannot teleport: map not found or forbidden - delay teleport
-        if (!map || !master->IsAlive() || master->GetBotMgr()->RestrictBots(me, true))
+        /*player_botnpc*/
+        bool CanRestrictBots = master->GetBotMgr()->RestrictBots(me, true);
+        if(me->IsPlayerNpcBot())
+        {
+            if((!map  || CanRestrictBots) && master->IsAlive())
+            {
+                if(me->GetBotGroup())
+                {
+                    me->GetBotGroup()->RemoveMember(me->GetGUID());
+                }
+                CheckBotGroup();
+                // LOG_ERROR("AddDelayedTeleportCallback","GO MAP1 And Delete");
+                return;
+            }
+        }
+        /*player_botnpc*/
+
+        if (!map || !master->IsAlive() || CanRestrictBots)
         {
             //ChatHandler ch(master->GetSession());
             //ch.PSendSysMessage("Your bot %s cannot teleport to you. Restricted bot access on this map...", me->GetName().c_str());
@@ -18859,6 +19129,7 @@ void bot_ai::OnBotEnterBattleground()
 {
     Battleground* bg = ASSERT_NOTNULL(GetBG());
 
+    // if (bg->GetStatus() != STATUS_IN_PROGRESS && IsWanderer())
     if (bg->GetStatus() != STATUS_IN_PROGRESS && IsWanderer())
     {
         uint32 mapId = bg->GetBgMap()->GetId();
@@ -19717,7 +19988,11 @@ bool bot_ai::IsValidTransmog(uint8 slot, ItemTemplate const* source) const
             return false;
     }
 
-    NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+    /*player_npcbot*/
+    NpcBotTransmogData const* transmogData = NewSelectNpcBotTransmogs();
+    // NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+    /*player_npcbot end*/
+
     if (transmogData && transmogData->transmogs[slot].second == int32(source->ItemId))
         return false;
 

@@ -581,6 +581,12 @@ void WorldSession::LogoutPlayer(bool save)
     m_playerLogout = true;
     m_playerSave = save;
 
+    if (_player)
+    {
+        //! Call script hook before other logout events
+        sScriptMgr->OnBeforePlayerLogout(_player);
+    }
+
     //npcbot - free all bots and remove from botmap
     if (_player->HaveBot() && _player->GetGroup() && !_player->GetGroup()->isRaidGroup() && !_player->GetGroup()->isLFGGroup() && m_Socket && sWorld->getBoolConfig(CONFIG_LEAVE_GROUP_ON_LOGOUT))
         _player->GetBotMgr()->RemoveAllBotsFromGroup();
@@ -589,9 +595,6 @@ void WorldSession::LogoutPlayer(bool save)
 
     if (_player)
     {
-        //! Call script hook before other logout events
-        sScriptMgr->OnBeforePlayerLogout(_player);
-
         if (ObjectGuid lguid = _player->GetLootGUID())
             DoLootRelease(lguid);
 
