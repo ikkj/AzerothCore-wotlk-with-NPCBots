@@ -39,6 +39,7 @@
 #include "CreatureData.h"
 #include "botdatamgr.h"
 #include "botmgr.h"
+#include "Chat.h"
 //end npcbot
 
 class Aura;
@@ -312,6 +313,12 @@ void WorldSession::HandleGroupUninviteGuidOpcode(WorldPacket& recvData)
     recvData >> guid;
     recvData >> reason;
 
+    if(guid.GetCounter() == 0)
+    {
+        LOG_ERROR("network.opcode", "WorldSession::HandleGroupUninviteGuidOpcode: guid is 0 :{}",guid.ToString());
+        return;
+    }
+
     //can't uninvite yourself
     if (guid == GetPlayer()->GetGUID())
     {
@@ -363,7 +370,7 @@ void WorldSession::HandleGroupUninviteGuidOpcode(WorldPacket& recvData)
         return;
     }
 
-    if (grp->IsMember(guid))
+    if (grp->IsMember(guid) )
     {
         Player::RemoveFromGroup(grp, guid, GROUP_REMOVEMETHOD_KICK, GetPlayer()->GetGUID(), reason.c_str());
         return;

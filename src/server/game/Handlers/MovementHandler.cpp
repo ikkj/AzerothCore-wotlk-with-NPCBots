@@ -18,6 +18,7 @@
 #include "ArenaSpectator.h"
 #include "Battleground.h"
 #include "BattlegroundMgr.h"
+#include "botmgr.h"
 #include "CellImpl.h"
 #include "Chat.h"
 #include "Corpse.h"
@@ -149,7 +150,11 @@ void WorldSession::HandleMoveWorldportAck()
         else if (Battleground* bg = _player->GetBattleground())
         {
             if (_player->IsInvitedForBattlegroundInstance()) // GMs are not invited, so they are not added to participants
+            {
                 bg->AddPlayer(_player);
+
+            }
+
         }
     }
 

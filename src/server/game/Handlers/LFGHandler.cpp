@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "botmgr.h"
 #include "DBCStores.h"
 #include "GameTime.h"
 #include "Group.h"
@@ -133,8 +134,20 @@ void WorldSession::HandleLfgSetBootVoteOpcode(WorldPacket& recvData)
     recvData >> agree;
 
     ObjectGuid guid = GetPlayer()->GetGUID();
+
     LOG_DEBUG("network", "CMSG_LFG_SET_BOOT_VOTE [{}] agree: {}", guid.ToString(), agree ? 1 : 0);
     sLFGMgr->UpdateBoot(guid, agree);
+
+    /*player_npcbot*/
+    Group*  group = GetPlayer()->GetGroup();
+    for (auto const& mslot : group->GetMemberSlots())
+    {
+        if(GetPlayer()->GetBotMgr()->GetBot(mslot.guid))
+        {
+            sLFGMgr->UpdateBoot(mslot.guid, agree);
+        }
+    }
+    /*player_npcbot*/
 }
 
 void WorldSession::HandleLfgTeleportOpcode(WorldPacket& recvData)

@@ -1252,13 +1252,7 @@ void BotMgr::_reviveBot(Creature* bot, WorldLocation* dest)
     if(bot->IsPlayerNpcBot())
     {
         bot->SetUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED);
-        // if(bot->GetBotAI()->GetBotOwner())
-        // {
-        //     // bot->GetBotAI()->GetBotOwner()->SetMinion((Minion*)bot,true);
-        //     const ObjectGuid ownerGuid = bot->GetBotAI()->GetBotOwner()->GetGUID();
-        //     bot->SetOwnerGUID(ownerGuid);
-        //     ((Minion*)bot)->InitStats(0);
-        // }
+        bot->GetBotAI()->Player_ResetAttackTarget();
     }
     /*player_npcbot*/
 

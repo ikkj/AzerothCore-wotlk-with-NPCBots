@@ -66,7 +66,8 @@ class bot_ai : public CreatureAI
             Player_target = ObjectGuid::Empty;
         }
 private:
-        ObjectGuid Player_target = ObjectGuid::Empty;;
+        ObjectGuid Player_target = ObjectGuid::Empty;
+        bool waitDestory = false;
     /*player_npcbot end*/
 
     public:

@@ -669,6 +669,7 @@ void bot_ai::ResetBotAI(uint8 resetType)
     _reviveTimer = 0;
 
     master = reinterpret_cast<Player*>(me);
+
     if (resetType & BOTAI_RESET_MASK_ABANDON_MASTER)
         _ownerGuid = 0;
     if (resetType == BOTAI_RESET_INIT || resetType == BOTAI_RESET_LOGOUT)
@@ -17260,25 +17261,33 @@ void bot_ai::UpdateDeadAI(uint32 diff)
     if (_selfrez_spell_id && (IAmFree() || !master->GetBotMgr()->IsPartyInCombat()) && Rand() < 15)
         me->CastSpell(me, _selfrez_spell_id);
 }
+
 bool bot_ai::CheckBotGroup()
 {
-    if(me->IsPlayerNpcBot()  && !_group.isValid())
+    if(me->IsPlayerNpcBot() )
     {
-        Map* map = me->FindMap();
-        KillEvents(true);
-        if(map && map->GetId() == 1)
+        if(!_group.isValid() ||!GetBotOwner() ||!GetBotOwner()->GetGroup())
         {
-            canUpdate = false;
-            BotMgr::CleanupsBeforeBotDelete(me);
-            map->AddObjectToRemoveList(me);
-        }else
-        {
-            ChatHandler(master->GetSession()).PSendSysMessage("追随者[%s]已离开！",me->GetPlayerBotName().c_str());
-            // master->GetSession()->SendNotification("已解散追随者 %s！",_bot->GetPlayerBotName().c_str());
-            GetBotOwner()->GetBotMgr()->UnbindBot(me->GetGUID());
-            TeleportHomeStart(true);
+            Map* map = me->FindMap();
+            KillEvents(true);
+            if(map && map->GetId() == 1 && me->GetAreaId() == 876 && waitDestory)
+            {
+                canUpdate = false;
+                BotMgr::CleanupsBeforeBotDelete(me);
+                map->AddObjectToRemoveList(me);
+            }
+            else
+            {
+                if(master && master->IsPlayer() && master->GetSession() && !master->GetSession()->PlayerLogout() )
+                {
+                    ChatHandler(master->GetSession()).PSendSysMessage("追随者[%s]已离开！",me->GetPlayerBotName().c_str());
+                    GetBotOwner()->GetBotMgr()->UnbindBot(me->GetGUID());
+                }
+                TeleportHomeStart(true);
+                waitDestory = true;
+            }
+            return true;
         }
-        return true;
     }
 
     return false;
@@ -18457,7 +18466,10 @@ bool bot_ai::FinishTeleport(bool reset)
         {
             if((!map  || CanRestrictBots) && master->IsAlive())
             {
-                me->GetBotGroup()->RemoveMember(me->GetGUID());
+                if(me->GetBotGroup())
+                {
+                    me->GetBotGroup()->RemoveMember(me->GetGUID());
+                }
                 CheckBotGroup();
                 // LOG_ERROR("AddDelayedTeleportCallback","GO MAP1 And Delete");
                 return;
@@ -19117,6 +19129,7 @@ void bot_ai::OnBotEnterBattleground()
 {
     Battleground* bg = ASSERT_NOTNULL(GetBG());
 
+    // if (bg->GetStatus() != STATUS_IN_PROGRESS && IsWanderer())
     if (bg->GetStatus() != STATUS_IN_PROGRESS && IsWanderer())
     {
         uint32 mapId = bg->GetBgMap()->GetId();

@@ -1344,7 +1344,25 @@ void Battleground::AddPlayer(Player* player)
         {
             Creature* bot = itr->second;
             if (bot && player->GetGroup()->IsMember(itr->first))
-                AddBot(bot);
+            {
+                if(bot->IsPlayerNpcBot())
+                {
+                    // auto playerBgQueueTypeId = player->GetBattlegroundQueueTypeId(i);
+                    // if (playerBgQueueTypeId != BATTLEGROUND_QUEUE_NONE && playerBgQueueTypeId != bgQueueTypeId)
+                    // {
+                    //     _player->RemoveBattlegroundQueueId(playerBgQueueTypeId);
+                    //     sBattlegroundMgr->GetBattlegroundQueue(playerBgQueueTypeId).RemovePlayer(_player->GetGUID(), true);
+                    // }
+                    //
+                    AddPlyaerNpcBot(bot);
+                    // Map* bgMap = ASSERT_NOTNULL(sMapMgr->FindMap(GetMapId(), GetInstanceID()));
+                    // BotMgr::TeleportBot(const_cast<Creature*>(bot), bgMap, GetTeamStartPosition(teamId), true, false);
+                }
+                else
+                {
+                    AddBot(bot);
+                }
+            }
         }
     }
     //end npcbot
@@ -1393,6 +1411,30 @@ void Battleground::AddPlayer(Player* player)
 }
 
 //npcbot
+/*player_npcbot*/
+void Battleground::AddPlyaerNpcBot(Creature* bot)
+{
+
+    ObjectGuid guid = bot->GetGUID();
+    TeamId teamId = BotDataMgr::GetTeamIdForFaction(bot->GetBotOwner()->GetFaction());
+
+    // Add to list/maps
+    BattlegroundBot bb;
+    bb.Team = teamId;
+    m_Bots[guid] = bb;
+
+    UpdatePlayersCountByTeam(teamId, false);                  // +1 player
+
+    WorldPacket data;
+    sBattlegroundMgr->BuildPlayerJoinedBattlegroundPacket(&data, (Player*)bot);
+    SendPacketToTeam(teamId, &data, nullptr, false);
+
+    AddOrSetBotToCorrectBgGroup(bot, teamId);
+
+    bot->GetBotAI()->SetBG(this);
+    bot->GetBotAI()->OnBotEnterBattleground();
+}
+
 void Battleground::AddBot(Creature* bot)
 {
     ObjectGuid guid = bot->GetGUID();

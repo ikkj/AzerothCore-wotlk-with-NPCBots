@@ -542,6 +542,7 @@ public:
     [[nodiscard]] std::size_t GetBotScoresSize() const { return BotScores.size(); }
     void RemoveBotFromResurrectQueue(ObjectGuid guid);
     virtual void AddBot(Creature* bot);
+    virtual void AddPlyaerNpcBot(Creature* bot);
     virtual void RemoveBotAtLeave(ObjectGuid guid);
     virtual bool UpdateBotScore(Creature const* bot, uint32 type, uint32 value);
     void AddOrSetBotToCorrectBgGroup(Creature* bot, TeamId teamId);

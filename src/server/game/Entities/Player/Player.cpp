@@ -2379,53 +2379,96 @@ void Player::RemoveFromGroup(Group* group, ObjectGuid guid, RemoveMethod method 
 {
     if (group)
     {
-        //npcbot - player is being removed from group - remove bots from that group
-        if (Player* player = ObjectAccessor::FindPlayer(guid))
+        if(method != GROUP_REMOVEMETHOD_KICK)
         {
-            if (player->HaveBot())
+            //npcbot - player is being removed from group - remove bots from that group
+            if (Player* player = ObjectAccessor::FindPlayer(guid))
             {
-                //remove npcbots and set up new group if needed
-                player->GetBotMgr()->RemoveAllBotsFromGroup();
-                group = player->GetGroup();
-                if (!group)
-                    return; //group has been disbanded
-            }
-        }
-        //npcbot - deleting player from db: remove bots
-        else if (guid.IsPlayer())
-        {
-            std::vector<ObjectGuid> botguids;
-            botguids.reserve(BotMgr::GetMaxNpcBots(DEFAULT_MAX_LEVEL) / 2 + 1);
-            BotDataMgr::GetNPCBotGuidsByOwner(botguids, guid);
-            for (std::vector<ObjectGuid>::const_iterator ci = botguids.begin(); ci != botguids.end(); ++ci)
-            {
-                if (group->IsMember(*ci))
+                if (player->HaveBot())
                 {
-                    if (!group->RemoveMember(*ci, method, kicker, reason))
-                        return;
+                    //remove npcbots and set up new group if needed
+                    player->GetBotMgr()->RemoveAllBotsFromGroup();
+                    group = player->GetGroup();
+                    if (!group)
+                        return; //group has been disbanded
                 }
             }
-        }
-        //npcbot - bot is being removed from group - find master and remove bot through botmap
-        else if (guid.IsCreature())
-        {
-            for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+            //npcbot - deleting player from db: remove bots
+            else if (guid.IsPlayer())
             {
-                if (Player* member = itr->GetSource())
+                std::vector<ObjectGuid> botguids;
+                botguids.reserve(BotMgr::GetMaxNpcBots(DEFAULT_MAX_LEVEL) / 2 + 1);
+                BotDataMgr::GetNPCBotGuidsByOwner(botguids, guid);
+                for (std::vector<ObjectGuid>::const_iterator ci = botguids.begin(); ci != botguids.end(); ++ci)
                 {
-                    if (!member->HaveBot())
-                        continue;
-
-                    if (Creature* bot = member->GetBotMgr()->GetBot(guid))
+                    if (group->IsMember(*ci))
                     {
-                        member->GetBotMgr()->RemoveBotFromGroup(bot);
-                        return;
+                        if (!group->RemoveMember(*ci, method, kicker, reason))
+                            return;
+                    }
+                }
+            }
+            //npcbot - bot is being removed from group - find master and remove bot through botmap
+            else if (guid.IsCreature())
+            {
+                for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                {
+                    if (Player* member = itr->GetSource())
+                    {
+                        if (!member->HaveBot())
+                            continue;
+
+                        if (Creature* bot = member->GetBotMgr()->GetBot(guid))
+                        {
+                            member->GetBotMgr()->RemoveBotFromGroup(bot);
+                            return;
+                        }
                     }
                 }
             }
         }
 
+
         group->RemoveMember(guid, method, kicker, reason);
+
+        if(group->isLFGGroup(true) && method == GROUP_REMOVEMETHOD_KICK)
+        {
+            //player_npcbot
+            /*被踢的人的机器人拒绝*/
+            if (Player* player = ObjectAccessor::FindPlayer(guid))
+            {
+                group = player->GetGroup();
+                if (player->HaveBot())
+                {
+                    for (auto const& mslot : group->GetMemberSlots())
+                    {
+                        if(player->GetBotMgr()->GetBot(mslot.guid))
+                        {
+                            sLFGMgr->UpdateBoot(mslot.guid, false);
+                        }
+                    }
+                }
+            }
+                /*踢的人的机器人全部同意*/
+                if (Player* kicker_player = ObjectAccessor::FindPlayer(kicker))
+                {
+                    group = kicker_player->GetGroup();
+                    if (kicker_player->HaveBot())
+                    {
+                        for (auto const& mslot : group->GetMemberSlots())
+                        {
+                            if(kicker_player->GetBotMgr()->GetBot(mslot.guid))
+                            {
+                                sLFGMgr->UpdateBoot(mslot.guid, true);
+                            }
+                        }
+                    }
+                }
+
+
+
+        }
+
         group = nullptr;
     }
 }

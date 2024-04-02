@@ -2734,13 +2734,13 @@ void Map::RemoveAllObjectsInRemoveList()
                 // make sure that like sources auras/etc removed before destructor start
                 obj->ToCreature()->CleanupsBeforeDelete();
                 RemoveFromMap(obj->ToCreature(), true);
-                /*player_npcbot */
+                // /*player_npcbot */
                 // if(obj->ToCreature() && obj->ToCreature()->IsPlayerNpcBot())
                 // {
                 //
                 // }else
                 // {
-                //
+                //     RemoveFromMap(obj->ToCreature(), true);
                 // }
 
                 break;
