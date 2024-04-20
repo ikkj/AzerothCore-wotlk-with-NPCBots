@@ -27,6 +27,8 @@ bool ScriptMgr::OnCriteriaCheck(uint32 scriptId, Player* source, Unit* target, u
     return tempScript ? tempScript->OnCheck(source, target, criteria_id) : false;
 }
 
+
+
 AchievementCriteriaScript::AchievementCriteriaScript(char const* name) :
     ScriptObject(name)
 {

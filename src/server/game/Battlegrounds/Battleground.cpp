@@ -1414,7 +1414,6 @@ void Battleground::AddPlayer(Player* player)
 /*player_npcbot*/
 void Battleground::AddPlyaerNpcBot(Creature* bot)
 {
-
     ObjectGuid guid = bot->GetGUID();
     TeamId teamId = BotDataMgr::GetTeamIdForFaction(bot->GetBotOwner()->GetFaction());
 

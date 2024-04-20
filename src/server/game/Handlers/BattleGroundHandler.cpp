@@ -101,6 +101,20 @@ void WorldSession::HandleBattlemasterJoinOpcode(WorldPacket& recvData)
         return;
     }
 
+    if (_player->GetPlayerSetting("mod-challenge-modes", 0).value)
+    {
+        ChatHandler(_player->GetSession()).PSendSysMessage("硬核模式无法进入战场!");
+        _player->GetSession()->SendNotification("|cFFFF00FF  硬核模式无法进入战场");//粉色公屏提示
+        return;
+    }
+
+
+    if(_player->HaveBot() || _player->GetGroup() && _player->GetGroup()->hasBot())
+    {
+        ChatHandler(this).PSendSysMessage("队伍中存在追隨者，无法进入战场！");
+        return;
+    }
+
     LOG_DEBUG("network", "WORLD: Recvd CMSG_BATTLEMASTER_JOIN Message from {}", guid.ToString());
 
     // get queue typeid and random typeid to check if already queued for them
@@ -826,6 +840,13 @@ void WorldSession::HandleBattlemasterJoinArena(WorldPacket& recvData)
 
     // queue result (default ok)
     GroupJoinBattlegroundResult err = GroupJoinBattlegroundResult(bgt->GetBgTypeID());
+
+    if(_player->HaveBot() || _player->GetGroup() && _player->GetGroup()->hasBot())
+    {
+        ChatHandler(this).PSendSysMessage("队伍中存在追隨者，无法进入竞技场！");
+        return;
+    }
+
 
     if (!sScriptMgr->CanJoinInArenaQueue(_player, guid, arenaslot, bgTypeId, asGroup, isRated, err) && err <= 0)
     {

@@ -109,10 +109,10 @@ void ScriptMgr::OnShutdown()
 
 void ScriptMgr::OnBeforeWorldInitialized()
 {
-    ExecuteScript<WorldScript>([&](WorldScript* script)
-    {
-        script->OnBeforeWorldInitialized();
-    });
+     ExecuteScript<WorldScript>([&](WorldScript* script)
+     {
+         script->OnBeforeWorldInitialized();
+     });
 }
 
 void ScriptMgr::OnAfterUnloadAllMaps()
@@ -121,6 +121,22 @@ void ScriptMgr::OnAfterUnloadAllMaps()
     {
         script->OnAfterUnloadAllMaps();
     });
+}
+
+void ScriptMgr::OnResetDailyQuests()
+{
+    ExecuteScript<WorldScript>([](WorldScript* script)
+   {
+       script->OnResetDailyQuests();
+   });
+}
+
+void ScriptMgr::OnResetInstance(uint32 mapid, Difficulty difficulty)
+{
+    ExecuteScript<WorldScript>([mapid, difficulty](WorldScript* script)
+  {
+      script->OnResetInstance(mapid,difficulty);
+  });
 }
 
 WorldScript::WorldScript(const char* name) :

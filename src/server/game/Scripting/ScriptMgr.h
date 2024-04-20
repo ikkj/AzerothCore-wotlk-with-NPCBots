@@ -177,6 +177,8 @@ public: /* WorldScript */
     void OnShutdown();
     void OnBeforeWorldInitialized();
     void OnAfterUnloadAllMaps();
+    void OnResetDailyQuests();
+    void OnResetInstance(uint32 mapid, Difficulty difficulty);
 
 public: /* FormulaScript */
     void OnHonorCalculation(float& honor, uint8 level, float multiplier);
@@ -296,6 +298,12 @@ public: /* AchievementCriteriaScript */
     bool OnCriteriaCheck(uint32 scriptId, Player* source, Unit* target, uint32 criteria_id);
 
 public: /* PlayerScript */
+    void OnCheckInstanceCount(Player* player,uint32 defaultCount,uint32& newCount);
+    void OnGetSkillCount(Player* player,uint32 defaultCount,uint32& newCount);
+    void OnVipLevelChanged(Player* player,uint32 level,uint32 old_level);
+
+    void GetVipLevel(Player* player,uint32& level);
+
     void OnBeforePlayerUpdate(Player* player, uint32 p_time);
     void OnPlayerUpdate(Player* player, uint32 p_time);
     void OnSendInitialPacketsBeforeAddToMap(Player* player, WorldPacket& data);

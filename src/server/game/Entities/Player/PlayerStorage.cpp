@@ -7003,9 +7003,16 @@ bool Player::CheckInstanceLoginValid()
     return sMapMgr->PlayerCannotEnter(GetMap()->GetId(), this, true) == Map::CAN_ENTER;
 }
 
-bool Player::CheckInstanceCount(uint32 instanceId) const
+bool Player::CheckInstanceCount(uint32 instanceId)
 {
-    if (_instanceResetTimes.size() < sWorld->getIntConfig(CONFIG_MAX_INSTANCES_PER_HOUR))
+    uint32 new_count = 0;
+    const uint32 default_count = sWorld->getIntConfig(CONFIG_MAX_INSTANCES_PER_HOUR);
+    sScriptMgr->OnCheckInstanceCount(this,default_count,new_count);
+
+    uint32 max_count = new_count>0?new_count:default_count;
+
+    // if (_instanceResetTimes.size() < sWorld->getIntConfig(CONFIG_MAX_INSTANCES_PER_HOUR))
+    if (_instanceResetTimes.size() < max_count)
         return true;
     return _instanceResetTimes.find(instanceId) != _instanceResetTimes.end();
 }

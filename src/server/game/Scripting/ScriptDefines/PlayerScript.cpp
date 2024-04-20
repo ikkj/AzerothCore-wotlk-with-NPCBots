@@ -86,9 +86,9 @@ void ScriptMgr::OnPlayerReleasedGhost(Player* player)
 bool ScriptMgr::OnCanPlayerFlyInZone(Player* player, uint32 mapId, uint32 zoneId, SpellInfo const* bySpell)
 {
     auto ret = IsValidBoolScript<PlayerScript>([player, mapId, zoneId, bySpell](PlayerScript* script)
-        {
-            return !script->OnCanPlayerFlyInZone(player, mapId, zoneId, bySpell);
-        });
+    {
+        return !script->OnCanPlayerFlyInZone(player, mapId, zoneId, bySpell);
+    });
 
     if (ret && *ret)
     {
@@ -197,9 +197,9 @@ void ScriptMgr::OnGivePlayerXP(Player* player, uint32& amount, Unit* victim, uin
 bool ScriptMgr::OnPlayerReputationChange(Player* player, uint32 factionID, int32& standing, bool incremental)
 {
     auto ret = IsValidBoolScript<PlayerScript>([&](PlayerScript* script)
-        {
-            return !script->OnReputationChange(player, factionID, standing, incremental);
-        });
+    {
+        return !script->OnReputationChange(player, factionID, standing, incremental);
+    });
 
     if (ret && *ret)
     {
@@ -329,6 +329,38 @@ void ScriptMgr::OnPlayerSpellCast(Player* player, Spell* spell, bool skipCheck)
     });
 }
 
+void ScriptMgr::OnCheckInstanceCount(Player* player, uint32 defaultCount, uint32& newCount)
+{
+    ExecuteScript<PlayerScript>([&](PlayerScript* script)
+    {
+        script->OnCheckInstanceCount(player, defaultCount, newCount);
+    });
+}
+
+void ScriptMgr::OnGetSkillCount(Player* player, uint32 defaultCount, uint32& newCount)
+{
+    ExecuteScript<PlayerScript>([&](PlayerScript* script)
+    {
+        script->OnGetSkillCount(player, defaultCount, newCount);
+    });
+}
+
+void ScriptMgr::OnVipLevelChanged(Player* player, uint32 level, uint32 old_level)
+{
+    ExecuteScript<PlayerScript>([&](PlayerScript* script)
+    {
+        script->OnVipLevelChanged(player, level, old_level);
+    });
+}
+
+void ScriptMgr::GetVipLevel(Player* player,uint32& level)
+{
+    ExecuteScript<PlayerScript>([&](PlayerScript* script)
+    {
+        script->GetVipLevel(player, level);
+    });
+}
+
 void ScriptMgr::OnBeforePlayerUpdate(Player* player, uint32 p_time)
 {
     ExecuteScript<PlayerScript>([&](PlayerScript* script)
@@ -364,9 +396,9 @@ void ScriptMgr::OnPlayerLoadFromDB(Player* player)
 void ScriptMgr::OnBeforePlayerLogout(Player* player)
 {
     ExecuteScript<PlayerScript>([&](PlayerScript* script)
-        {
-            script->OnBeforeLogout(player);
-        });
+    {
+        script->OnBeforeLogout(player);
+    });
 }
 
 void ScriptMgr::OnPlayerLogout(Player* player)
@@ -464,7 +496,7 @@ void ScriptMgr::OnPlayerAddToBattleground(Player* player, Battleground* bg)
     });
 }
 
-void ScriptMgr::OnPlayerQueueRandomDungeon(Player* player, uint32 & rDungeonId)
+void ScriptMgr::OnPlayerQueueRandomDungeon(Player* player, uint32& rDungeonId)
 {
     ExecuteScript<PlayerScript>([&](PlayerScript* script)
     {
@@ -656,9 +688,9 @@ void ScriptMgr::OnQuestRewardItem(Player* player, Item* item, uint32 count)
 
 bool ScriptMgr::CanPlaceAuctionBid(Player* player, AuctionEntry* auction)
 {
-    auto ret = IsValidBoolScript<PlayerScript>([&](PlayerScript *script)
+    auto ret = IsValidBoolScript<PlayerScript>([&](PlayerScript* script)
     {
-       return !script->CanPlaceAuctionBid(player, auction);
+        return !script->CanPlaceAuctionBid(player, auction);
     });
 
     if (ret && *ret)
@@ -680,9 +712,9 @@ void ScriptMgr::OnGroupRollRewardItem(Player* player, Item* item, uint32 count, 
 bool ScriptMgr::OnBeforeOpenItem(Player* player, Item* item)
 {
     auto ret = IsValidBoolScript<PlayerScript>([&](PlayerScript* script)
-        {
-            return !script->OnBeforeOpenItem(player, item);
-        });
+    {
+        return !script->OnBeforeOpenItem(player, item);
+    });
 
     if (ret && *ret)
     {
@@ -825,6 +857,7 @@ void ScriptMgr::OnBeforeInitTalentForLevel(Player* player, uint8& level, uint32&
         script->OnBeforeInitTalentForLevel(player, level, talentPointsForLevel);
     });
 }
+
 bool ScriptMgr::OnBeforePlayerQuestComplete(Player* player, uint32 quest_id)
 {
     auto ret = IsValidBoolScript<PlayerScript>([&](PlayerScript* script)
@@ -839,6 +872,7 @@ bool ScriptMgr::OnBeforePlayerQuestComplete(Player* player, uint32 quest_id)
 
     return true;
 }
+
 void ScriptMgr::OnQuestComputeXP(Player* player, Quest const* quest, uint32& xpValue)
 {
     ExecuteScript<PlayerScript>([&](PlayerScript* script)
@@ -1062,9 +1096,9 @@ void ScriptMgr::OnGetMaxSkillValue(Player* player, uint32 skill, int32& result, 
 bool ScriptMgr::OnPlayerHasActivePowerType(Player const* player, Powers power)
 {
     auto ret = IsValidBoolScript<PlayerScript>([&](PlayerScript* script)
-        {
-            return script->OnPlayerHasActivePowerType(player, power);
-        });
+    {
+        return script->OnPlayerHasActivePowerType(player, power);
+    });
 
     if (ret && *ret)
     {
@@ -1074,14 +1108,16 @@ bool ScriptMgr::OnPlayerHasActivePowerType(Player const* player, Powers power)
     return false;
 }
 
-void ScriptMgr::OnUpdateGatheringSkill(Player *player, uint32 skillId, uint32 currentLevel, uint32 gray, uint32 green, uint32 yellow, uint32 &gain) {
+void ScriptMgr::OnUpdateGatheringSkill(Player* player, uint32 skillId, uint32 currentLevel, uint32 gray, uint32 green, uint32 yellow, uint32& gain)
+{
     ExecuteScript<PlayerScript>([&](PlayerScript* script)
     {
         script->OnUpdateGatheringSkill(player, skillId, currentLevel, gray, green, yellow, gain);
     });
 }
 
-void ScriptMgr::OnUpdateCraftingSkill(Player *player, SkillLineAbilityEntry const* skill, uint32 currentLevel, uint32& gain) {
+void ScriptMgr::OnUpdateCraftingSkill(Player* player, SkillLineAbilityEntry const* skill, uint32 currentLevel, uint32& gain)
+{
     ExecuteScript<PlayerScript>([&](PlayerScript* script)
     {
         script->OnUpdateCraftingSkill(player, skill, currentLevel, gain);
@@ -1423,13 +1459,14 @@ void ScriptMgr::OnIsFFAPvP(Player* player, bool& result)
         script->OnIsFFAPvP(player, result);
     });
 }
+
 //Fires whenever the UNIT_BYTE2_FLAG_FFA_PVP bit is Changed
 void ScriptMgr::OnFfaPvpStateUpdate(Player* player, bool result)
 {
     ExecuteScript<PlayerScript>([&](PlayerScript* script)
-        {
-            script->OnFfaPvpStateUpdate(player, result);
-        });
+    {
+        script->OnFfaPvpStateUpdate(player, result);
+    });
 }
 
 void ScriptMgr::OnIsPvP(Player* player, bool& result)
@@ -1511,9 +1548,9 @@ bool ScriptMgr::CanInitTrade(Player* player, Player* target)
 bool ScriptMgr::CanSetTradeItem(Player* player, Item* tradedItem, uint8 tradeSlot)
 {
     auto ret = IsValidBoolScript<PlayerScript>([&](PlayerScript* script)
-        {
-            return !script->CanSetTradeItem(player, tradedItem, tradeSlot);
-        });
+    {
+        return !script->CanSetTradeItem(player, tradedItem, tradeSlot);
+    });
 
     if (ret && *ret)
         return false;

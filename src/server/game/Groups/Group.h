@@ -202,6 +202,7 @@ public:
     void DelinkBotMember(ObjectGuid guid);
     GroupBotReference* GetFirstBotMember() { return m_botMemberMgr.getFirst(); }
     GroupBotReference const* GetFirstBotMember() const { return m_botMemberMgr.getFirst(); }
+    bool hasBot();
     //end npcbot
     bool   AddInvite(Player* player);
     void   RemoveInvite(Player* player);

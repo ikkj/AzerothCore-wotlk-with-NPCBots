@@ -75,8 +75,8 @@ enum ShamanBaseSpells
     MAGMA_TOTEM_1                       = 8190,
     SEARING_TOTEM_1                     = 3599,
     STONECLAW_TOTEM_1                   = 5730,
-    FIRE_ELEMENTAL_TOTEM_1              = 2894,
-    EARTH_ELEMENTAL_TOTEM_1             = 2062,
+    FIRE_ELEMENTAL_TOTEM_1              = 2894,//火元素图腾
+    EARTH_ELEMENTAL_TOTEM_1             = 2062,//土元素图腾
     FIRE_RESISTANCE_TOTEM_1             = 8184,
     FROST_RESISTANCE_TOTEM_1            = 8181,
     NATURE_RESISTANCE_TOTEM_1           = 10595,
@@ -98,7 +98,7 @@ enum ShamanBaseSpells
 
     REINCARNATION_1                     = 21169,
 
-    FERAL_SPIRIT_1                      = 51533, //not casted
+    FERAL_SPIRIT_1                      = 51533, //not casted/野性狼魂、召唤幽灵狼
 
     //ROCKBITER_WEAPON_1                  = 8017, //disabled due to bonus handling method
     FLAMETONGUE_WEAPON_1                = 8024,
@@ -2093,7 +2093,7 @@ public:
                 myPet->SetByteValue(UNIT_FIELD_BYTES_2, 1, master->GetByteValue(UNIT_FIELD_BYTES_2, 1));
                 myPet->SetUInt32Value(UNIT_CREATED_BY_SPELL, FERAL_SPIRIT_1);
 
-                //botPet = myPet;
+                 //botPet = myPet;
 
                 myPet->Attack(target, true);
                 if (!HasBotCommandState(BOT_COMMAND_MASK_UNCHASE))

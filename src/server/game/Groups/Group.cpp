@@ -395,6 +395,25 @@ void Group::ConvertToRaid()
         sLFGMgr->LeaveLfg(GetLeaderGUID());
 }
 
+bool Group::hasBot()
+{
+    for (member_citerator citr = m_memberSlots.begin(); citr != m_memberSlots.end(); ++citr)
+    {
+        if(citr->guid.IsPlayer())
+        {
+            if (Player* player = ObjectAccessor::FindPlayer(citr->guid))
+            {
+                if(player->HaveBot())
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 bool Group::AddInvite(Player* player)
 {
     if (!player || player->GetGroupInvite())

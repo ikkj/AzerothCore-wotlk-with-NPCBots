@@ -208,6 +208,10 @@ class AC_GAME_API BotMgr
         static bool LimitBots(Map const* map);
         static bool CanBotParryWhileCasting(Creature const* bot);
         static bool IsWanderingWorldBot(Creature const* bot);
+    /*player_npcbot*/
+         bool DestoryPlayerNpcBot(Creature* bot);
+    bool CheckBotInOwnerGroup(Creature* bot);
+
         static bool IsBotContestedPvP(Creature const* bot);
         static void SetBotContestedPvP(Creature const* bot);
         bool IsMapAllowedForBots(Map const* map) const;
@@ -324,6 +328,7 @@ class AC_GAME_API BotMgr
 
         Player* const _owner;
         BotMap _bots;
+        BotMap _beforeRemoveBots;
         std::list<ObjectGuid> _removeList;
         DPSTracker* const _dpstracker;
 

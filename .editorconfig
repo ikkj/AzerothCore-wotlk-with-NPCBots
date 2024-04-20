@@ -7,6 +7,11 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 max_line_length = 80
 
+# ReSharper properties
+resharper_cpp_max_line_length = 500
+resharper_cpp_wrap_before_ternary_opsigns = false
+resharper_cpp_wrap_lines = false
+
 [*.{json,ts,js,yml}]
 charset = utf-8
 indent_style = space

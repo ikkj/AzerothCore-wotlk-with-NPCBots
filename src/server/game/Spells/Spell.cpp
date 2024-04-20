@@ -572,7 +572,7 @@ Spell::Spell(Unit* caster, SpellInfo const* info, TriggerCastFlags triggerFlags,
 /*
     m_spellInfo(sSpellMgr->GetSpellForDifficultyFromSpell(info, caster)),
 */
-    m_spellInfo(sSpellMgr->GetSpellForDifficultyFromSpell(info, caster)->TryGetSpellInfoOverride(caster)),
+    m_spellInfo((caster->IsNPCBot() ? info : sSpellMgr->GetSpellForDifficultyFromSpell(info, caster))->TryGetSpellInfoOverride(caster)),
 //end npcbot
     m_caster((info->HasAttribute(SPELL_ATTR6_ORIGINATE_FROM_CONTROLLER) && caster->GetCharmerOrOwner()) ? caster->GetCharmerOrOwner() : caster)
     , m_spellValue(new SpellValue(m_spellInfo)), _spellEvent(nullptr)
@@ -4127,14 +4127,16 @@ void Spell::_cast(bool skipCheck)
     }
 
     //npcbot - hook for spellcast finish
-    if (m_caster->IsNPCBotOrPet())
-        BotMgr::OnBotSpellGo(m_caster->ToCreature(), this);
-    //npcbot - hook for master's spellcast finish
-    else if (m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->ToPlayer()->HaveBot())
-        BotMgr::OnBotOwnerSpellGo(m_caster->ToPlayer(), this);
-    //npcbot - hook for master's vehicle spellcast finish
-    else if (m_caster->ToUnit() && m_caster->ToUnit()->IsVehicle())
-        BotMgr::OnVehicleSpellGo(m_caster->ToUnit(), this);
+    if (m_caster) {
+        if (m_caster->IsNPCBotOrPet())
+            BotMgr::OnBotSpellGo(m_caster->ToCreature(), this);
+        //npcbot - hook for master's spellcast finish
+        else if (m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->ToPlayer()->HaveBot())
+            BotMgr::OnBotOwnerSpellGo(m_caster->ToPlayer(), this);
+        //npcbot - hook for master's vehicle spellcast finish
+        else if (m_caster->ToUnit() && m_caster->ToUnit()->IsVehicle())
+            BotMgr::OnVehicleSpellGo(m_caster->ToUnit(), this);
+    }
     //end npcbot
 
     if (resetAttackTimers)

@@ -48,6 +48,8 @@ class WanderNode;
 
 class bot_ai : public CreatureAI
 {
+    friend class BotMgr;
+
     /*player_npcbot*/
     public:
         NpcBotData const* NewSelectNpcBotData() const;
@@ -65,9 +67,13 @@ class bot_ai : public CreatureAI
         {
             Player_target = ObjectGuid::Empty;
         }
+
+       bool waitDestory = false;
+
 private:
         ObjectGuid Player_target = ObjectGuid::Empty;
-        bool waitDestory = false;
+        // bool GroupIned = false;
+
     /*player_npcbot end*/
 
     public:
@@ -116,6 +122,11 @@ private:
         static Position GetAbsoluteTransportPosition(WorldObject const* object);
 
         static const std::string& LocalizedNpcText(Player const* forPlayer, uint32 textId);
+
+        std::string GetItemIcon(uint32 entry, uint32 width, uint32 height, int x, int y) const;
+        std::string GetSlotIcon(uint8 slot, uint32 width, uint32 height, int x, int y) const;
+        std::string GetItemLink(uint32 entry/*, WorldSession* session*/) const;
+        std::string GetItemIconAndLink(Item const* item,uint8 slot) const;
 
         bool OnGossipHello(Player* player, uint32 option);
         bool OnGossipSelect(Player* player, Creature* creature, uint32 sender, uint32 action);
@@ -380,7 +391,7 @@ private:
         virtual void ReduceCD(uint32 /*diff*/) {}
         bool GlobalUpdate(uint32 diff);
 
-        bool CheckBotGroup();
+        // bool CheckBotGroup();
 
         virtual bool HealTarget(Unit* /*target*/, uint32 /*diff*/) { return false; }
         virtual bool BuffTarget(Unit* /*target*/, uint32 /*diff*/) { return false; }

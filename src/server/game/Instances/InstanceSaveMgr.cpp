@@ -600,6 +600,9 @@ void InstanceSaveMgr::_ResetOrWarnAll(uint32 mapid, Difficulty difficulty, bool 
             if (itr2->second->GetMapId() == mapid && itr2->second->GetDifficulty() == difficulty)
                 _ResetSave(itr2);
         }
+
+        /*VIP系统*/
+        sScriptMgr->OnResetInstance(mapid,difficulty);
     }
 
     // now loop all existing maps to warn / reset

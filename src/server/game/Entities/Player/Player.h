@@ -1753,6 +1753,10 @@ public:
     void SetFreePrimaryProfessions(uint16 profs) { SetUInt32Value(PLAYER_CHARACTER_POINTS2, profs); }
     void InitPrimaryProfessions();
 
+    /*VIP系统*/
+    uint32 GetFreePrimaryProfessionsCount() const {return FreePrimaryProfessionsCount < 0?0:FreePrimaryProfessionsCount;}
+    int32 FreePrimaryProfessionsCount;
+
     [[nodiscard]] PlayerSpellMap const& GetSpellMap() const { return m_spells; }
     PlayerSpellMap&       GetSpellMap()       { return m_spells; }
 
@@ -2427,7 +2431,7 @@ public:
     void PrettyPrintRequirementsItemsList(const std::vector<const ProgressionRequirement*>& missingItems) const;
     bool Satisfy(DungeonProgressionRequirements const* ar, uint32 target_map, bool report = false);
     bool CheckInstanceLoginValid();
-    [[nodiscard]] bool CheckInstanceCount(uint32 instanceId) const;
+    [[nodiscard]] bool CheckInstanceCount(uint32 instanceId) ;
 
     void AddInstanceEnterTime(uint32 instanceId, time_t enterTime)
     {

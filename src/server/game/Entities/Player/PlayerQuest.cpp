@@ -1912,6 +1912,7 @@ void Player::KilledMonster(CreatureTemplate const* cInfo, ObjectGuid guid)
 
 void Player::KilledMonsterCredit(uint32 entry, ObjectGuid guid)
 {
+    /*npcbot fixed*/
     uint16 addkillcount = 1;
     uint32 real_entry = entry;
     if (guid)

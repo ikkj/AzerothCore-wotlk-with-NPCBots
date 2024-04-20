@@ -941,14 +941,15 @@ public:
                 if (doCast(me, DEVOTION_AURA))
                     return;
             }
-            if (CONCENTRATION_AURA && !(mask & SPECIFIC_AURA_CONCENTRATION) &&
+            //19746
+           /* if (CONCENTRATION_AURA && !(mask & SPECIFIC_AURA_CONCENTRATION) &&
                 (master->GetClass() == BOT_CLASS_MAGE || master->GetClass() == BOT_CLASS_PRIEST ||
                 master->GetClass() == BOT_CLASS_WARLOCK || master->GetClass() == BOT_CLASS_DRUID ||
                 (!IAmFree() && master->GetClass() == BOT_CLASS_PALADIN) || pureHealer))
             {
                 if (doCast(me, CONCENTRATION_AURA))
                     return;
-            }
+            }*/
             if (RETRIBUTION_AURA &&
                 (!(mask & SPECIFIC_AURA_RETRIBUTION) || idMap[RETRIBUTION_AURA_1] < RETRIBUTION_AURA) &&
                 (IsMeleeClass(master->GetClass()) || IsMelee()))

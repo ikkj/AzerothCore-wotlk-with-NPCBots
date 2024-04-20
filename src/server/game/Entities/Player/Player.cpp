@@ -154,6 +154,8 @@ Player::Player(WorldSession* session): Unit(true), m_mover(this)
 #pragma warning(default:4355)
 #endif
 
+    FreePrimaryProfessionsCount = 0;
+
     m_objectType |= TYPEMASK_PLAYER;
     m_objectTypeId = TYPEID_PLAYER;
 
@@ -453,6 +455,7 @@ Player::~Player()
     delete m_runes;
     delete m_achievementMgr;
     delete m_reputationMgr;
+    delete _cinematicMgr;
 
     //npcbot
     delete _botMgr;
@@ -3333,7 +3336,14 @@ bool Player::_addSpell(uint32 spellId, uint8 addSpecMask, bool temporary, bool l
     if (uint32 freeProfs = GetFreePrimaryProfessionPoints())
     {
         if (spellInfo->IsPrimaryProfessionFirstRank())
+        {
             SetFreePrimaryProfessions(freeProfs - 1);
+        }
+    }
+
+    if (spellInfo->IsPrimaryProfessionFirstRank())
+    {
+        FreePrimaryProfessionsCount++;
     }
 
     uint16 maxskill = GetMaxSkillValueForLevel();
@@ -3521,7 +3531,21 @@ void Player::removeSpell(uint32 spell_id, uint8 removeSpecMask, bool onlyTempora
     if (spellInfo->IsPrimaryProfessionFirstRank())
     {
         uint32 freeProfs = GetFreePrimaryProfessionPoints() + 1;
-        if (freeProfs <= sWorld->getIntConfig(CONFIG_MAX_PRIMARY_TRADE_SKILL))
+
+        const uint32 default_count =sWorld->getIntConfig(CONFIG_MAX_PRIMARY_TRADE_SKILL);
+        uint32 new_count = 0;
+        sScriptMgr->OnGetSkillCount(this,default_count,new_count);
+        const uint32 c_count =  new_count > 0?new_count:default_count;
+
+        if(FreePrimaryProfessionsCount - 1 < 0)
+        {
+            FreePrimaryProfessionsCount = 0;
+        }else
+        {
+            FreePrimaryProfessionsCount--;
+        }
+
+        if (freeProfs <= c_count)
             SetFreePrimaryProfessions(freeProfs);
     }
 
@@ -11661,7 +11685,13 @@ bool Player::IsVisibleGloballyFor(Player const* u) const
 
 void Player::InitPrimaryProfessions()
 {
-    SetFreePrimaryProfessions(sWorld->getIntConfig(CONFIG_MAX_PRIMARY_TRADE_SKILL));
+    // FreePrimaryProfessionsCount = 0;
+    const uint32 default_count =sWorld->getIntConfig(CONFIG_MAX_PRIMARY_TRADE_SKILL);
+    uint32 new_count = 0;
+    sScriptMgr->OnGetSkillCount(this,default_count,new_count);
+    const uint32 c_count =  new_count > 0?new_count:default_count;
+
+    SetFreePrimaryProfessions(c_count);
 }
 
 bool Player::ModifyMoney(int32 amount, bool sendError /*= true*/)

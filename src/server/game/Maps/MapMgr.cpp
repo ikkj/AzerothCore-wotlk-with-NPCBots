@@ -239,6 +239,9 @@ Map::EnterState MapMgr::PlayerCannotEnter(uint32 mapid, Player* player, bool log
             instaceIdToCheck = save->GetInstanceId();
 
         // instaceIdToCheck can be 0 if save not found - means no bind so the instance is new
+        // 重置副本
+
+
         if (!player->CheckInstanceCount(instaceIdToCheck))
         {
             player->SendTransferAborted(mapid, TRANSFER_ABORT_TOO_MANY_INSTANCES);

@@ -943,7 +943,64 @@ bool BotMgr::CanBotParryWhileCasting(Creature const* bot)
 
 bool BotMgr::IsWanderingWorldBot(Creature const* bot)
 {
-    return bot->IsWandererBot() && (!bot->FindMap() || !bot->GetMap()->GetEntry() || bot->GetMap()->GetEntry()->IsWorldMap());
+    //player_npcbot
+    return bot->IsWandererBot() && !bot->IsPlayerNpcBot() && (!bot->FindMap() || !bot->GetMap()->GetEntry() || bot->GetMap()->GetEntry()->IsWorldMap()|| bot->GetMap()->GetEntry()->IsBattleground());
+}
+
+bool BotMgr::DestoryPlayerNpcBot(Creature* bot)
+{
+    // Map* map = bot->FindMap();
+    bot_ai* ai = bot->GetBotAI();
+
+    // if(map && map->GetId() == 1 && bot->GetAreaId() == 876 && ai->waitDestory)
+    // {
+    //     LOG_ERROR("DestoryPlayerNpcBot","DestoryPlayerNpcBot3");
+    //     ai->KillEvents(true);
+    //     RemoveBot(bot->GetGUID(), BOT_REMOVE_DISMISS);
+    //     bot->CombatStop();
+    //     ai->canUpdate = false;
+    //     map->AddObjectToRemoveList(bot);
+    //     return true;
+    //     //BotDataMgr::Player_UpdateNpcBotData(_owner->GetGUID().GetCounter(),bot->GetEntry(), NPCBOT_UPDATE_ERASE);
+    // }
+
+    if(!ai->waitDestory)
+    {
+        _beforeRemoveBots[bot->GetGUID()] = bot;
+
+        if(bot->GetBotGroup())
+        {
+            bot->GetBotGroup()->RemoveMember(bot->GetGUID());
+        }
+
+        // Map* GMMap = sMapMgr->FindBaseMap(1);
+        // Position pos(16254.311f, 16305.019f,20.844324f);
+        // BotMgr::TeleportBot(bot, GMMap, &pos, true);
+        ai->waitDestory = true;
+        return false;
+    }
+
+    return false;
+}
+
+bool BotMgr::CheckBotInOwnerGroup(Creature* bot)
+{
+     if(bot->GetBotAI()->IsDuringTeleport())
+     {
+         return true;
+     }
+
+    if(!_owner->GetGroup())
+    {
+        return false;
+    }
+
+    if(!_owner->GetGroup()->IsMember(bot->GetGUID()))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void BotMgr::Update(uint32 diff)
@@ -975,11 +1032,31 @@ void BotMgr::Update(uint32 diff)
     if (partyCombat)
         bot_ai::CalculateAoeSpots(_owner, _aoespots);
 
+
     for (BotMap::const_iterator itr = _bots.begin(); itr != _bots.end(); ++itr)
     {
+
         //guid = itr->first;
         bot = itr->second;
+        if (!bot) {
+            continue;
+        }
+
         ai = bot->GetBotAI();
+
+
+        if(bot->IsPlayerNpcBot())
+        {
+            if(ai->IAmFree() || !bot->GetBotGroup() || !_owner || !CheckBotInOwnerGroup(bot))
+            {
+                DestoryPlayerNpcBot(bot);
+            }
+        }
+
+        // if(ai->waitDestory)
+        // {
+        //     continue;
+        // }
 
         if (ai->IAmFree())
             continue;
@@ -992,6 +1069,7 @@ void BotMgr::Update(uint32 diff)
 
         if (partyCombat == false || _owner->InBattleground())
             ai->UpdateReviveTimer(diff);
+
 
         //bot->IsAIEnabled = true;
 
@@ -1014,14 +1092,31 @@ void BotMgr::Update(uint32 diff)
             (!bot->GetBotAI()->HasBotCommandState(BOT_COMMAND_STAY) && _owner->GetDistance(bot) > SIZE_OF_GRIDS)))
         {
             //_owner->m_Controlled.erase(bot);
-            TeleportBot(bot, _owner->GetMap(), _owner, _quickrecall);
-            continue;
+             TeleportBot(bot, _owner->GetMap(), _owner, _quickrecall);
+             continue;
         }
 
         ai->canUpdate = true;
         bot->Update(diff);
         ai->canUpdate = false;
+
     }
+
+    for (BotMap::const_iterator itr2 = _beforeRemoveBots.begin(); itr2 != _beforeRemoveBots.end(); ++itr2)
+    {
+        bot = itr2->second;
+        if (!bot) {
+            continue;
+        }
+       /* std::string sayText = _owner->GetPlayerName() + ",主人再见！";
+        bot->GetBotAI()->BotWhisper(sayText, _owner);*/
+
+        /* bot->Say(sayText,Language::LANG_UNIVERSAL);*/
+
+        RemoveBot(bot->GetGUID(), BOT_REMOVE_DISMISS);
+    }
+
+    _beforeRemoveBots.clear();
 
     if (_quickrecall)
     {
@@ -1046,7 +1141,7 @@ bool BotMgr::IsMapAllowedForBots(Map const* map) const
 
 bool BotMgr::RestrictBots(Creature const* bot, bool add) const
 {
-
+    if (!_owner) { return true; }
     if (!_owner->FindMap())
         return true;
 
@@ -1603,8 +1698,11 @@ void BotMgr::RemoveBot(ObjectGuid guid, uint8 removetype)
     bot->SetLevel(bot->GetCreatureTemplate()->minlevel);
 
     /*player_npcbot*/
-    if(itr->second->IsPlayerNpcBot())
+    if(bot->IsPlayerNpcBot())
     {
+        if (!bot->GetBotAI()->IsDuringTeleport()) {
+            bot->GetBotAI()->TeleportHomeStart(true);
+        }
         return;
     }
 

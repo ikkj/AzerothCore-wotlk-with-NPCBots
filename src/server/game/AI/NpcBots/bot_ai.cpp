@@ -41,6 +41,7 @@
 #include "SpellAuraEffects.h"
 #include "TemporarySummon.h"
 #include "Transport.h"
+#include "Config.h"
 #include "World.h"
 /*
 NpcBot System by Trickerer (https://github.com/trickerer/Trinity-Bots; onlysuffering@gmail.com)
@@ -66,71 +67,71 @@ static constexpr GossipOptionIcon BOT_ICON_OFF = GOSSIP_ICON_CHAT;
 static constexpr uint32 MAX_AMMO_LEVEL = 13;
 static constexpr uint8 AmmoDPSForLevel[MAX_AMMO_LEVEL][2] =
 {
-    {  1,  1 },
-    {  5,  2 },
-    { 10,  3 },
-    { 15,  4 },
-    { 25,  7 },
-    { 30,  8 },
-    { 37, 12 },
-    { 44, 15 },
-    { 52, 17 },
-    { 57, 26 },
-    { 62, 43 },
-    { 72, 67 },
-    { 80, 91 }
+    {1, 1},
+    {5, 2},
+    {10, 3},
+    {15, 4},
+    {25, 7},
+    {30, 8},
+    {37, 12},
+    {44, 15},
+    {52, 17},
+    {57, 26},
+    {62, 43},
+    {72, 67},
+    {80, 91}
 };
 static constexpr uint32 MAX_POTION_SPELLS = 8;
 static constexpr uint32 MAX_FEAST_SPELLS = 11;
 static constexpr uint32 ManaPotionSpells[MAX_POTION_SPELLS][2] =
 {
-    {  5,   437 },
-    { 14,   438 },
-    { 22,  2023 },
-    { 31, 11903 },
-    { 41, 17530 },
-    { 49, 17531 },
-    { 55, 28499 },
-    { 70, 43186 }
+    {5, 437},
+    {14, 438},
+    {22, 2023},
+    {31, 11903},
+    {41, 17530},
+    {49, 17531},
+    {55, 28499},
+    {70, 43186}
 };
 static constexpr uint32 HealingPotionSpells[MAX_POTION_SPELLS][2] =
 {
-    {  1,   439 },
-    {  3,   440 },
-    { 12,   441 },
-    { 21,  2024 },
-    { 35,  4042 },
-    { 45, 17534 },
-    { 55, 28495 },
-    { 70, 43185 }
+    {1, 439},
+    {3, 440},
+    {12, 441},
+    {21, 2024},
+    {35, 4042},
+    {45, 17534},
+    {55, 28495},
+    {70, 43185}
 };
 static constexpr uint32 DrinkSpells[MAX_FEAST_SPELLS][2] =
 {
-    {  1,   430 },
-    {  5,   431 },
-    { 15,   432 },
-    { 25,  1133 },
-    { 35,  1135 },
-    { 45,  1137 },
-    { 60, 34291 },
-    { 65, 27089 },
-    { 70, 43182 },
-    { 75, 43183 },
-    { 80, 57073 }
+    {1, 430},
+    {5, 431},
+    {15, 432},
+    {25, 1133},
+    {35, 1135},
+    {45, 1137},
+    {60, 34291},
+    {65, 27089},
+    {70, 43182},
+    {75, 43183},
+    {80, 57073}
 };
 static constexpr uint32 EatSpells[MAX_FEAST_SPELLS][2] =
 {
-    {  1,   433 },
-    {  5,   434 },
-    { 15,   435 },
-    { 25,  1127 },
-    { 35,  1129 },
-    { 45,  1131 },
-    { 55, 27094 },
-    { 65, 35270 },
-    { 70, 43180 }, //req 65 but
-    { 75, 45548 },
-    { 80, 45548 }
+    {1, 433},
+    {5, 434},
+    {15, 435},
+    {25, 1127},
+    {35, 1129},
+    {45, 1131},
+    {55, 27094},
+    {65, 35270},
+    {70, 43180}, //req 65 but
+    {75, 45548},
+    {80, 45548}
 };
 uint8 GroupIconsFlags[TARGETICONCOUNT] =
 {
@@ -149,9 +150,10 @@ struct TSpellSummary
     uint8 Targets; // set of enum SelectTarget
     uint8 Effects; // set of enum SelectEffect
 };
+
 extern TSpellSummary* SpellSummary;
 
-void ApplyBotPercentModFloatVar(float &var, float val, bool apply)
+void ApplyBotPercentModFloatVar(float& var, float val, bool apply)
 {
     var *= (apply ? ((100.f + val) / 100.f) : (100.f / (100.f + val)));
 }
@@ -289,21 +291,23 @@ bot_ai::bot_ai(Creature* creature) : CreatureAI(creature)
 
 NpcBotData const* bot_ai::NewSelectNpcBotData() const
 {
-    if(me && me->IsPlayerNpcBot() )
+    if (me && me->IsPlayerNpcBot())
     {
-        return BotDataMgr::Player_SelectNpcBotData(me->GetPlayerNpcBotOwnerId(),me->GetEntry());
-    }else
+        return BotDataMgr::Player_SelectNpcBotData(me->GetPlayerNpcBotOwnerId(), me->GetEntry());
+    }
+    else
     {
         return BotDataMgr::SelectNpcBotData(me->GetEntry());
     }
 }
 
-void bot_ai::NewUpdateNpcBotData(NpcBotDataUpdateType updateType,void* data) const
+void bot_ai::NewUpdateNpcBotData(NpcBotDataUpdateType updateType, void* data) const
 {
-    if(me && me->IsPlayerNpcBot())
+    if (me && me->IsPlayerNpcBot())
     {
-         BotDataMgr::Player_UpdateNpcBotData(me->GetPlayerNpcBotOwnerId(),me->GetEntry(),updateType,data);
-    }else
+        BotDataMgr::Player_UpdateNpcBotData(me->GetPlayerNpcBotOwnerId(), me->GetEntry(), updateType, data);
+    }
+    else
     {
         BotDataMgr::UpdateNpcBotData(me->GetEntry(), updateType, data);
     }
@@ -311,44 +315,48 @@ void bot_ai::NewUpdateNpcBotData(NpcBotDataUpdateType updateType,void* data) con
 
 NpcBotTransmogData const* bot_ai::NewSelectNpcBotTransmogs() const
 {
-    if(me && me->IsPlayerNpcBot())
+    if (me && me->IsPlayerNpcBot())
     {
-        return BotDataMgr::Player_SelectNpcBotTransmogs(me->GetPlayerNpcBotOwnerId(),me->GetEntry());
-    }else
+        return BotDataMgr::Player_SelectNpcBotTransmogs(me->GetPlayerNpcBotOwnerId(), me->GetEntry());
+    }
+    else
     {
-       return  BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
+        return BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
     }
 }
 
 uint8 bot_ai::NewGetOwnedBotsCount(ObjectGuid owner_guid, uint32 class_mask) const
 {
-    if(me && me->IsPlayerNpcBot())
+    if (me && me->IsPlayerNpcBot())
     {
-        return BotDataMgr::Player_GetOwnedBotsCount(owner_guid,class_mask);
-    }else
+        return BotDataMgr::Player_GetOwnedBotsCount(owner_guid, class_mask);
+    }
+    else
     {
-        return BotDataMgr::GetOwnedBotsCount(owner_guid,class_mask);
+        return BotDataMgr::GetOwnedBotsCount(owner_guid, class_mask);
     }
 }
 
 void bot_ai::NewUpdateNpcBotTransmogData(uint8 slot, uint32 item_id,
-    int32 fake_id, bool update_db) const
+                                         int32 fake_id, bool update_db) const
 {
-    if(me && me->IsPlayerNpcBot())
+    if (me && me->IsPlayerNpcBot())
     {
-        BotDataMgr::Player_UpdateNpcBotTransmogData(me->GetPlayerNpcBotOwnerId(),me->GetEntry(),slot,item_id,fake_id,update_db);
-    }else
+        BotDataMgr::Player_UpdateNpcBotTransmogData(me->GetPlayerNpcBotOwnerId(), me->GetEntry(), slot, item_id, fake_id, update_db);
+    }
+    else
     {
-        BotDataMgr::UpdateNpcBotTransmogData(me->GetEntry(),slot,item_id,fake_id,update_db);
+        BotDataMgr::UpdateNpcBotTransmogData(me->GetEntry(), slot, item_id, fake_id, update_db);
     }
 }
 
 void bot_ai::NewSaveNpcBotStats(NpcBotStats const* stats) const
 {
-    if(me && me->IsPlayerNpcBot())
+    if (me && me->IsPlayerNpcBot())
     {
-        BotDataMgr::Player_SaveNpcBotStats(me->GetPlayerNpcBotOwnerId(),stats);
-    }else
+        BotDataMgr::Player_SaveNpcBotStats(me->GetPlayerNpcBotOwnerId(), stats);
+    }
+    else
     {
         BotDataMgr::SaveNpcBotStats(stats);
     }
@@ -379,6 +387,7 @@ uint16 bot_ai::Rand() const
 {
     return __rand;
 }
+
 //0-178
 void bot_ai::GenerateRand() const
 {
@@ -405,7 +414,7 @@ const std::string& bot_ai::LocalizedNpcText(Player const* forPlayer, uint32 text
         if (!unk_botstrings.count(textId))
         {
             LOG_ERROR("entities.player", "NPCBots: bot text string #{} is not localized, at least for {}",
-                textId, localeNames[loc]);
+                      textId, localeNames[loc]);
 
             std::ostringstream msg;
             msg << (loc == DEFAULT_LOCALE ? "<undefined string " : "<unlocalized string ") << textId << ">";
@@ -424,7 +433,7 @@ void bot_ai::InitializeAI()
     Reset();
 }
 
-void bot_ai::BotSay(const std::string &text, Player const* target) const
+void bot_ai::BotSay(const std::string& text, Player const* target) const
 {
     if (!target && master->GetTypeId() == TYPEID_PLAYER)
         target = master;
@@ -433,7 +442,8 @@ void bot_ai::BotSay(const std::string &text, Player const* target) const
 
     me->Say(text, LANG_UNIVERSAL, target);
 }
-void bot_ai::BotWhisper(const std::string &text, Player const* target) const
+
+void bot_ai::BotWhisper(const std::string& text, Player const* target) const
 {
     if (!target && master->GetTypeId() == TYPEID_PLAYER)
         target = master;
@@ -444,7 +454,8 @@ void bot_ai::BotWhisper(const std::string &text, Player const* target) const
 
     me->Whisper(text, LANG_UNIVERSAL, playerTarget);
 }
-void bot_ai::BotYell(const std::string &text, Player const* /*target*/) const
+
+void bot_ai::BotYell(const std::string& text, Player const* /*target*/) const
 {
     //if (!target && master->GetTypeId() == TYPEID_PLAYER)
     //    target = master;
@@ -453,6 +464,7 @@ void bot_ai::BotYell(const std::string &text, Player const* /*target*/) const
 
     me->Yell(text, LANG_UNIVERSAL);
 }
+
 void bot_ai::BotSay(std::string&& text, Player const* target) const
 {
     if (!target && master->GetTypeId() == TYPEID_PLAYER)
@@ -462,6 +474,7 @@ void bot_ai::BotSay(std::string&& text, Player const* target) const
 
     me->Say(text, LANG_UNIVERSAL, target);
 }
+
 void bot_ai::BotWhisper(std::string&& text, Player const* target) const
 {
     if (!target && master->GetTypeId() == TYPEID_PLAYER)
@@ -473,6 +486,7 @@ void bot_ai::BotWhisper(std::string&& text, Player const* target) const
 
     me->Whisper(text, LANG_UNIVERSAL, playerTarget);
 }
+
 void bot_ai::BotYell(std::string&& text, Player const* /*target*/) const
 {
     me->Yell(text, LANG_UNIVERSAL);
@@ -496,13 +510,13 @@ bool bot_ai::SetBotOwner(Player* newowner)
     if (master->GetGUID() != me->GetGUID())
     {
         LOG_ERROR("entities.player", "bot_ai::SetBotOwner(): bot {} (id: {}) has master {} while trying to set to {}...",
-            me->GetName().c_str(), me->GetEntry(), master->GetName().c_str(), newowner->GetName().c_str());
+                  me->GetName().c_str(), me->GetEntry(), master->GetName().c_str(), newowner->GetName().c_str());
         return false;
     }
     if (!IAmFree())
     {
         LOG_ERROR("entities.player", "bot_ai::SetBotOwner(): minion bot {} (id: {}) IS NOT FREE (has master {}) while trying to set to {}",
-            me->GetName().c_str(), me->GetEntry(), master->GetName().c_str(), newowner->GetName().c_str());
+                  me->GetName().c_str(), me->GetEntry(), master->GetName().c_str(), newowner->GetName().c_str());
         return false;
     }
 
@@ -529,6 +543,7 @@ bool bot_ai::SetBotOwner(Player* newowner)
     AbortTeleport();
     return true;
 }
+
 //Check if should totally unlink from owner
 void bot_ai::CheckOwnerExpiry()
 {
@@ -576,7 +591,7 @@ void bot_ai::CheckOwnerExpiry()
         std::string name = "unknown";
         sCharacterCache->GetCharacterNameByGuid(ownerGuid, name);
         LOG_DEBUG("npcbots", ">> {}'s (guid: {}) ownership over bot {} ({}) has expired!",
-            name.c_str(), npcBotData->owner, me->GetName().c_str(), me->GetEntry());
+                  name.c_str(), npcBotData->owner, me->GetName().c_str(), me->GetEntry());
 
         //send all items back
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_NPCBOT_EQUIP_BY_ITEM_INSTANCE);
@@ -600,8 +615,8 @@ void bot_ai::CheckOwnerExpiry()
                 Item* item = new Item;
                 ASSERT(item->LoadFromDB(itemGuidLow, ownerGuid, fields2, itemId));
                 items.push_back(item);
-
-            } while (iiresult->NextRow());
+            }
+            while (iiresult->NextRow());
 
             CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
             while (!items.empty())
@@ -646,7 +661,6 @@ void bot_ai::CheckOwnerExpiry()
 
         if (Group* gr = GetGroup())
             gr->RemoveMember(me->GetGUID());
-
     }
 }
 
@@ -676,7 +690,8 @@ void bot_ai::ResetBotAI(uint8 resetType)
     {
         NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
         _checkOwershipTimer = (BotMgr::GetOwnershipExpireTime() && npcBotData->owner) ?
-            ((resetType == BOTAI_RESET_INIT || BotMgr::GetOwnershipExpireMode() == BOT_OWNERSHIP_EXPIRE_HIRE) ? 1000 : CalculateOwnershipCheckTime()) : 0;
+                                  ((resetType == BOTAI_RESET_INIT || BotMgr::GetOwnershipExpireMode() == BOT_OWNERSHIP_EXPIRE_HIRE) ? 1000 : CalculateOwnershipCheckTime()) :
+                                  0;
         if (resetType == BOTAI_RESET_INIT)
             homepos.Relocate(me);
         else //if (resetType == BOTAI_RESET_LOGOUT)
@@ -689,7 +704,7 @@ void bot_ai::ResetBotAI(uint8 resetType)
         me->ReplaceAllUnitFlags2(UnitFlags2(me->GetCreatureTemplate()->unit_flags2));
     }
 
-    if (resetType == BOTAI_RESET_DISMISS && !IsTempBot())
+    if (resetType == BOTAI_RESET_DISMISS && !IsTempBot() && !me->IsPlayerNpcBot())
         EnableAllSpells();
 
     //me->IsAIEnabled = true;
@@ -794,13 +809,13 @@ SpellCastResult bot_ai::CheckBotCast(Unit const* victim, uint32 spellId) const
     {
         if (spellInfo->EquippedItemInventoryTypeMask != 0)
         {
-            if ((spellInfo->EquippedItemInventoryTypeMask & (1<<INVTYPE_WEAPONMAINHAND)) &&
+            if ((spellInfo->EquippedItemInventoryTypeMask & (1 << INVTYPE_WEAPONMAINHAND)) &&
                 !me->CanUseAttackType(BASE_ATTACK))
                 return SPELL_FAILED_EQUIPPED_ITEM_CLASS_MAINHAND;
-            if ((spellInfo->EquippedItemInventoryTypeMask & (1<<INVTYPE_WEAPONOFFHAND)) &&
+            if ((spellInfo->EquippedItemInventoryTypeMask & (1 << INVTYPE_WEAPONOFFHAND)) &&
                 !me->CanUseAttackType(OFF_ATTACK))
                 return SPELL_FAILED_EQUIPPED_ITEM_CLASS_OFFHAND;
-            if ((spellInfo->EquippedItemInventoryTypeMask & ((1<<INVTYPE_RANGED)|(1<<INVTYPE_RANGEDRIGHT)|(1<<INVTYPE_THROWN))) &&
+            if ((spellInfo->EquippedItemInventoryTypeMask & ((1 << INVTYPE_RANGED) | (1 << INVTYPE_RANGEDRIGHT) | (1 << INVTYPE_THROWN))) &&
                 !me->CanUseAttackType(RANGED_ATTACK))
                 return SPELL_FAILED_EQUIPPED_ITEM_CLASS;
         }
@@ -825,49 +840,49 @@ SpellCastResult bot_ai::CheckBotCast(Unit const* victim, uint32 spellId) const
                         return SPELL_FAILED_BAD_TARGETS;
             }
         }
-        else if (//spells that ignore immunities
+        else if ( //spells that ignore immunities
             spellId != 64382 && //shattering throw
             spellId != 32375 && //mass dispel
             (spellInfo->HasEffect(SPELL_EFFECT_SCHOOL_DAMAGE) ||
-            spellInfo->HasEffect(SPELL_EFFECT_WEAPON_PERCENT_DAMAGE) ||
-            spellInfo->HasEffect(SPELL_EFFECT_WEAPON_DAMAGE) ||
-            spellInfo->HasEffect(SPELL_EFFECT_POWER_BURN) ||
-            spellInfo->HasEffect(SPELL_EFFECT_NORMALIZED_WEAPON_DMG)) &&
+                spellInfo->HasEffect(SPELL_EFFECT_WEAPON_PERCENT_DAMAGE) ||
+                spellInfo->HasEffect(SPELL_EFFECT_WEAPON_DAMAGE) ||
+                spellInfo->HasEffect(SPELL_EFFECT_POWER_BURN) ||
+                spellInfo->HasEffect(SPELL_EFFECT_NORMALIZED_WEAPON_DMG)) &&
             !_checkImmunities(victim, spellInfo))
             return SPELL_FAILED_BAD_TARGETS;
     }
 
     switch (_botclass)
     {
-        case BOT_CLASS_PALADIN:
-        case BOT_CLASS_MAGE:
-        case BOT_CLASS_PRIEST:
-        case BOT_CLASS_DRUID:
-        case BOT_CLASS_WARLOCK:
-        case BOT_CLASS_SHAMAN:
-            if (Feasting() && !master->IsInCombat() && !master->HasAuraType(SPELL_AURA_PERIODIC_DAMAGE))
-                return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
-            break;
-        case BOT_CLASS_WARRIOR: //BladeStorm
-        case BOT_CLASS_BM: //BladeStorm PLACEHOLDER
-        case BOT_CLASS_ROGUE: //Killing Spree
-            if (me->HasAuraType(SPELL_AURA_ALLOW_ONLY_ABILITY))
-                return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
-            break;
-        case BOT_CLASS_HUNTER:
-        case BOT_CLASS_DEATH_KNIGHT:
-        case BOT_CLASS_SPHYNX:
-        case BOT_CLASS_ARCHMAGE:
-        case BOT_CLASS_DREADLORD:
-        case BOT_CLASS_SPELLBREAKER:
-        case BOT_CLASS_DARK_RANGER:
-        case BOT_CLASS_NECROMANCER:
-        case BOT_CLASS_SEA_WITCH:
-        case BOT_CLASS_CRYPT_LORD:
-            break;
-        default:
-            LOG_ERROR("entities.player", "CheckBotCast(): Unknown bot class {}", _botclass);
-            break;
+    case BOT_CLASS_PALADIN:
+    case BOT_CLASS_MAGE:
+    case BOT_CLASS_PRIEST:
+    case BOT_CLASS_DRUID:
+    case BOT_CLASS_WARLOCK:
+    case BOT_CLASS_SHAMAN:
+        if (Feasting() && !master->IsInCombat() && !master->HasAuraType(SPELL_AURA_PERIODIC_DAMAGE))
+            return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
+        break;
+    case BOT_CLASS_WARRIOR: //BladeStorm
+    case BOT_CLASS_BM: //BladeStorm PLACEHOLDER
+    case BOT_CLASS_ROGUE: //Killing Spree
+        if (me->HasAuraType(SPELL_AURA_ALLOW_ONLY_ABILITY))
+            return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
+        break;
+    case BOT_CLASS_HUNTER:
+    case BOT_CLASS_DEATH_KNIGHT:
+    case BOT_CLASS_SPHYNX:
+    case BOT_CLASS_ARCHMAGE:
+    case BOT_CLASS_DREADLORD:
+    case BOT_CLASS_SPELLBREAKER:
+    case BOT_CLASS_DARK_RANGER:
+    case BOT_CLASS_NECROMANCER:
+    case BOT_CLASS_SEA_WITCH:
+    case BOT_CLASS_CRYPT_LORD:
+        break;
+    default:
+        LOG_ERROR("entities.player", "CheckBotCast(): Unknown bot class {}", _botclass);
+        break;
     }
 
     return SPELL_CAST_OK;
@@ -913,7 +928,7 @@ bool bot_ai::doCast(Unit* victim, uint32 spellId, TriggerCastFlags flags)
                 // check if target already has the same type, but more powerful aura
                 if (!nonAuraEffectMask && (approximateAuraEffectMask & (1 << i)))
                     if (!victim->IsHighestExclusiveAuraEffect(m_botSpellInfo, AuraType(m_botSpellInfo->Effects[i].ApplyAuraName),
-                        m_botSpellInfo->Effects[i].CalcValue(me, &m_botSpellInfo->Effects[i].BasePoints), approximateAuraEffectMask, false))
+                                                              m_botSpellInfo->Effects[i].CalcValue(me, &m_botSpellInfo->Effects[i].BasePoints), approximateAuraEffectMask, false))
                         return false;
             }
         }
@@ -937,7 +952,7 @@ bool bot_ai::doCast(Unit* victim, uint32 spellId, TriggerCastFlags flags)
         !m_botSpellInfo->HasEffect(SPELL_EFFECT_SELF_RESURRECT))
     {
         LOG_DEBUG("npcbots", "bot_ai::doCast(): {} (bot class {}) tried to cast spell {} on a dead target {}",
-            me->GetName().c_str(), _botclass, spellId, victim->GetName().c_str());
+                  me->GetName().c_str(), _botclass, spellId, victim->GetName().c_str());
         //return false;
     }
 
@@ -945,11 +960,11 @@ bool bot_ai::doCast(Unit* victim, uint32 spellId, TriggerCastFlags flags)
     if (me->isMoving() && !(flags & TRIGGERED_CAST_DIRECTLY) && !(m_botSpellInfo->Attributes & SPELL_ATTR0_ON_NEXT_SWING) &&
         !m_botSpellInfo->IsAutoRepeatRangedSpell() &&
         ((m_botSpellInfo->InterruptFlags & SPELL_INTERRUPT_FLAG_MOVEMENT)
-        //autorepeat spells missing SPELL_INTERRUPT_FLAG_MOVEMENT
-        || spellId == SHOOT_WAND
-        //channeled spells missing SPELL_INTERRUPT_FLAG_MOVEMENT
-        //Mind Flay (Rank 8)
-        || spellId == 48155) &&
+            //autorepeat spells missing SPELL_INTERRUPT_FLAG_MOVEMENT
+            || spellId == SHOOT_WAND
+            //channeled spells missing SPELL_INTERRUPT_FLAG_MOVEMENT
+            //Mind Flay (Rank 8)
+            || spellId == 48155) &&
         (m_botSpellInfo->IsChanneled() || m_botSpellInfo->CalcCastTime()))
     {
         int32 cast_time = int32(m_botSpellInfo->CalcCastTime());
@@ -1019,12 +1034,12 @@ bool bot_ai::doCast(Unit* victim, uint32 spellId, TriggerCastFlags flags)
     targets.SetUnitTarget(victim);
     Spell* spell = new Spell(me, m_botSpellInfo, flags);
     spell->prepare(&targets); //sets current spell if succeed
-/*
-    SpellCastResult result = spell->CheckCast(true);
-    if (result != SPELL_CAST_OK)
-        TC_LOG_ERROR("entities.player", "doCast(): %s (%u) by %s on %s failed with %u",
-        m_botSpellInfo->SpellName[0], spellId, me->GetName().c_str(), victim->GetName().c_str(), uint32(result));
-*/
+    /*
+        SpellCastResult result = spell->CheckCast(true);
+        if (result != SPELL_CAST_OK)
+            TC_LOG_ERROR("entities.player", "doCast(): %s (%u) by %s on %s failed with %u",
+            m_botSpellInfo->SpellName[0], spellId, me->GetName().c_str(), victim->GetName().c_str(), uint32(result));
+    */
     bool casted = triggered; //triggered casts are casted immediately
     for (uint8 i = 0; i != CURRENT_MAX_SPELL; ++i)
     {
@@ -1063,7 +1078,7 @@ bool bot_ai::doCast(Unit* victim, uint32 spellId, TriggerCastFlags flags)
     //Apply haste to cooldown
     if (haste && m_botSpellInfo->StartRecoveryCategory == 133 && m_botSpellInfo->StartRecoveryTime == 1500 &&
         m_botSpellInfo->DmgClass != SPELL_DAMAGE_CLASS_MELEE && m_botSpellInfo->DmgClass != SPELL_DAMAGE_CLASS_RANGED &&
-        !(m_botSpellInfo->Attributes & (SPELL_ATTR0_USES_RANGED_SLOT|SPELL_ATTR0_IS_ABILITY)))
+        !(m_botSpellInfo->Attributes & (SPELL_ATTR0_USES_RANGED_SLOT | SPELL_ATTR0_IS_ABILITY)))
         ApplyBotPercentModFloatVar(gcd, float(haste), false);
 
     //if cast time is lower than 1.5 sec it also reduces gcd but only if not instant
@@ -1088,6 +1103,7 @@ bool bot_ai::doCast(Unit* victim, uint32 spellId, TriggerCastFlags flags)
 
     return true;
 }
+
 //Follow point calculation
 void bot_ai::_calculatePos(Unit const* followUnit, Position& pos, float* speed/* = nullptr*/) const
 {
@@ -1121,12 +1137,12 @@ void bot_ai::_calculatePos(Unit const* followUnit, Position& pos, float* speed/*
         angle = float(M_PI) / 7.5f; //max bias (left of right) //total arc is angle * 2
         angle = (angle / dpss) * (slot); //bias
         if (slot % 2) angle *= -1.f; //bias interchange
-        angle += float(((slot % 4) < 2) ? (M_PI/2.f) : -(M_PI/2.f)); //sides
+        angle += float(((slot % 4) < 2) ? (M_PI / 2.f) : -(M_PI / 2.f)); //sides
         mydist = 2.0f;
     }
     else
     {
-        angle = float((me->GetEntry() % 2) ? (M_PI/2.f) : -(M_PI/2.f));
+        angle = float((me->GetEntry() % 2) ? (M_PI / 2.f) : -(M_PI / 2.f));
         mydist = 0.5f;
     }
 
@@ -1154,9 +1170,9 @@ void bot_ai::_calculatePos(Unit const* followUnit, Position& pos, float* speed/*
                 break;
             }
             mmover->GetNearPoint(bmover, x, y, z, 0.f, mydist, angle);
-            if (!followUnit->IsWithinLOS(x,y,z)) //try to get much closer to follow unit
+            if (!followUnit->IsWithinLOS(x, y, z)) //try to get much closer to follow unit
             {
-                mydist *= 0.4f - float(i*0.07f);
+                mydist *= 0.4f - float(i * 0.07f);
                 size *= 0.1f;
                 if (size < 0.1)
                     size = 0.f;
@@ -1166,7 +1182,7 @@ void bot_ai::_calculatePos(Unit const* followUnit, Position& pos, float* speed/*
         }
     }
     else
-        mpos = mmover->GetFirstCollisionPosition(mydist+size, angle);
+        mpos = mmover->GetFirstCollisionPosition(mydist + size, angle);
 
     if ((movFlags & MOVEMENTFLAG_FORWARD) && !(movFlags & MOVEMENTFLAG_FALLING_FAR))
     {
@@ -1220,6 +1236,7 @@ void bot_ai::_calculatePos(Unit const* followUnit, Position& pos, float* speed/*
     //r - ranged (ROLE_RANGED)
     //m - melee (ROLE_DPS)
 }
+
 // Movement set
 // Uses MovePoint() for following instead of MoveFollow()
 // This helps bots overcome a bug with fanthom walls on grid borders blocking pathing
@@ -1234,18 +1251,19 @@ void bot_ai::BotMovement(BotMovementType type, Position const* pos, Unit* target
 
     switch (type)
     {
-        case BOT_MOVE_CHASE:
-            ASSERT(target);
-            mover->GetMotionMaster()->MoveChase(target, {}, ChaseAngle(target->GetRelativeAngle(me), float(target->IsPlayer() ? M_PI * 2.0 : M_PI / 8.0)));
-            break;
-        case BOT_MOVE_POINT:
-            mover->GetMotionMaster()->Add(new PointMovementGenerator<Creature>(1, pos->m_positionX, pos->m_positionY, pos->m_positionZ, speed, 0.0f, nullptr, generatePath));
-            break;
-        default:
-            LOG_ERROR("scripts", "BotMovement: unhandled bot movement type {}", uint32(type));
-            return;
+    case BOT_MOVE_CHASE:
+        ASSERT(target);
+        mover->GetMotionMaster()->MoveChase(target, {}, ChaseAngle(target->GetRelativeAngle(me), float(target->IsPlayer() ? M_PI * 2.0 : M_PI / 8.0)));
+        break;
+    case BOT_MOVE_POINT:
+        mover->GetMotionMaster()->Add(new PointMovementGenerator<Creature>(1, pos->m_positionX, pos->m_positionY, pos->m_positionZ, speed, 0.0f, nullptr, generatePath));
+        break;
+    default:
+        LOG_ERROR("scripts", "BotMovement: unhandled bot movement type {}", uint32(type));
+        return;
     }
 }
+
 bool bot_ai::CanBotMoveVehicle() const
 {
     if (VehicleSeatEntry const* seat = me->GetVehicle() ? me->GetVehicle()->GetSeatForPassenger(me) : nullptr)
@@ -1253,6 +1271,7 @@ bool bot_ai::CanBotMoveVehicle() const
 
     return false;
 }
+
 void bot_ai::MoveToSendPosition(Position const& mpos)
 {
     EventRemoveBotAwaitState(BOT_AWAIT_SEND);
@@ -1273,12 +1292,14 @@ void bot_ai::MoveToSendPosition(Position const& mpos)
     else
         BotWhisper("Position is too far away!");
 }
+
 void bot_ai::MoveToSendPosition(uint32 point_id)
 {
     ASSERT(point_id < MAX_SEND_POINTS);
 
     MoveToSendPosition(sendpos[point_id]);
 }
+
 void bot_ai::MarkSendPosition(uint32 point_id)
 {
     ASSERT(point_id < MAX_SEND_POINTS);
@@ -1339,8 +1360,11 @@ void bot_ai::SetBotCommandState(uint32 st, bool force, Position* newpos, float* 
             float myspeed = 0.0f;
             if (!newpos)
             {
-                ASSERT(!IAmFree());
-                _calculatePos(master, movepos, &myspeed);
+                //ASSERT(!IAmFree());
+                if (!IAmFree())
+                {
+                    _calculatePos(master, movepos, &myspeed);
+                }
             }
             else
             {
@@ -1429,36 +1453,44 @@ bool bot_ai::IsPointedTarget(Unit const* target, uint8 targetFlags) const
 
     return false;
 }
+
 bool bot_ai::IsPointedHealTarget(Unit const* target) const
 {
     return IsPointedTarget(target, BotMgr::GetHealTargetIconFlags());
 }
+
 bool bot_ai::IsPointedTankingTarget(Unit const* target) const
 {
     return IsPointedTarget(target, BotMgr::GetTankTargetIconFlags());
 }
+
 bool bot_ai::IsPointedOffTankingTarget(Unit const* target) const
 {
     return IsPointedTarget(target, BotMgr::GetOffTankTargetIconFlags());
 }
+
 //unused
 bool bot_ai::IsPointedDPSTarget(Unit const* target) const
 {
     return IsPointedTarget(target, BotMgr::GetDPSTargetIconFlags());
 }
+
 //unused
 bool bot_ai::IsPointedRangedDPSTarget(Unit const* target) const
 {
     return IsPointedTarget(target, BotMgr::GetRangedDPSTargetIconFlags());
 }
+
 bool bot_ai::IsPointedNoDPSTarget(Unit const* target) const
 {
     return IsPointedTarget(target, BotMgr::GetNoDPSTargetIconFlags());
 }
+
 bool bot_ai::IsPointedAnyAttackTarget(Unit const* target) const
 {
     return IsPointedTarget(target, BotMgr::GetOffTankTargetIconFlags() | BotMgr::GetDPSTargetIconFlags() | BotMgr::GetRangedDPSTargetIconFlags());
 }
+
 // Buffs And Heal (really)
 // Priority as follows: 1) heal players 2) buff players 3) heal bots 4) buff bots
 // Priority adjustments to be considered
@@ -1482,13 +1514,14 @@ void bot_ai::BuffAndHealGroup(uint32 diff)
         std::list<Unit*> targets2;
         GetNearbyFriendlyTargetsList(targets2, 30);
         targets2.remove_if(BOTAI_PRED::BuffTargetExclude());
-        targets2.remove_if([this](Unit const* unit) {
+        targets2.remove_if([this](Unit const* unit)
+        {
             return unit->GetTypeId() != TYPEID_PLAYER && !(IsWanderer() && unit->IsNPCBot() && unit->ToCreature()->GetBotAI()->IsWanderer());
         });
         if (!targets2.empty() && BuffTarget(targets2.size() == 1 ? targets2.front() : Acore::Containers::SelectRandomContainerElement(targets2), diff))
             return;
         for (std::list<Unit*>::const_iterator itr = targets2.begin(); itr != targets2.end(); ++itr)
-            if (GetHealthPCT(*itr) < 95 && urand(1, 100) <= (30 + 30*uint32(GetBG() != nullptr)) && HealTarget(*itr, diff))
+            if (GetHealthPCT(*itr) < 95 && urand(1, 100) <= (30 + 30 * uint32(GetBG() != nullptr)) && HealTarget(*itr, diff))
                 break;
 
         return;
@@ -1507,7 +1540,7 @@ void bot_ai::BuffAndHealGroup(uint32 diff)
             if (master->IsAlive() && !master->HasUnitState(UNIT_STATE_ISOLATED) && GetHealthPCT(master) <= hppctthreshold && me->GetDistance(master) < 40)
                 targets3.push_back(master);
             if (master->GetVehicleBase() && !(master->GetVehicleBase()->GetTypeId() == TYPEID_UNIT &&
-                master->GetVehicleCreatureBase()->GetCreatureTemplate()->type == CREATURE_TYPE_MECHANICAL) &&
+                    master->GetVehicleCreatureBase()->GetCreatureTemplate()->type == CREATURE_TYPE_MECHANICAL) &&
                 !master->GetVehicleBase()->HasUnitState(UNIT_STATE_ISOLATED) && GetHealthPCT(master->GetVehicleBase()) <= hppctthreshold &&
                 me->GetDistance(master->GetVehicleBase()) < 40)
                 targets3.push_back(master->GetVehicleBase());
@@ -1563,7 +1596,8 @@ void bot_ai::BuffAndHealGroup(uint32 diff)
         {
             Unit* u = *itr;
             if (!u || !u->IsPet() || me->GetMap() != u->FindMap() || !u->IsAlive() || u->HasUnitState(UNIT_STATE_ISOLATED) ||
-                u->IsTotem() || me->GetDistance(u) > 30) continue;
+                u->IsTotem() || me->GetDistance(u) > 30)
+                continue;
 
             targets4.push_back(u);
         }
@@ -1590,7 +1624,7 @@ void bot_ai::BuffAndHealGroup(uint32 diff)
             if (GetHealthPCT(tPlayer) <= hppctthreshold || IsTank(tPlayer))
                 targets5.push_back(tPlayer);
             if (tPlayer->GetVehicleBase() && !(tPlayer->GetVehicleBase()->GetTypeId() == TYPEID_UNIT &&
-                tPlayer->GetVehicleCreatureBase()->GetCreatureTemplate()->type == CREATURE_TYPE_MECHANICAL) &&
+                    tPlayer->GetVehicleCreatureBase()->GetCreatureTemplate()->type == CREATURE_TYPE_MECHANICAL) &&
                 !tPlayer->GetVehicleBase()->HasUnitState(UNIT_STATE_ISOLATED) && GetHealthPCT(tPlayer->GetVehicleBase()) <= hppctthreshold &&
                 me->GetDistance(tPlayer->GetVehicleBase()) < 40)
                 targets5.push_back(tPlayer->GetVehicleBase());
@@ -1703,7 +1737,8 @@ void bot_ai::BuffAndHealGroup(uint32 diff)
             {
                 Unit* u = *bitr;
                 if (!u || !u->IsPet() || me->GetMap() != u->FindMap() || !u->IsAlive() || u->HasUnitState(UNIT_STATE_ISOLATED) ||
-                    u->IsTotem() || me->GetDistance(u) > 30) continue;
+                    u->IsTotem() || me->GetDistance(u) > 30)
+                    continue;
 
                 targets6.push_back(u);
             }
@@ -1713,6 +1748,7 @@ void bot_ai::BuffAndHealGroup(uint32 diff)
     if (!targets6.empty() && BuffTarget(Acore::Containers::SelectRandomContainerElement(targets6), diff))
         return;
 }
+
 // Attempt to resurrect dead players and bots
 // Target is either bot, player or player corpse
 // no need to check global cooldown
@@ -1774,7 +1810,7 @@ void bot_ai::ResurrectGroup(uint32 spell_id)
                 else if (me->GetDistance(target) < 15 && !target->IsWithinLOSInMap(me, VMAP::ModelIgnoreFlags::M2, LINEOFSIGHT_ALL_CHECKS))
                     me->Relocate(*target);
 
-                if (doCast(target, spell_id))//rezzing it
+                if (doCast(target, spell_id)) //rezzing it
                 {
                     BotWhisper(LocalizedNpcText(player, BOT_TEXT_REZZING_YOU));
                     return;
@@ -1822,7 +1858,7 @@ void bot_ai::ResurrectGroup(uint32 spell_id)
             else if (me->GetDistance(target) < 15 && !target->IsWithinLOSInMap(me, VMAP::ModelIgnoreFlags::M2, LINEOFSIGHT_ALL_CHECKS))
                 me->Relocate(*target);
 
-            if (doCast(target, spell_id))//rezzing it
+            if (doCast(target, spell_id)) //rezzing it
             {
                 BotWhisper(LocalizedNpcText(player, BOT_TEXT_REZZING_YOU), player);
                 if (player != master)
@@ -1878,6 +1914,7 @@ void bot_ai::ResurrectGroup(uint32 spell_id)
         return;
     }
 }
+
 // CURES
 //cycle through the group sending members for cure
 void bot_ai::CureGroup(uint32 cureSpell, uint32 diff)
@@ -1885,7 +1922,7 @@ void bot_ai::CureGroup(uint32 cureSpell, uint32 diff)
     if (!cureSpell) return;
     if (GC_Timer > diff) return;
     if (me->IsMounted())
-    if (IsTank() && me->GetVictim() && me->GetMap()->IsRaid()) return;
+        if (IsTank() && me->GetVictim() && me->GetMap()->IsRaid()) return;
     if (IsCasting()) return;
 
     if (IAmFree())
@@ -2021,7 +2058,7 @@ bool bot_ai::_canCureTarget(Unit const* target, uint32 cureSpell) const
 
     //SpellBreaker addins
     if (cureSpell == SPELL_STEAL_MAGIC)
-        dispelMask |= (1<<DISPEL_MAGIC) | (1<<DISPEL_CURSE);
+        dispelMask |= (1 << DISPEL_MAGIC) | (1 << DISPEL_CURSE);
 
     if (dispelMask == 0)
         return false;
@@ -2032,12 +2069,12 @@ bool bot_ai::_canCureTarget(Unit const* target, uint32 cureSpell) const
     return !(dispel_list.empty());
 }
 
-void bot_ai::_getBotDispellableAuraList(Unit const* target, uint32 dispelMask, std::list<Aura const*> &dispelList) const
+void bot_ai::_getBotDispellableAuraList(Unit const* target, uint32 dispelMask, std::list<Aura const*>& dispelList) const
 {
     //Unholy Blight prevents diseases from being dispelled
-    if ((dispelMask & (1<<DISPEL_DISEASE)) &&
+    if ((dispelMask & (1 << DISPEL_DISEASE)) &&
         target->GetAuraEffect(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_DEATHKNIGHT, 1494, 0))
-        dispelMask &= ~(1<<DISPEL_DISEASE);
+        dispelMask &= ~(1 << DISPEL_DISEASE);
 
     Unit::AuraMap const& auras = target->GetOwnedAuras();
     for (Unit::AuraMap::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
@@ -2066,6 +2103,7 @@ void bot_ai::_getBotDispellableAuraList(Unit const* target, uint32 dispelMask, s
         }
     }
 }
+
 // Check if can cast some spell out of main rotation to use up target's spell reflection charges
 // Supposed to check instant non-damaging spells but these checks are not performed (Shaman, Priest)
 bool bot_ai::CanRemoveReflectSpells(Unit const* target, uint32 spellId) const
@@ -2103,28 +2141,29 @@ bool bot_ai::CanRemoveReflectSpells(Unit const* target, uint32 spellId) const
         //}
         //if (directDamage)
         //{
-            Unit::AuraEffectList const& reflectAuras1 = target->GetAuraEffectsByType(SPELL_AURA_REFLECT_SPELLS);
-            for (Unit::AuraEffectList::const_iterator itr = reflectAuras1.begin(); itr != reflectAuras1.end(); ++itr)
-            {
-                //All existing SPELL_AURA_REFLECT_SPELLS spells have at least amount 50
-                if ((*itr)->GetBase()->IsUsingCharges() &&
-                    (*itr)->GetBase()->GetCharges() <= target->getAttackers().size() * ((*itr)->GetBase()->GetDuration() / 1000) / 4)
-                    return true;
-            }
+        Unit::AuraEffectList const& reflectAuras1 = target->GetAuraEffectsByType(SPELL_AURA_REFLECT_SPELLS);
+        for (Unit::AuraEffectList::const_iterator itr = reflectAuras1.begin(); itr != reflectAuras1.end(); ++itr)
+        {
+            //All existing SPELL_AURA_REFLECT_SPELLS spells have at least amount 50
+            if ((*itr)->GetBase()->IsUsingCharges() &&
+                (*itr)->GetBase()->GetCharges() <= target->getAttackers().size() * ((*itr)->GetBase()->GetDuration() / 1000) / 4)
+                return true;
+        }
 
-            Unit::AuraEffectList const& reflectAuras2 = target->GetAuraEffectsByType(SPELL_AURA_REFLECT_SPELLS_SCHOOL);
-            for (Unit::AuraEffectList::const_iterator itr = reflectAuras2.begin(); itr != reflectAuras2.end(); ++itr)
-            {
-                if ((*itr)->GetBase()->IsUsingCharges() &&
-                    (*itr)->GetAmount() >= 50 && ((*itr)->GetMiscValue() & spellInfo->GetSchoolMask()) &&
-                    (*itr)->GetBase()->GetCharges() <= ((*itr)->GetBase()->GetDuration() / 1000) / 4)
-                    return true;
-            }
+        Unit::AuraEffectList const& reflectAuras2 = target->GetAuraEffectsByType(SPELL_AURA_REFLECT_SPELLS_SCHOOL);
+        for (Unit::AuraEffectList::const_iterator itr = reflectAuras2.begin(); itr != reflectAuras2.end(); ++itr)
+        {
+            if ((*itr)->GetBase()->IsUsingCharges() &&
+                (*itr)->GetAmount() >= 50 && ((*itr)->GetMiscValue() & spellInfo->GetSchoolMask()) &&
+                (*itr)->GetBase()->GetCharges() <= ((*itr)->GetBase()->GetDuration() / 1000) / 4)
+                return true;
+        }
         //}
     }
 
     return false;
 }
+
 //LIST AURAS
 // Debug: Returns bot's info to called player
 void bot_ai::_listAuras(Player const* player, Unit const* unit) const
@@ -2147,7 +2186,7 @@ void bot_ai::_listAuras(Player const* player, Unit const* unit) const
         botstring << (owner != unit ? owner->GetName() : LocalizedNpcText(player, BOT_TEXT_NONE));
     }
     uint8 locale = player->GetSession()->GetSessionDbcLocale();
-    Unit::AuraMap const &vAuras = unit->GetOwnedAuras();
+    Unit::AuraMap const& vAuras = unit->GetOwnedAuras();
     for (Unit::AuraMap::const_iterator itr = vAuras.begin(); itr != vAuras.end(); ++itr)
     {
         SpellInfo const* spellInfo = itr->second->GetSpellInfo();
@@ -2187,12 +2226,18 @@ void bot_ai::_listAuras(Player const* player, Unit const* unit) const
         std::string mystat;
         switch (i)
         {
-            case STAT_STRENGTH: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_STR); break;
-            case STAT_AGILITY: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_AGI); break;
-            case STAT_STAMINA: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_STA); break;
-            case STAT_INTELLECT: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_INT); break;
-            case STAT_SPIRIT: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_SPI); break;
-            default: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_UNK); break;
+        case STAT_STRENGTH: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_STR);
+            break;
+        case STAT_AGILITY: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_AGI);
+            break;
+        case STAT_STAMINA: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_STA);
+            break;
+        case STAT_INTELLECT: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_INT);
+            break;
+        case STAT_SPIRIT: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_SPI);
+            break;
+        default: mystat = LocalizedNpcText(player, BOT_TEXT_STAT_UNK);
+            break;
         }
         //ch.PSendSysMessage("base %s: %.1f", mystat.c_str(), unit->GetCreateStat(Stats(i));
         float totalstat = unit->GetTotalStatValue(Stats(i));
@@ -2202,12 +2247,17 @@ void bot_ai::_listAuras(Player const* player, Unit const* unit) const
             BotStatMods t = MAX_BOT_ITEM_MOD;
             switch (i)
             {
-                case STAT_STRENGTH:     t = BOT_STAT_MOD_STRENGTH;  break;
-                case STAT_AGILITY:      t = BOT_STAT_MOD_AGILITY;   break;
-                case STAT_STAMINA:      t = BOT_STAT_MOD_STAMINA;   break;
-                case STAT_INTELLECT:    t = BOT_STAT_MOD_INTELLECT; break;
-                case STAT_SPIRIT:       t = BOT_STAT_MOD_SPIRIT;    break;
-                default:                                            break;
+            case STAT_STRENGTH: t = BOT_STAT_MOD_STRENGTH;
+                break;
+            case STAT_AGILITY: t = BOT_STAT_MOD_AGILITY;
+                break;
+            case STAT_STAMINA: t = BOT_STAT_MOD_STAMINA;
+                break;
+            case STAT_INTELLECT: t = BOT_STAT_MOD_INTELLECT;
+                break;
+            case STAT_SPIRIT: t = BOT_STAT_MOD_SPIRIT;
+                break;
+            default: break;
             }
 
             if (t < MAX_BOT_ITEM_MOD)
@@ -2233,31 +2283,31 @@ void bot_ai::_listAuras(Player const* player, Unit const* unit) const
     //botstring << "\n" << "Resilience pct" << ": -" << resilience_base << " / -" << float(resilience_base * 2.2f) << " / -" << float(resilience_base * 2.0f);
 
     WeaponAttackType type = BASE_ATTACK;
-    float attSpeed = (unit->GetAttackTime(type) * unit->m_modAttackSpeedPct[type])/1000.f;
+    float attSpeed = (unit->GetAttackTime(type) * unit->m_modAttackSpeedPct[type]) / 1000.f;
     botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_RANGE_MAINHAND) << ": " << LocalizedNpcText(player, BOT_TEXT_MIN) << ": " << int32(unit->GetFloatValue(UNIT_FIELD_MINDAMAGE)) << ", " << LocalizedNpcText(player, BOT_TEXT_MAX) << ": " << int32(unit->GetFloatValue(UNIT_FIELD_MAXDAMAGE) + 1.f);
-    botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_MULT_MAINHAND) << ": " << float(unit->GetModifierValue(UNIT_MOD_DAMAGE_MAINHAND, BASE_PCT)*unit->GetModifierValue(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_PCT));
+    botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_MULT_MAINHAND) << ": " << float(unit->GetModifierValue(UNIT_MOD_DAMAGE_MAINHAND, BASE_PCT) * unit->GetModifierValue(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_PCT));
     botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_ATTACK_TIME_MAINHAND) << ": " << float(attSpeed)
         << " (" << float(((unit->GetFloatValue(UNIT_FIELD_MINDAMAGE) + unit->GetFloatValue(UNIT_FIELD_MAXDAMAGE)) / 2) / attSpeed) << " " << LocalizedNpcText(player, BOT_TEXT_DPS) << ")";
     if (unit->haveOffhandWeapon())
     {
         type = OFF_ATTACK;
-        attSpeed = (unit->GetAttackTime(type) * unit->m_modAttackSpeedPct[type])/1000.f;
+        attSpeed = (unit->GetAttackTime(type) * unit->m_modAttackSpeedPct[type]) / 1000.f;
         botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_RANGE_OFFHAND) << ": " << LocalizedNpcText(player, BOT_TEXT_MIN) << ": " << int32(unit->GetFloatValue(UNIT_FIELD_MINOFFHANDDAMAGE)) << ", " << LocalizedNpcText(player, BOT_TEXT_MAX) << ": " << int32(unit->GetFloatValue(UNIT_FIELD_MAXOFFHANDDAMAGE) + 1.f);
-        botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_MULT_OFFHAND) << ": " << float(unit->GetModifierValue(UNIT_MOD_DAMAGE_OFFHAND, BASE_PCT)*unit->GetModifierValue(UNIT_MOD_DAMAGE_OFFHAND, TOTAL_PCT));
+        botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_MULT_OFFHAND) << ": " << float(unit->GetModifierValue(UNIT_MOD_DAMAGE_OFFHAND, BASE_PCT) * unit->GetModifierValue(UNIT_MOD_DAMAGE_OFFHAND, TOTAL_PCT));
         botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_ATTACK_TIME_OFFHAND) << ": " << float(attSpeed)
             << " (" << float(((unit->GetFloatValue(UNIT_FIELD_MINOFFHANDDAMAGE) + unit->GetFloatValue(UNIT_FIELD_MAXOFFHANDDAMAGE)) / 2) / attSpeed) << " " << LocalizedNpcText(player, BOT_TEXT_DPS) << ")";
     }
     if (unit != me ||
         (me->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + uint32(BOT_SLOT_RANGED)) &&
-        _botclass != BOT_CLASS_PALADIN &&
-        _botclass != BOT_CLASS_DEATH_KNIGHT &&
-        _botclass != BOT_CLASS_DRUID &&
-        _botclass != BOT_CLASS_SHAMAN))
+            _botclass != BOT_CLASS_PALADIN &&
+            _botclass != BOT_CLASS_DEATH_KNIGHT &&
+            _botclass != BOT_CLASS_DRUID &&
+            _botclass != BOT_CLASS_SHAMAN))
     {
         type = RANGED_ATTACK;
-        attSpeed = (unit->GetAttackTime(type) * unit->m_modAttackSpeedPct[type])/1000.f;
+        attSpeed = (unit->GetAttackTime(type) * unit->m_modAttackSpeedPct[type]) / 1000.f;
         botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_RANGE_RANGED) << ": " << LocalizedNpcText(player, BOT_TEXT_MIN) << ": " << int32(unit->GetFloatValue(UNIT_FIELD_MINRANGEDDAMAGE)) << ", " << LocalizedNpcText(player, BOT_TEXT_MAX) << ": " << int32(unit->GetFloatValue(UNIT_FIELD_MAXRANGEDDAMAGE) + 1.f);
-        botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_MULT_RANGED) << ": " << float(unit->GetModifierValue(UNIT_MOD_DAMAGE_RANGED, BASE_PCT)*unit->GetModifierValue(UNIT_MOD_DAMAGE_RANGED, TOTAL_PCT));
+        botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_DMG_MULT_RANGED) << ": " << float(unit->GetModifierValue(UNIT_MOD_DAMAGE_RANGED, BASE_PCT) * unit->GetModifierValue(UNIT_MOD_DAMAGE_RANGED, TOTAL_PCT));
         botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_ATTACK_TIME_RANGED) << ": " << float(attSpeed)
             << " (" << float(((unit->GetFloatValue(UNIT_FIELD_MINRANGEDDAMAGE) + unit->GetFloatValue(UNIT_FIELD_MAXRANGEDDAMAGE)) / 2) / attSpeed) << " " << LocalizedNpcText(player, BOT_TEXT_DPS) << ")";
     }
@@ -2285,17 +2335,23 @@ void bot_ai::_listAuras(Player const* player, Unit const* unit) const
 
         for (uint8 i = SPELL_SCHOOL_HOLY; i != MAX_SPELL_SCHOOL; ++i)
         {
-            uint32 curresist = me->GetResistance(SpellSchools(i)) + resistbonus[i-1];
+            uint32 curresist = me->GetResistance(SpellSchools(i)) + resistbonus[i - 1];
 
             std::string resist;
             switch (i)
             {
-                case 1: resist = LocalizedNpcText(player, BOT_TEXT_HOLY);   break;
-                case 2: resist = LocalizedNpcText(player, BOT_TEXT_FIRE);   break;
-                case 3: resist = LocalizedNpcText(player, BOT_TEXT_NATURE); break;
-                case 4: resist = LocalizedNpcText(player, BOT_TEXT_FROST);  break;
-                case 5: resist = LocalizedNpcText(player, BOT_TEXT_SHADOW); break;
-                case 6: resist = LocalizedNpcText(player, BOT_TEXT_ARCANE); break;
+            case 1: resist = LocalizedNpcText(player, BOT_TEXT_HOLY);
+                break;
+            case 2: resist = LocalizedNpcText(player, BOT_TEXT_FIRE);
+                break;
+            case 3: resist = LocalizedNpcText(player, BOT_TEXT_NATURE);
+                break;
+            case 4: resist = LocalizedNpcText(player, BOT_TEXT_FROST);
+                break;
+            case 5: resist = LocalizedNpcText(player, BOT_TEXT_SHADOW);
+                break;
+            case 6: resist = LocalizedNpcText(player, BOT_TEXT_ARCANE);
+                break;
             }
             botstring << "\n" << LocalizedNpcText(player, BOT_TEXT_RESISTANCE) << ": " << resist << ": " << uint32(curresist);
         }
@@ -2383,6 +2439,7 @@ void bot_ai::_listAuras(Player const* player, Unit const* unit) const
 
     ch.SendSysMessage(botstring.str().c_str());
 }
+
 //SetStats
 // Health, Armor, Powers, Combat Ratings, and global update setup
 void bot_ai::SetStats(bool force)
@@ -2450,37 +2507,37 @@ void bot_ai::SetStats(bool force)
 
     switch (myclass)
     {
-        case BOT_CLASS_WARRIOR:
-        case BOT_CLASS_DEATH_KNIGHT:
-        case BOT_CLASS_PALADIN:
-        case BOT_CLASS_ROGUE:
-        case BOT_CLASS_HUNTER:
-        case BOT_CLASS_SHAMAN:
-        case BOT_CLASS_DRUID:
-        case BOT_CLASS_MAGE:
-        case BOT_CLASS_PRIEST:
-        case BOT_CLASS_WARLOCK:
-        case DRUID_BEAR_FORM:
-        case DRUID_CAT_FORM:
-        case DRUID_MOONKIN_FORM:
-        case DRUID_TREE_FORM:
-        case DRUID_TRAVEL_FORM:
-        case DRUID_AQUATIC_FORM:
-        //case DRUID_FLIGHT_FORM:
-        case BOT_CLASS_BM:
-        case BOT_CLASS_SPHYNX:
-        case BOT_CLASS_ARCHMAGE:
-        case BOT_CLASS_DREADLORD:
-        case BOT_CLASS_SPELLBREAKER:
-        case BOT_CLASS_DARK_RANGER:
-        case BOT_CLASS_NECROMANCER:
-        case BOT_CLASS_SEA_WITCH:
-        case BOT_CLASS_CRYPT_LORD:
-            break;
+    case BOT_CLASS_WARRIOR:
+    case BOT_CLASS_DEATH_KNIGHT:
+    case BOT_CLASS_PALADIN:
+    case BOT_CLASS_ROGUE:
+    case BOT_CLASS_HUNTER:
+    case BOT_CLASS_SHAMAN:
+    case BOT_CLASS_DRUID:
+    case BOT_CLASS_MAGE:
+    case BOT_CLASS_PRIEST:
+    case BOT_CLASS_WARLOCK:
+    case DRUID_BEAR_FORM:
+    case DRUID_CAT_FORM:
+    case DRUID_MOONKIN_FORM:
+    case DRUID_TREE_FORM:
+    case DRUID_TRAVEL_FORM:
+    case DRUID_AQUATIC_FORM:
+    //case DRUID_FLIGHT_FORM:
+    case BOT_CLASS_BM:
+    case BOT_CLASS_SPHYNX:
+    case BOT_CLASS_ARCHMAGE:
+    case BOT_CLASS_DREADLORD:
+    case BOT_CLASS_SPELLBREAKER:
+    case BOT_CLASS_DARK_RANGER:
+    case BOT_CLASS_NECROMANCER:
+    case BOT_CLASS_SEA_WITCH:
+    case BOT_CLASS_CRYPT_LORD:
+        break;
 
-        default:
-            LOG_ERROR("entities.player", "minion_ai: *etStats():Init - unknown bot class {}, real class: {}, _botclass: {}", myclass, GetPlayerClass(), _botclass);
-            break;
+    default:
+        LOG_ERROR("entities.player", "minion_ai: *etStats():Init - unknown bot class {}, real class: {}, _botclass: {}", myclass, GetPlayerClass(), _botclass);
+        break;
     }
 
     float value;
@@ -2516,50 +2573,82 @@ void bot_ai::SetStats(bool force)
     float strmult, agimult;
     switch (myclass)
     {
-        case BOT_CLASS_WARRIOR:
-        case BOT_CLASS_PALADIN:
-        case BOT_CLASS_DEATH_KNIGHT:
-        case BOT_CLASS_DRUID:
-            strmult = 2.f; agimult = 0.f; break;
-        case BOT_CLASS_ROGUE:
-        case BOT_CLASS_SHAMAN:
-            strmult = 1.f; agimult = 1.f; break;
-        case BOT_CLASS_HUNTER:
-            strmult = 0.5f; agimult = 1.f;break; //until attack power is separated
-        case BOT_CLASS_PRIEST:
-        case BOT_CLASS_MAGE:
-        case BOT_CLASS_WARLOCK:
-            strmult = 1.f; agimult = 0.f; break;
-        case DRUID_CAT_FORM:
-            strmult = 2.f; agimult = 1.f; break;
-        case DRUID_BEAR_FORM:
-        case DRUID_MOONKIN_FORM:
-        case DRUID_TREE_FORM:
-        case DRUID_TRAVEL_FORM:
-        case DRUID_AQUATIC_FORM:
+    case BOT_CLASS_WARRIOR:
+    case BOT_CLASS_PALADIN:
+    case BOT_CLASS_DEATH_KNIGHT:
+    case BOT_CLASS_DRUID:
+        strmult = 2.f;
+        agimult = 0.f;
+        break;
+    case BOT_CLASS_ROGUE:
+    case BOT_CLASS_SHAMAN:
+        strmult = 1.f;
+        agimult = 1.f;
+        break;
+    case BOT_CLASS_HUNTER:
+        strmult = 0.5f;
+        agimult = 1.f;
+        break; //until attack power is separated
+    case BOT_CLASS_PRIEST:
+    case BOT_CLASS_MAGE:
+    case BOT_CLASS_WARLOCK:
+        strmult = 1.f;
+        agimult = 0.f;
+        break;
+    case DRUID_CAT_FORM:
+        strmult = 2.f;
+        agimult = 1.f;
+        break;
+    case DRUID_BEAR_FORM:
+    case DRUID_MOONKIN_FORM:
+    case DRUID_TREE_FORM:
+    case DRUID_TRAVEL_FORM:
+    case DRUID_AQUATIC_FORM:
         //case DRUID_FLIGHT_FORM:
-            strmult = 2.f; agimult = 0.f; break;
-        case BOT_CLASS_BM:
-            strmult = 0.f; agimult = 9.f; break;
-        case BOT_CLASS_SPHYNX:
-            strmult = 2.f; agimult = 0.f; break;
-        case BOT_CLASS_ARCHMAGE:
-            strmult = 0.f; agimult = 0.f; break;
-        case BOT_CLASS_DREADLORD:
-            strmult = 8.f; agimult = 0.f; break;
-        case BOT_CLASS_SPELLBREAKER:
-            strmult = 5.f; agimult = 0.f; break;
-        case BOT_CLASS_DARK_RANGER:
-            strmult = 0.f; agimult = 4.f; break;
-        case BOT_CLASS_NECROMANCER:
-            strmult = 0.f; agimult = 0.f; break;
-        case BOT_CLASS_SEA_WITCH:
-            strmult = 0.f; agimult = 2.f; break;
-        case BOT_CLASS_CRYPT_LORD:
-            strmult = 9.f; agimult = 0.f; break;
-        default:
-            LOG_ERROR("entities.player", "_MeleeDamageUpdate(): NIY myclass {}!", uint32(myclass));
-            strmult = 0.f; agimult = 0.f; break;
+        strmult = 2.f;
+        agimult = 0.f;
+        break;
+    case BOT_CLASS_BM:
+        strmult = 0.f;
+        agimult = 9.f;
+        break;
+    case BOT_CLASS_SPHYNX:
+        strmult = 2.f;
+        agimult = 0.f;
+        break;
+    case BOT_CLASS_ARCHMAGE:
+        strmult = 0.f;
+        agimult = 0.f;
+        break;
+    case BOT_CLASS_DREADLORD:
+        strmult = 8.f;
+        agimult = 0.f;
+        break;
+    case BOT_CLASS_SPELLBREAKER:
+        strmult = 5.f;
+        agimult = 0.f;
+        break;
+    case BOT_CLASS_DARK_RANGER:
+        strmult = 0.f;
+        agimult = 4.f;
+        break;
+    case BOT_CLASS_NECROMANCER:
+        strmult = 0.f;
+        agimult = 0.f;
+        break;
+    case BOT_CLASS_SEA_WITCH:
+        strmult = 0.f;
+        agimult = 2.f;
+        break;
+    case BOT_CLASS_CRYPT_LORD:
+        strmult = 9.f;
+        agimult = 0.f;
+        break;
+    default:
+        LOG_ERROR("entities.player", "_MeleeDamageUpdate(): NIY myclass {}!", uint32(myclass));
+        strmult = 0.f;
+        agimult = 0.f;
+        break;
     }
 
     atpower += (strmult != 0x0) ? strmult * _getTotalBotStat(BOT_STAT_MOD_STRENGTH) : 0.f;
@@ -2608,7 +2697,7 @@ void bot_ai::SetStats(bool force)
                 _getBotStat(slot, BOT_STAT_MOD_FERAL_ATTACK_POWER)
                 + _getBotStat(slot, BOT_STAT_MOD_ATTACK_POWER)
                 //+ _getBotStat(slot, BOT_STAT_MOD_RANGED_ATTACK_POWER)
-                );
+            );
         }
     }
     if (_botclass == BOT_CLASS_HUNTER)
@@ -2674,10 +2763,10 @@ void bot_ai::SetStats(bool force)
             //Survival of the Fittest
             if (myclass == DRUID_BEAR_FORM && GetSpec() == BOT_SPEC_DRUID_FERAL)
                 armor_mod += 0.33f + (me->GetShapeshiftForm() == FORM_BEAR ? 1.8f : 3.7f);
-            //Moonkin Form innate
+                //Moonkin Form innate
             else if (myclass == DRUID_MOONKIN_FORM && GetSpec() == BOT_SPEC_DRUID_BALANCE)
                 armor_mod += 3.7f;
-            //Improved Tree Form
+                //Improved Tree Form
             else if (myclass == DRUID_TREE_FORM && GetSpec() == BOT_SPEC_DRUID_RESTORATION)
                 armor_mod += 2.0f;
             //Improved Barkskin
@@ -2745,7 +2834,7 @@ void bot_ai::SetStats(bool force)
         if (_botclass == BOT_CLASS_DARK_RANGER || _botclass == BOT_CLASS_SEA_WITCH || _botclass == BOT_CLASS_CRYPT_LORD)
             value += mylevel * 2; //total 249 at 83
 
-        resistbonus[i-1] = int32(value);
+        resistbonus[i - 1] = int32(value);
         //me->UpdateResistances(i);
     }
 
@@ -2893,13 +2982,13 @@ void bot_ai::SetStats(bool force)
     {
         //Spellstone: just emulate the rating bonus
         uint8 ratingBonus;
-        if      (mylevel >= 78) ratingBonus = 60;
+        if (mylevel >= 78) ratingBonus = 60;
         else if (mylevel >= 72) ratingBonus = 50;
         else if (mylevel >= 66) ratingBonus = 40;
         else if (mylevel >= 60) ratingBonus = 30;
         else if (mylevel >= 48) ratingBonus = 20;
         else if (mylevel >= 36) ratingBonus = 10;
-        else                    ratingBonus = 0;
+        else ratingBonus = 0;
 
         //Master Conjuror
         if (mylevel >= 30 && GetSpec() == BOT_SPEC_WARLOCK_DEMONOLOGY)
@@ -2909,8 +2998,8 @@ void bot_ai::SetStats(bool force)
     }
 
     value += tempval * ((_botclass == BOT_CLASS_HUNTER || _botclass == BOT_CLASS_DARK_RANGER || _botclass == BOT_CLASS_SEA_WITCH) ?
-        _getRatingMultiplier(CR_HASTE_RANGED) :
-        std::max<float>(_getRatingMultiplier(CR_HASTE_MELEE), _getRatingMultiplier(CR_HASTE_SPELL)));
+                            _getRatingMultiplier(CR_HASTE_RANGED) :
+                            std::max<float>(_getRatingMultiplier(CR_HASTE_MELEE), _getRatingMultiplier(CR_HASTE_SPELL)));
 
     //class-specific
     if (_botclass == BOT_CLASS_HUNTER)
@@ -2943,21 +3032,21 @@ void bot_ai::SetStats(bool force)
         float haste_per_lvl;
         switch (_botclass)
         {
-            case BOT_CLASS_BM:
-            case BOT_CLASS_DREADLORD:
-                haste_per_lvl = 0.875f;
-                break;
-            case BOT_CLASS_ARCHMAGE:
-            case BOT_CLASS_DARK_RANGER:
-            case BOT_CLASS_SEA_WITCH:
-                haste_per_lvl = 0.5f;
-                break;
-            case BOT_CLASS_CRYPT_LORD:
-                haste_per_lvl = 0.35f;
-                break;
-            default:
-                haste_per_lvl = 0.25f;
-                break;
+        case BOT_CLASS_BM:
+        case BOT_CLASS_DREADLORD:
+            haste_per_lvl = 0.875f;
+            break;
+        case BOT_CLASS_ARCHMAGE:
+        case BOT_CLASS_DARK_RANGER:
+        case BOT_CLASS_SEA_WITCH:
+            haste_per_lvl = 0.5f;
+            break;
+        case BOT_CLASS_CRYPT_LORD:
+            haste_per_lvl = 0.35f;
+            break;
+        default:
+            haste_per_lvl = 0.25f;
+            break;
         }
         value += mylevel * haste_per_lvl;
     }
@@ -3082,14 +3171,14 @@ void bot_ai::SetStats(bool force)
         value = IAmFree() ? mylevel / 4 : 0; // +20%/+0% at 80
         tempval = value;
 
-        GtChanceToMeleeCritBaseEntry const* critBaseMelee  = sGtChanceToMeleeCritBaseStore.LookupEntry(GetPlayerClass()-1);
-        GtChanceToMeleeCritEntry const* critRatioMelee = sGtChanceToMeleeCritStore.LookupEntry((GetPlayerClass()-1)*GT_MAX_LEVEL + mylevel-1);
+        GtChanceToMeleeCritBaseEntry const* critBaseMelee = sGtChanceToMeleeCritBaseStore.LookupEntry(GetPlayerClass() - 1);
+        GtChanceToMeleeCritEntry const* critRatioMelee = sGtChanceToMeleeCritStore.LookupEntry((GetPlayerClass() - 1) * GT_MAX_LEVEL + mylevel - 1);
         if (critBaseMelee && critRatioMelee)
             value += (critBaseMelee->base + _getTotalBotStat(BOT_STAT_MOD_AGILITY) * critRatioMelee->ratio) * 100.0f;
 
         //crit from intellect
-        GtChanceToSpellCritBaseEntry const* critBaseSpell  = sGtChanceToSpellCritBaseStore.LookupEntry(GetPlayerClass()-1);
-        GtChanceToSpellCritEntry const* critRatioSpell = sGtChanceToSpellCritStore.LookupEntry((GetPlayerClass()-1)*GT_MAX_LEVEL + mylevel-1);
+        GtChanceToSpellCritBaseEntry const* critBaseSpell = sGtChanceToSpellCritBaseStore.LookupEntry(GetPlayerClass() - 1);
+        GtChanceToSpellCritEntry const* critRatioSpell = sGtChanceToSpellCritStore.LookupEntry((GetPlayerClass() - 1) * GT_MAX_LEVEL + mylevel - 1);
         if (critBaseSpell && critRatioSpell)
             tempval += (critBaseSpell->base + _getTotalBotStat(BOT_STAT_MOD_INTELLECT) * critRatioSpell->ratio) * 100.f;
 
@@ -3106,14 +3195,14 @@ void bot_ai::SetStats(bool force)
         if (_botclass == BOT_CLASS_WARLOCK)
         {
             uint8 ratingBonus;
-            if      (mylevel >= 80) ratingBonus = 49;
+            if (mylevel >= 80) ratingBonus = 49;
             else if (mylevel >= 74) ratingBonus = 42;
             else if (mylevel >= 66) ratingBonus = 35;
             else if (mylevel >= 56) ratingBonus = 28;
             else if (mylevel >= 46) ratingBonus = 21;
             else if (mylevel >= 36) ratingBonus = 14;
             else if (mylevel >= 28) ratingBonus = 7;
-            else                    ratingBonus = 0;
+            else ratingBonus = 0;
 
             //Master Conjuror
             if (mylevel >= 30 && GetSpec() == BOT_SPEC_WARLOCK_DEMONOLOGY)
@@ -3127,7 +3216,7 @@ void bot_ai::SetStats(bool force)
         //common crit talents
         if (mylevel >= 10 &&
             (_botclass != BOT_CLASS_MAGE && _botclass != BOT_CLASS_PRIEST &&
-            _botclass != BOT_CLASS_DRUID && _botclass != BOT_CLASS_WARLOCK))
+                _botclass != BOT_CLASS_DRUID && _botclass != BOT_CLASS_WARLOCK))
             value += 5.f;
 
         //class-specific
@@ -3146,7 +3235,7 @@ void bot_ai::SetStats(bool force)
                 {
                     if (mainhand->GetTemplate()->Class == ITEM_CLASS_WEAPON &&
                         (mainhand->GetTemplate()->SubClass == ITEM_SUBCLASS_WEAPON_DAGGER ||
-                        mainhand->GetTemplate()->SubClass == ITEM_SUBCLASS_WEAPON_FIST))
+                            mainhand->GetTemplate()->SubClass == ITEM_SUBCLASS_WEAPON_FIST))
                         value += 5.f;
                 }
             }
@@ -3271,7 +3360,7 @@ void bot_ai::SetStats(bool force)
     {
         value = 5.0f + (IAmFree() ? mylevel / 8 : 0); // +10%/+0% at 80
 
-        if (GtChanceToMeleeCritEntry  const* dodgeRatio = sGtChanceToMeleeCritStore.LookupEntry((GetPlayerClass()-1)*GT_MAX_LEVEL + mylevel-1))
+        if (GtChanceToMeleeCritEntry const* dodgeRatio = sGtChanceToMeleeCritStore.LookupEntry((GetPlayerClass() - 1) * GT_MAX_LEVEL + mylevel - 1))
             value += _getTotalBotStat(BOT_STAT_MOD_AGILITY) * dodgeRatio->ratio * 100.0f;
 
         if (mylevel >= 10)
@@ -3399,7 +3488,7 @@ void bot_ai::SetStats(bool force)
             //Spiritual Guidance - 25% Spirit to spell power
             if (GetSpec() == BOT_SPEC_PRIEST_HOLY)
                 value += 0.25f * totalSpi;
-            //Twisted Faith - 20% Spirit to spell power
+                //Twisted Faith - 20% Spirit to spell power
             else if (mylevel >= 55 && GetSpec() == BOT_SPEC_PRIEST_SHADOW)
                 value += 0.2f * totalSpi;
             //Shadowy Insight (Glyph of Shadow)
@@ -3447,7 +3536,7 @@ void bot_ai::SetStats(bool force)
         if (_botclass == BOT_CLASS_SPHYNX)
         {
             //bonus from attack power (for tank) or intellect (ranged)
-            value += 2.0f *_getTotalBotStat(BOT_STAT_MOD_INTELLECT);
+            value += 2.0f * _getTotalBotStat(BOT_STAT_MOD_INTELLECT);
             value += 0.5f * me->GetTotalAttackPowerValue(BASE_ATTACK);
             //from wands
             for (uint8 i = BOT_SLOT_MAINHAND; i <= BOT_SLOT_OFFHAND; ++i)
@@ -3517,33 +3606,33 @@ void bot_ai::ReceiveEmote(Player* player, uint32 emote)
 {
     switch (emote)
     {
-        case TEXT_EMOTE_BONK:
-            _listAuras(player, me);
+    case TEXT_EMOTE_BONK:
+        _listAuras(player, me);
+        break;
+    case TEXT_EMOTE_SALUTE:
+        _listAuras(player, player);
+        break;
+    case TEXT_EMOTE_STAND:
+        if (master != player)
+        {
+            me->HandleEmoteCommand(EMOTE_ONESHOT_RUDE);
             break;
-        case TEXT_EMOTE_SALUTE:
-            _listAuras(player, player);
+        }
+        SetBotCommandState(BOT_COMMAND_STAY);
+    //BotWhisper("Standing Still.", player);
+        break;
+    case TEXT_EMOTE_WAVE:
+        if (master != player)
+        {
+            me->HandleEmoteCommand(EMOTE_ONESHOT_RUDE);
             break;
-        case TEXT_EMOTE_STAND:
-            if (master != player)
-            {
-                me->HandleEmoteCommand(EMOTE_ONESHOT_RUDE);
-                break;
-            }
-            SetBotCommandState(BOT_COMMAND_STAY);
-            //BotWhisper("Standing Still.", player);
-            break;
-        case TEXT_EMOTE_WAVE:
-            if (master != player)
-            {
-                me->HandleEmoteCommand(EMOTE_ONESHOT_RUDE);
-                break;
-            }
-            if (me->IsNonMeleeSpellCast(true))
-                me->InterruptNonMeleeSpells(true);
-            SetBotCommandState(BOT_COMMAND_FOLLOW, true);
-            //BotWhisper("Following!", player);
-            break;
-        case TEXT_EMOTE_TICKLE:
+        }
+        if (me->IsNonMeleeSpellCast(true))
+            me->InterruptNonMeleeSpells(true);
+        SetBotCommandState(BOT_COMMAND_FOLLOW, true);
+    //BotWhisper("Following!", player);
+        break;
+    case TEXT_EMOTE_TICKLE:
         {
             if (master != player)
                 break;
@@ -3571,8 +3660,8 @@ void bot_ai::ReceiveEmote(Player* player, uint32 emote)
             me->TextEmote(LocalizedNpcText(player, BOT_TEXT_BOT_TICKLED).c_str());
             break;
         }
-        default:
-            break;
+    default:
+        break;
     }
 }
 
@@ -3598,7 +3687,7 @@ bool bot_ai::IsInBotParty(Unit const* unit) const
         return
             (unit->GetTypeId() == TYPEID_PLAYER || unit->ToCreature()->IsPet() || unit->ToCreature()->IsNPCBotOrPet()) &&
             (unit->GetFaction() == me->GetFaction() || (me->GetBotGroup() && me->GetBotGroup()->IsMember(unit->GetGUID())) ||
-            (me->GetReactionTo(unit) >= REP_FRIENDLY && unit->GetReactionTo(me) >= REP_FRIENDLY));
+                (me->GetReactionTo(unit) >= REP_FRIENDLY && unit->GetReactionTo(me) >= REP_FRIENDLY));
     }
 
     //cheap check
@@ -3705,14 +3794,14 @@ void bot_ai::RefreshAura(uint32 spellId, int8 count, Unit* target) const
     if (count < 0 || count > 1)
     {
         LOG_ERROR("entities.player", "bot_ai::RefreshAura(): count is out of bounds ({}) for bot {} (botclass: {}, entry: {})",
-            int32(count), me->GetName().c_str(), uint32(_botclass), me->GetEntry());
+                  int32(count), me->GetName().c_str(), uint32(_botclass), me->GetEntry());
         return;
     }
 
     if (!spellId)
     {
         LOG_ERROR("entities.player", "bot_ai::RefreshAura(): spellId is 0 for bot {} (botclass: {}, entry: {})",
-            me->GetName().c_str(), uint32(_botclass), me->GetEntry());
+                  me->GetName().c_str(), uint32(_botclass), me->GetEntry());
         return;
     }
 
@@ -3720,7 +3809,7 @@ void bot_ai::RefreshAura(uint32 spellId, int8 count, Unit* target) const
     if (!spellInfo)
     {
         LOG_ERROR("entities.player", "bot_ai::RefreshAura(): Invalid spellInfo for spell {}! Bot - {} (botclass: {}, entry: {})",
-            spellId, me->GetName().c_str(), uint32(_botclass), me->GetEntry());
+                  spellId, me->GetName().c_str(), uint32(_botclass), me->GetEntry());
         return;
     }
     spellInfo = spellInfo->TryGetSpellInfoOverride(me);
@@ -3762,17 +3851,38 @@ bool bot_ai::CanBotAttack(Unit const* target, int8 byspell, bool secondary) cons
     {
         switch (target->GetEntry())
         {
-            case 33229: case 33243: case 33272: // AT Training dummy targets
-            case 4952: case 17578: case 24792: case 30527: case 31143: case 31144: case 31146: // training dummy
-            case 32541: case 32542: case 32543: case 32545: case 32546: case 32547: case 32666: case 32667: // training dummy
-            case 7668: case 7669: case 7670: case 7671: // Blasted Lands servants
+        case 33229:
+        case 33243:
+        case 33272: // AT Training dummy targets
+        case 4952:
+        case 17578:
+        case 24792:
+        case 30527:
+        case 31143:
+        case 31144:
+        case 31146: // training dummy
+        case 32541:
+        case 32542:
+        case 32543:
+        case 32545:
+        case 32546:
+        case 32547:
+        case 32666:
+        case 32667: // training dummy
+        case 7668:
+        case 7669:
+        case 7670:
+        case 7671: // Blasted Lands servants
+            return false;
+        case 21416:
+        case 21709:
+        case 21710:
+        case 21711: // Shadowmoon Valley Broken element corruptors
+            if (target->HasAuraTypeWithMiscvalue(SPELL_AURA_SCHOOL_IMMUNITY, 127))
                 return false;
-            case 21416: case 21709: case 21710: case 21711: // Shadowmoon Valley Broken element corruptors
-                if (target->HasAuraTypeWithMiscvalue(SPELL_AURA_SCHOOL_IMMUNITY, 127))
-                    return false;
-                break;
-            default:
-                break;
+            break;
+        default:
+            break;
         }
     }
 
@@ -3788,33 +3898,47 @@ bool bot_ai::CanBotAttack(Unit const* target, int8 byspell, bool secondary) cons
     {
         switch (_botclass)
         {
-            case BOT_CLASS_PRIEST:      mainMask = SPELL_SCHOOL_MASK_SHADOW;                                                                break;
-            case BOT_CLASS_SHAMAN:      mainMask = IsMelee() ? SPELL_SCHOOL_MASK_NORMAL : (SPELL_SCHOOL_MASK_FIRE|SPELL_SCHOOL_MASK_NATURE);break;
-            case BOT_CLASS_MAGE:        mainMask = Rand() > 50 ? SPELL_SCHOOL_MASK_FIRE : SPELL_SCHOOL_MASK_FROST;                          break;
-            case BOT_CLASS_WARLOCK:     mainMask = Rand() > 50 ? SPELL_SCHOOL_MASK_SHADOW : SPELL_SCHOOL_MASK_FIRE;                         break;
-            case BOT_CLASS_DRUID:       mainMask = Rand() > 50 ? SPELL_SCHOOL_MASK_ARCANE : SPELL_SCHOOL_MASK_NATURE;                       break;
-            case BOT_CLASS_SPHYNX:      mainMask = SPELL_SCHOOL_MASK_NONE;                                                                  break;
-            case BOT_CLASS_ARCHMAGE:    mainMask = SPELL_SCHOOL_MASK_NONE;                                                                  break;
-            case BOT_CLASS_DREADLORD:   mainMask = SPELL_SCHOOL_MASK_NONE;                                                                  break;
-            case BOT_CLASS_SPELLBREAKER:mainMask = SPELL_SCHOOL_MASK_NONE;                                                                  break;
-            case BOT_CLASS_DARK_RANGER: mainMask = SPELL_SCHOOL_MASK_NONE;                                                                  break;
-            case BOT_CLASS_NECROMANCER: mainMask = SPELL_SCHOOL_MASK_NONE;                                                                  break;
-            case BOT_CLASS_SEA_WITCH:   mainMask = SPELL_SCHOOL_MASK_NONE;                                                                  break;
-            default:                    mainMask = SPELL_SCHOOL_MASK_NORMAL;                                                                break;
+        case BOT_CLASS_PRIEST: mainMask = SPELL_SCHOOL_MASK_SHADOW;
+            break;
+        case BOT_CLASS_SHAMAN: mainMask = IsMelee() ? SPELL_SCHOOL_MASK_NORMAL : (SPELL_SCHOOL_MASK_FIRE | SPELL_SCHOOL_MASK_NATURE);
+            break;
+        case BOT_CLASS_MAGE: mainMask = Rand() > 50 ? SPELL_SCHOOL_MASK_FIRE : SPELL_SCHOOL_MASK_FROST;
+            break;
+        case BOT_CLASS_WARLOCK: mainMask = Rand() > 50 ? SPELL_SCHOOL_MASK_SHADOW : SPELL_SCHOOL_MASK_FIRE;
+            break;
+        case BOT_CLASS_DRUID: mainMask = Rand() > 50 ? SPELL_SCHOOL_MASK_ARCANE : SPELL_SCHOOL_MASK_NATURE;
+            break;
+        case BOT_CLASS_SPHYNX: mainMask = SPELL_SCHOOL_MASK_NONE;
+            break;
+        case BOT_CLASS_ARCHMAGE: mainMask = SPELL_SCHOOL_MASK_NONE;
+            break;
+        case BOT_CLASS_DREADLORD: mainMask = SPELL_SCHOOL_MASK_NONE;
+            break;
+        case BOT_CLASS_SPELLBREAKER: mainMask = SPELL_SCHOOL_MASK_NONE;
+            break;
+        case BOT_CLASS_DARK_RANGER: mainMask = SPELL_SCHOOL_MASK_NONE;
+            break;
+        case BOT_CLASS_NECROMANCER: mainMask = SPELL_SCHOOL_MASK_NONE;
+            break;
+        case BOT_CLASS_SEA_WITCH: mainMask = SPELL_SCHOOL_MASK_NONE;
+            break;
+        default: mainMask = SPELL_SCHOOL_MASK_NORMAL;
+            break;
         }
     }
 
     return
-        ((master->IsInCombat() || target->IsInCombat() || IsWanderer() || (IAmFree() && me->GetFaction() == 14)) &&
+    ((master->IsInCombat() || target->IsInCombat() || IsWanderer() || (IAmFree() && me->GetFaction() == 14)) &&
         target->IsVisible() && target->isTargetableForAttack(false) && me->IsValidAttackTarget(target) &&
         (!master->IsAlive() || target->IsControlledByPlayer() ||
-        (followdist > 0 && (master->GetDistance(target) <= foldist || HasBotCommandState(BOT_COMMAND_STAY)))) &&//if master is killed pursue to the end
+            (followdist > 0 && (master->GetDistance(target) <= foldist || HasBotCommandState(BOT_COMMAND_STAY)))) && //if master is killed pursue to the end
         !IsInBotParty(target) && (target->InSamePhase(me) || CanSeeEveryone()) &&
         (!HasBotCommandState(BOT_COMMAND_STAY) ||
-        ((!IsRanged() && !secondary) ? me->IsWithinMeleeRange(target) : me->GetDistance(target) <= foldist)) &&//if stationery check own distance
+            ((!IsRanged() && !secondary) ? me->IsWithinMeleeRange(target) : me->GetDistance(target) <= foldist)) && //if stationery check own distance
         (byspell == -1 || !target->IsTotem()) &&
         (byspell == -1 || !mainMask || !target->IsImmunedToDamage(SpellSchoolMask(mainMask))));
 }
+
 bool bot_ai::CanBotAttackOnVehicle() const
 {
     if (VehicleSeatEntry const* seat = me->GetVehicle() ? me->GetVehicle()->GetSeatForPassenger(me) : nullptr)
@@ -3822,6 +3946,7 @@ bool bot_ai::CanBotAttackOnVehicle() const
 
     return true;
 }
+
 //GETVEHICLETARGET
 //Returns attack target or 'no target'
 //All code above 'x = _getVehicleTarget() call must not dereference opponent since it can be invalid
@@ -3881,7 +4006,7 @@ Unit* bot_ai::_getVehicleTarget(BotVehicleStrats /*strat*/) const
         {
             if (ObjectGuid guid = gr->GetTargetIcons()[i])
             {
-                if ((HasRole(BOT_ROLE_RANGED)|| HasVehicleRoleOverride(BOT_ROLE_RANGED)) &&
+                if ((HasRole(BOT_ROLE_RANGED) || HasVehicleRoleOverride(BOT_ROLE_RANGED)) &&
                     (BotMgr::GetRangedDPSTargetIconFlags() & GroupIconsFlags[i]))
                 {
                     if (mytar && mytar->GetGUID() == guid)
@@ -3913,7 +4038,7 @@ Unit* bot_ai::_getVehicleTarget(BotVehicleStrats /*strat*/) const
         }
     }
 
-    float followdist = float (master->GetBotMgr()->GetBotFollowDist() * 2);
+    float followdist = float(master->GetBotMgr()->GetBotFollowDist() * 2);
     if (float distOverride = GetVehicleAttackDistanceOverride())
         followdist = distOverride * 2.f;
     if (mytar && mytar->GetTypeId() == TYPEID_UNIT &&
@@ -3944,22 +4069,23 @@ Unit* bot_ai::_getVehicleTarget(BotVehicleStrats /*strat*/) const
     float maxdist = InitAttackRange(followdist, IsRanged());
     Unit* t = nullptr;
     NearbyHostileVehicleTargetCheck check(veh, maxdist, this);
-    Acore::UnitSearcher <NearbyHostileVehicleTargetCheck> searcher(veh, t, check);
+    Acore::UnitSearcher<NearbyHostileVehicleTargetCheck> searcher(veh, t, check);
     Cell::VisitAllObjects(veh, searcher, maxdist);
     //veh->VisitNearbyObject(maxdist, searcher);
 
     return t;
 }
+
 //GETTARGET
 //Returns attack target or 'no target' and distant check target or 'no target'
 //All code above 'x = _getTarget() call must not dereference opponent or disttarget since it can be invalid
-std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &reset) const
+std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool& reset) const
 {
     //if (_evadeMode) //IAmFree() case only
     //    return { nullptr, nullptr };
 
     if (!CanBotAttackOnVehicle())
-        return { nullptr, nullptr };
+        return {nullptr, nullptr};
 
     Unit* mytar = me->GetVictim();
 
@@ -3967,39 +4093,48 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
     //TC_LOG_ERROR("entities.player", "bot_ai::getTarget(): bot: %s", me->GetName().c_str());
 
     if (mytar && me->HasAuraType(SPELL_AURA_MOD_TAUNT))
-        return { mytar, mytar };
+        return {mytar, mytar};
 
     /*player_npcbot*/
-    if(me->IsPlayerNpcBot() && Player_target != ObjectGuid::Empty)
+    if (me->IsPlayerNpcBot() && Player_target != ObjectGuid::Empty)
     {
-        if(Unit* AttackUnit = ObjectAccessor::GetUnit(*me, Player_target))
+        if (Unit* AttackUnit = ObjectAccessor::GetUnit(*me, Player_target))
         {
-            if(AttackUnit->isDead())
+            if (AttackUnit->isDead())
             {
                 me->GetBotAI()->Player_ResetAttackTarget();
                 me->GetBotAI()->SetBotCommandState(BOT_COMMAND_FOLLOW, true);
-                return { nullptr, nullptr };
+                return {nullptr, nullptr};
             }
 
-            return { AttackUnit, AttackUnit };
+            if (AttackUnit->IsVisible() && AttackUnit->isTargetableForAttack(false) && me->IsValidAttackTarget(AttackUnit) && (CanSeeEveryone() || (me->CanSeeOrDetect(AttackUnit) && AttackUnit->InSamePhase(me))))
+            {
+                //TC_LOG_ERROR("entities.unit", "_getTarget: found rdps icon target %s", unit->GetName().c_str());
+                return {AttackUnit, AttackUnit};
+            }else
+            {
+                me->GetBotAI()->Player_ResetAttackTarget();
+            }
         }
 
         me->GetBotAI()->Player_ResetAttackTarget();
         me->GetBotAI()->SetBotCommandState(BOT_COMMAND_FOLLOW, true);
-        return { nullptr, nullptr };
+        return {nullptr, nullptr};
     }
     /*player_npcbot end*/
 
     //Immediate targets
     if (!IAmFree() && me->GetMap()->GetEntry() && !me->GetMap()->GetEntry()->IsWorldMap())
     {
-        static const std::array WMOAreaGroupLashlayer = { 29476u }; // Halls of Strife
-        static const std::array WMOAreaGroupMarrowgar = { 47833u }; // The Spire
-        static const std::array WMOAreaGroupSindragosa = { 48066u }; // Frost Queen's Lair
-        static const std::array WMOAreaGroupLichKing = { 50038u, 50040u }; // The Frozen Throne
+        static const std::array WMOAreaGroupLashlayer = {29476u}; // Halls of Strife
+        static const std::array WMOAreaGroupMarrowgar = {47833u}; // The Spire
+        static const std::array WMOAreaGroupSindragosa = {48066u}; // Frost Queen's Lair
+        static const std::array WMOAreaGroupLichKing = {50038u, 50040u}; // The Frozen Throne
 
-        static auto isInWMOArea = [this](auto const& ids) {
-            for (auto wmoId : ids) {
+        static auto isInWMOArea = [this](auto const& ids)
+        {
+            for (auto wmoId : ids)
+            {
                 if (wmoId == _lastWMOAreaId)
                     return true;
             }
@@ -4008,22 +4143,26 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
 
         // Blackwing Lair
         if (me->GetMapId() == 469 && GetBotClass() == BOT_CLASS_ROGUE && !HasRole(BOT_ROLE_DPS) && me->HasStealthAura() && isInWMOArea(WMOAreaGroupLashlayer)) // BWL - Bloodlord Lashlayer
-            return { nullptr, nullptr };
+            return {nullptr, nullptr};
 
         // Icecrown Citadel - Lord Marrowgar
         if (me->GetMapId() == 631 && isInWMOArea(WMOAreaGroupMarrowgar) && me->IsInCombat() && HasRole(BOT_ROLE_DPS) && !IsTank())
         {
-            static const std::array BoneSpikeIds = { CREATURE_ICC_BONE_SPIKE1, CREATURE_ICC_BONE_SPIKE2, CREATURE_ICC_BONE_SPIKE3 };
+            static const std::array BoneSpikeIds = {CREATURE_ICC_BONE_SPIKE1, CREATURE_ICC_BONE_SPIKE2, CREATURE_ICC_BONE_SPIKE3};
 
-            auto boneSpikeCheck = [this, mydist = 50.f](Unit const* unit) mutable {
+            auto boneSpikeCheck = [this, mydist = 50.f](Unit const* unit) mutable
+            {
                 if (!unit->IsAlive())
                     return false;
-                for (uint32 bsId : BoneSpikeIds) {
-                    if (unit->GetEntry() == bsId)  {
+                for (uint32 bsId : BoneSpikeIds)
+                {
+                    if (unit->GetEntry() == bsId)
+                    {
                         if (HasRole(BOT_ROLE_RANGED))
                             return true;
                         float dist = me->GetDistance2d(unit);
-                        if (dist < mydist) {
+                        if (dist < mydist)
+                        {
                             mydist = dist;
                             return true;
                         }
@@ -4036,11 +4175,14 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
             Acore::CreatureListSearcher searcher(me, cList, boneSpikeCheck);
             Cell::VisitAllObjects(me, searcher, 50.f);
 
-            if (Creature* spike = cList.empty() ? nullptr : cList.size() == 1 ? cList.front() :
-                Acore::Containers::SelectRandomContainerElement(cList))
+            if (Creature* spike = cList.empty() ?
+                                      nullptr :
+                                      cList.size() == 1 ?
+                                      cList.front() :
+                                      Acore::Containers::SelectRandomContainerElement(cList))
             {
                 // Bone Spike is always attackable - no additional checks needed
-                return { spike, nullptr };
+                return {spike, nullptr};
             }
         }
 
@@ -4049,10 +4191,11 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
             (!mytar || (mytar->GetEntry() != CREATURE_ICC_ICE_TOMB1 && mytar->GetEntry() != CREATURE_ICC_ICE_TOMB2 &&
             mytar->GetEntry() != CREATURE_ICC_ICE_TOMB3 && mytar->GetEntry() != CREATURE_ICC_ICE_TOMB4))*/)
         {
-            static const std::array IceTombIds = { CREATURE_ICC_ICE_TOMB1, CREATURE_ICC_ICE_TOMB2, CREATURE_ICC_ICE_TOMB3, CREATURE_ICC_ICE_TOMB4 };
-            static const std::array SindragosaIds = { CREATURE_ICC_SINDRAGOSA1, CREATURE_ICC_SINDRAGOSA2, CREATURE_ICC_SINDRAGOSA3, CREATURE_ICC_SINDRAGOSA4 };
+            static const std::array IceTombIds = {CREATURE_ICC_ICE_TOMB1, CREATURE_ICC_ICE_TOMB2, CREATURE_ICC_ICE_TOMB3, CREATURE_ICC_ICE_TOMB4};
+            static const std::array SindragosaIds = {CREATURE_ICC_SINDRAGOSA1, CREATURE_ICC_SINDRAGOSA2, CREATURE_ICC_SINDRAGOSA3, CREATURE_ICC_SINDRAGOSA4};
 
-            static auto SiItCheck = [=](Unit const* unit) {
+            static auto SiItCheck = [=](Unit const* unit)
+            {
                 if (unit->IsAlive())
                 {
                     for (uint32 itId : IceTombIds)
@@ -4106,12 +4249,12 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                     bool air_phase = sindragosa && sindragosa->GetReactState() == REACT_PASSIVE;
                     bool above35 = GetHealthPCT(icetomb) > 35;
                     if (!air_phase || above35)
-                        return { icetomb, nullptr };
+                        return {icetomb, nullptr};
                     else if (mytar == icetomb || !master->GetVictim())
                     {
                         if (botPet && botPet->GetVictim())
                             botPet->AttackStop();
-                        return { nullptr, nullptr };
+                        return {nullptr, nullptr};
                     }
                 }
             }
@@ -4120,11 +4263,13 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
         // Icecrown Citadel - The Lich King
         if (me->GetMapId() == 631 && isInWMOArea(WMOAreaGroupLichKing) && me->IsInCombat() && HasRole(BOT_ROLE_DPS) && !IsTank())
         {
-            static const std::array IceSphereIds = { CREATURE_ICC_ICE_SPHERE1, CREATURE_ICC_ICE_SPHERE2, CREATURE_ICC_ICE_SPHERE3, CREATURE_ICC_ICE_SPHERE4 };
-            static const std::array ValkyrShadowguardIds = { CREATURE_ICC_VALKYR_LK1, CREATURE_ICC_VALKYR_LK2, CREATURE_ICC_VALKYR_LK3, CREATURE_ICC_VALKYR_LK4 };
+            static const std::array IceSphereIds = {CREATURE_ICC_ICE_SPHERE1, CREATURE_ICC_ICE_SPHERE2, CREATURE_ICC_ICE_SPHERE3, CREATURE_ICC_ICE_SPHERE4};
+            static const std::array ValkyrShadowguardIds = {CREATURE_ICC_VALKYR_LK1, CREATURE_ICC_VALKYR_LK2, CREATURE_ICC_VALKYR_LK3, CREATURE_ICC_VALKYR_LK4};
 
-            static auto valkyrCheck = [=](Unit const* unit) {
-                for (uint32 vsId : ValkyrShadowguardIds) {
+            static auto valkyrCheck = [=](Unit const* unit)
+            {
+                for (uint32 vsId : ValkyrShadowguardIds)
+                {
                     if (unit->IsAlive() && unit->GetEntry() == vsId && !unit->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE))
                         return true;
                 }
@@ -4136,14 +4281,18 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
             Cell::VisitAllObjects(me, searcher, 50.f);
 
             if (valkyr)
-                return { valkyr, nullptr };
+                return {valkyr, nullptr};
 
             Unit const* usearcher = master->IsAlive() ? master->ToUnit() : me->ToUnit();
-            auto iceSphereCheck = [this, usearcher = usearcher, mydist = 30.f](Unit const* unit) mutable {
-                for (uint32 isId : IceSphereIds) {
-                    if (unit->IsAlive() && unit->GetEntry() == isId) {
+            auto iceSphereCheck = [this, usearcher = usearcher, mydist = 30.f](Unit const* unit) mutable
+            {
+                for (uint32 isId : IceSphereIds)
+                {
+                    if (unit->IsAlive() && unit->GetEntry() == isId)
+                    {
                         float dist = usearcher->GetDistance2d(unit);
-                        if (dist < mydist && (HasRole(BOT_ROLE_RANGED) || dist < 7.f)) {
+                        if (dist < mydist && (HasRole(BOT_ROLE_RANGED) || dist < 7.f))
+                        {
                             mydist = dist;
                             return true;
                         }
@@ -4157,7 +4306,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
             Cell::VisitAllObjects(usearcher, searcher2, 30.f);
 
             if (sphere)
-                return { sphere, nullptr };
+                return {sphere, nullptr};
         }
     }
 
@@ -4170,14 +4319,14 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
             if (ObjectGuid guid = gr->GetTargetIcons()[_primaryIconTank])
             {
                 if (mytar && mytar->GetGUID() == guid)
-                    return { mytar, mytar };
+                    return {mytar, mytar};
 
                 if (Unit* unit = ObjectAccessor::GetUnit(*me, guid))
                 {
                     if (unit->IsVisible() && unit->isTargetableForAttack(false) && me->IsValidAttackTarget(unit) &&
                         (unit->IsInCombat() || me->IsInCombat() || master->IsInCombat()) && (CanSeeEveryone() || (me->CanSeeOrDetect(unit) && unit->InSamePhase(me))))
                     {
-                        return { unit, unit };
+                        return {unit, unit};
                     }
                 }
             }
@@ -4196,7 +4345,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                     if (mytar && mytar->GetGUID() == guid && mytar->GetVictim() == me)
                     {
                         //TC_LOG_ERROR("entities.unit", "_getTarget: %s continues %s", me->GetName().c_str(), mytar->GetName().c_str());
-                        return { mytar, mytar };
+                        return {mytar, mytar};
                     }
 
                     if (Unit* unit = ObjectAccessor::GetUnit(*me, guid))
@@ -4222,7 +4371,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
         if (tankTar)
         {
             //TC_LOG_ERROR("entities.unit", "_getTarget: %s returning %s", me->GetName().c_str(), tankTar->GetName().c_str());
-            return { tankTar, tankTar };
+            return {tankTar, tankTar};
         }
     }
     if (gr && IsTank())
@@ -4232,14 +4381,14 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
             if (ObjectGuid guid = gr->GetTargetIcons()[_primaryIconTank])
             {
                 if (mytar && mytar->GetGUID() == guid)
-                    return { mytar, mytar };
+                    return {mytar, mytar};
 
                 if (Unit* unit = ObjectAccessor::GetUnit(*me, guid))
                 {
                     if (unit->IsVisible() && unit->isTargetableForAttack(false) && me->IsValidAttackTarget(unit) &&
                         (unit->IsInCombat() || me->IsInCombat() || master->IsInCombat()) && (CanSeeEveryone() || (me->CanSeeOrDetect(unit) && unit->InSamePhase(me))))
                     {
-                        return { unit, unit };
+                        return {unit, unit};
                     }
                 }
             }
@@ -4258,7 +4407,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                     if (mytar && mytar->GetGUID() == guid && mytar->GetVictim() == me)
                     {
                         //TC_LOG_ERROR("entities.unit", "_getTarget: %s continues %s", me->GetName().c_str(), mytar->GetName().c_str());
-                        return { mytar, mytar };
+                        return {mytar, mytar};
                     }
 
                     if (Unit* unit = ObjectAccessor::GetUnit(*me, guid))
@@ -4284,7 +4433,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
         if (tankTar)
         {
             //TC_LOG_ERROR("entities.unit", "_getTarget: %s returning %s", me->GetName().c_str(), tankTar->GetName().c_str());
-            return { tankTar, tankTar };
+            return {tankTar, tankTar};
         }
     }
     if (gr)
@@ -4299,14 +4448,14 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                 if (ObjectGuid guid = gr->GetTargetIcons()[_primaryIconDamage])
                 {
                     if (mytar && mytar->GetGUID() == guid)
-                        return { mytar, mytar };
+                        return {mytar, mytar};
 
                     if (Unit* unit = ObjectAccessor::GetUnit(*me, guid))
                     {
                         if (unit->IsVisible() && unit->isTargetableForAttack(false) && me->IsValidAttackTarget(unit) &&
                             (unit->IsInCombat() || me->IsInCombat() || master->IsInCombat()) && (CanSeeEveryone() || (me->CanSeeOrDetect(unit) && unit->InSamePhase(me))))
                         {
-                            return { unit, unit };
+                            return {unit, unit};
                         }
                     }
                 }
@@ -4323,7 +4472,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                 if (HasRole(BOT_ROLE_RANGED) && (BotMgr::GetRangedDPSTargetIconFlags() & GroupIconsFlags[i]))
                 {
                     if (mytar && mytar->GetGUID() == guid)
-                        return { mytar, mytar };
+                        return {mytar, mytar};
 
                     if (Unit* unit = ObjectAccessor::GetUnit(*me, guid))
                     {
@@ -4331,14 +4480,14 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                             unit->IsInCombat() && (CanSeeEveryone() || (me->CanSeeOrDetect(unit) && unit->InSamePhase(me))))
                         {
                             //TC_LOG_ERROR("entities.unit", "_getTarget: found rdps icon target %s", unit->GetName().c_str());
-                            return { unit, unit };
+                            return {unit, unit};
                         }
                     }
                 }
                 if (BotMgr::GetDPSTargetIconFlags() & GroupIconsFlags[i])
                 {
                     if (mytar && mytar->GetGUID() == guid)
-                        return { mytar, mytar };
+                        return {mytar, mytar};
 
                     if (Unit* unit = ObjectAccessor::GetUnit(*me, guid))
                     {
@@ -4346,7 +4495,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                             unit->IsInCombat() && (CanSeeEveryone() || (me->CanSeeOrDetect(unit) && unit->InSamePhase(me))))
                         {
                             //TC_LOG_ERROR("entities.unit", "_getTarget: found dps icon target %s", unit->GetName().c_str());
-                            return { unit, unit };
+                            return {unit, unit};
                         }
                     }
                 }
@@ -4355,47 +4504,47 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
     }
 
     Unit* u = master->GetVictim();
-//Disabled due to a bug:
-//when spell cast is finished target is immideately put in combat which makes bots attack immediately
-//caster must be put in combat at spell launch
-//but target must be put in combat at spell hit
-/*
-    if (!u && !IAmFree() && master->IsInCombat() && Rand() < 15)
-    {
-        for (uint8 i = CURRENT_FIRST_NON_MELEE_SPELL; i != CURRENT_MAX_SPELL; ++i)
+    //Disabled due to a bug:
+    //when spell cast is finished target is immideately put in combat which makes bots attack immediately
+    //caster must be put in combat at spell launch
+    //but target must be put in combat at spell hit
+    /*
+        if (!u && !IAmFree() && master->IsInCombat() && Rand() < 15)
         {
-            if (Spell const* spell = master->GetCurrentSpell(CurrentSpellTypes(i)))
+            for (uint8 i = CURRENT_FIRST_NON_MELEE_SPELL; i != CURRENT_MAX_SPELL; ++i)
             {
-                //if (spell->getState() == SPELL_STATE_FINISHED)
-                //    continue;
-
-                if (mytar && spell->m_targets.GetUnitTargetGUID() == mytar->GetGUID())
+                if (Spell const* spell = master->GetCurrentSpell(CurrentSpellTypes(i)))
                 {
-                    u = mytar;
-                    break;
-                }
+                    //if (spell->getState() == SPELL_STATE_FINISHED)
+                    //    continue;
 
-                //direct damaging spells
-                if (!spell->GetSpellInfo()->IsPositive() &&
-                    (spell->GetSpellInfo()->HasEffect(SPELL_EFFECT_WEAPON_DAMAGE) ||
-                    spell->GetSpellInfo()->HasEffect(SPELL_EFFECT_SCHOOL_DAMAGE) ||
-                    spell->GetSpellInfo()->HasEffect(SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL)))
-                {
-                    Unit* victim = ObjectAccessor::GetUnit(*me, spell->m_targets.GetUnitTargetGUID());
-                    if (victim && victim->IsInCombat())
+                    if (mytar && spell->m_targets.GetUnitTargetGUID() == mytar->GetGUID())
                     {
-                        u = victim;
+                        u = mytar;
                         break;
+                    }
+
+                    //direct damaging spells
+                    if (!spell->GetSpellInfo()->IsPositive() &&
+                        (spell->GetSpellInfo()->HasEffect(SPELL_EFFECT_WEAPON_DAMAGE) ||
+                        spell->GetSpellInfo()->HasEffect(SPELL_EFFECT_SCHOOL_DAMAGE) ||
+                        spell->GetSpellInfo()->HasEffect(SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL)))
+                    {
+                        Unit* victim = ObjectAccessor::GetUnit(*me, spell->m_targets.GetUnitTargetGUID());
+                        if (victim && victim->IsInCombat())
+                        {
+                            u = victim;
+                            break;
+                        }
                     }
                 }
             }
         }
-    }
-*/
+    */
     if (u && u == mytar && !IAmFree() && u->GetTypeId() == TYPEID_PLAYER && CanBotAttack(u, byspell))
     {
         //TC_LOG_ERROR("entities.player", "bot %s continues attack common target %s", me->GetName().c_str(), u->GetName().c_str());
-        return { u, u };//forced
+        return {u, u}; //forced
     }
     //Follow if...
     uint8 followdist = IAmFree() ? BotMgr::GetBotFollowDistDefault() / 2 : master->GetBotMgr()->GetBotFollowDist();
@@ -4411,10 +4560,10 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
     if (!dropTarget && (!u || IAmFree()) && master->IsAlive() && mytar && mytar == opponent)
     {
         dropTarget = IAmFree() ?
-            me->GetDistance(mytar) > (IsWanderer() ? float(followdist + 10) : foldist) :
-            HasBotCommandState(BOT_COMMAND_STAY) ?
-            (!IsRanged() ? !me->IsWithinMeleeRange(mytar) : me->GetDistance(mytar) > foldist) :
-            (master->GetDistance(mytar) > foldist || (master->GetDistance(mytar) > foldist * 0.75f && !mytar->IsWithinLOSInMap(me, VMAP::ModelIgnoreFlags::M2, LINEOFSIGHT_ALL_CHECKS)));
+                         me->GetDistance(mytar) > (IsWanderer() ? float(followdist + 10) : foldist) :
+                         HasBotCommandState(BOT_COMMAND_STAY) ?
+                         (!IsRanged() ? !me->IsWithinMeleeRange(mytar) : me->GetDistance(mytar) > foldist) :
+                         (master->GetDistance(mytar) > foldist || (master->GetDistance(mytar) > foldist * 0.75f && !mytar->IsWithinLOSInMap(me, VMAP::ModelIgnoreFlags::M2, LINEOFSIGHT_ALL_CHECKS)));
     }
     if (dropTarget)
     {
@@ -4426,17 +4575,17 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
         (!HasBotCommandState(BOT_COMMAND_STAY) || (!IsRanged() ? me->IsWithinMeleeRange(u) : me->GetDistance(u) < foldist)))
     {
         //TC_LOG_ERROR("entities.player", "bot %s starts attack master's target %s", me->GetName().c_str(), u->GetName().c_str());
-        return { u, u };
+        return {u, u};
     }
 
     bool canAttack = mytar && CanBotAttack(mytar, byspell);
-    if (mytar && (!IAmFree() || me->GetDistance(mytar) < float(BOT_MAX_CHASE_RANGE)) && canAttack &&/* !InDuel(mytar) &&*/
+    if (mytar && (!IAmFree() || me->GetDistance(mytar) < float(BOT_MAX_CHASE_RANGE)) && canAttack && /* !InDuel(mytar) &&*/
         !(mytar->GetVictim() != nullptr && IsTank() && IsTank(mytar->GetVictim())))
     {
         //TC_LOG_ERROR("entities.player", "bot %s continues attack its target %s", me->GetName().c_str(), mytar->GetName().c_str());
         if (me->GetDistance(mytar) > (ranged ? 20.f : 5.f) && !HasBotCommandState(BOT_COMMAND_MASK_UNCHASE))
             reset = true;
-        return { mytar, mytar };
+        return {mytar, mytar};
     }
 
     //check group
@@ -4454,7 +4603,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                 if (u && (bot->IsInCombat() || u->IsInCombat()) && CanBotAttack(u, byspell))
                 {
                     //TC_LOG_ERROR("entities.player", "bot %s hooked %s's victim %s", me->GetName().c_str(), bot->GetName().c_str(), u->GetName().c_str());
-                    return { u, u };
+                    return {u, u};
                 }
             }
         }
@@ -4470,7 +4619,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                 if (u && pl != master && (pl->IsInCombat() || u->IsInCombat()) && CanBotAttack(u, byspell))
                 {
                     //TC_LOG_ERROR("entities.player", "bot %s hooked %s's victim %s", me->GetName().c_str(), pl->GetName().c_str(), u->GetName().c_str());
-                    return { u, u };
+                    return {u, u};
                 }
                 if (!pl->HaveBot()) continue;
                 BotMap const* map = pl->GetBotMgr()->GetBotMap();
@@ -4485,7 +4634,7 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                     if (u && (bot->IsInCombat() || u->IsInCombat()) && CanBotAttack(u, byspell))
                     {
                         //TC_LOG_ERROR("entities.player", "bot %s hooked %s's victim %s", me->GetName().c_str(), bot->GetName().c_str(), u->GetName().c_str());
-                        return { u, u };
+                        return {u, u};
                     }
                 }
             }
@@ -4503,11 +4652,11 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                 if (_canSwitchToTarget(u, att, byspell))
                     u = att;
         if (u)
-            return { u, u };
+            return {u, u};
     }
 
     if (IAmFree() && IsWanderer() && !me->IsInCombat() && me->getAttackers().empty() && (evadeDelayTimer > 7500 || Feasting() || me->GetHealthPct() < 85.f))
-        return { nullptr, nullptr };
+        return {nullptr, nullptr};
 
     //check targets around
     float maxdist = InitAttackRange(float(followdist + 10), ranged);
@@ -4535,7 +4684,8 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
                 }
             }
 
-            unitList.remove_if([me = me](Unit const* unit) -> bool {
+            unitList.remove_if([me = me](Unit const* unit) -> bool
+            {
                 if (!unit->IsInCombatWith(me) && !(unit->IsNPCBot() && unit->ToCreature()->IsWandererBot()))
                 {
                     if (unit->IsPlayer())
@@ -4591,12 +4741,13 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
             uint32 res = !CanBotAttack(un, byspell) ? (checkSecondary && CanBotAttack(un, byspell, checkSecondary)) ? 2 : 0 : 1;
             switch (res)
             {
-                case 1: case 2:
-                    if (!ts[res - 1].first || me->GetDistance(un) < ts[res - 1].second)
-                        ts[res - 1] = { un, me->GetDistance(un) };
-                    break;
-                default:
-                    break;
+            case 1:
+            case 2:
+                if (!ts[res - 1].first || me->GetDistance(un) < ts[res - 1].second)
+                    ts[res - 1] = {un, me->GetDistance(un)};
+                break;
+            default:
+                break;
             }
         }
     }
@@ -4614,8 +4765,9 @@ std::tuple<Unit*, Unit*> bot_ai::_getTargets(bool byspell, bool ranged, bool &re
     //if (t)
     //    TC_LOG_ERROR("entities.player", "bot %s has found new target %s", me->GetName().c_str(), t->GetName().c_str());
 
-    return { t1, t2 };
+    return {t1, t2};
 }
+
 //'CanAttack' function
 //Only called in class ai UpdateAI function
 //Side effects: opponent, disttarget
@@ -4637,55 +4789,55 @@ bool bot_ai::CheckAttackTarget()
 
     switch (_botclass)
     {
-        case BOT_CLASS_DRUID:
-            switch (GetBotStance())
-            {
-                case DRUID_CAT_FORM:
-                case DRUID_BEAR_FORM:
-                    break;
-                case DRUID_TREE_FORM:
-                case DRUID_TRAVEL_FORM:
-                case DRUID_AQUATIC_FORM:
-                //case DRUID_FLIGHT_FORM:
-                    ranged = true;
-                    break;
-                case DRUID_MOONKIN_FORM:
-                    byspell = true;
-                    break;
-                case BOT_STANCE_NONE:
-                    byspell = ranged && HasRole(BOT_ROLE_DPS);
-                    break;
-                default:
-                    LOG_ERROR("entities.player", "bot_ai::CheckAttackTarget(): druid has NYI bot stance {}", uint32(GetBotStance()));
-                    break;
-            }
+    case BOT_CLASS_DRUID:
+        switch (GetBotStance())
+        {
+        case DRUID_CAT_FORM:
+        case DRUID_BEAR_FORM:
             break;
-        case BOT_CLASS_PRIEST:
-        case BOT_CLASS_MAGE:
-        case BOT_CLASS_WARLOCK:
-        case BOT_CLASS_SHAMAN:
+        case DRUID_TREE_FORM:
+        case DRUID_TRAVEL_FORM:
+        case DRUID_AQUATIC_FORM:
+            //case DRUID_FLIGHT_FORM:
+            ranged = true;
+            break;
+        case DRUID_MOONKIN_FORM:
+            byspell = true;
+            break;
+        case BOT_STANCE_NONE:
             byspell = ranged && HasRole(BOT_ROLE_DPS);
             break;
-        case BOT_CLASS_SPHYNX:
-        case BOT_CLASS_ARCHMAGE:
-        case BOT_CLASS_NECROMANCER:
-            byspell = HasRole(BOT_ROLE_DPS);
-            break;
-        case BOT_CLASS_HUNTER:
-        case BOT_CLASS_DEATH_KNIGHT:
-        case BOT_CLASS_PALADIN:
-        case BOT_CLASS_WARRIOR:
-        case BOT_CLASS_ROGUE:
-        case BOT_CLASS_BM:
-        case BOT_CLASS_DREADLORD:
-        case BOT_CLASS_SPELLBREAKER:
-        case BOT_CLASS_DARK_RANGER:
-        case BOT_CLASS_SEA_WITCH:
-        case BOT_CLASS_CRYPT_LORD:
-            break;
         default:
-            LOG_ERROR("entities.player", "bot_ai: CheckAttackTarget() - unknown bot class {}", _botclass);
-            return false;
+            LOG_ERROR("entities.player", "bot_ai::CheckAttackTarget(): druid has NYI bot stance {}", uint32(GetBotStance()));
+            break;
+        }
+        break;
+    case BOT_CLASS_PRIEST:
+    case BOT_CLASS_MAGE:
+    case BOT_CLASS_WARLOCK:
+    case BOT_CLASS_SHAMAN:
+        byspell = ranged && HasRole(BOT_ROLE_DPS);
+        break;
+    case BOT_CLASS_SPHYNX:
+    case BOT_CLASS_ARCHMAGE:
+    case BOT_CLASS_NECROMANCER:
+        byspell = HasRole(BOT_ROLE_DPS);
+        break;
+    case BOT_CLASS_HUNTER:
+    case BOT_CLASS_DEATH_KNIGHT:
+    case BOT_CLASS_PALADIN:
+    case BOT_CLASS_WARRIOR:
+    case BOT_CLASS_ROGUE:
+    case BOT_CLASS_BM:
+    case BOT_CLASS_DREADLORD:
+    case BOT_CLASS_SPELLBREAKER:
+    case BOT_CLASS_DARK_RANGER:
+    case BOT_CLASS_SEA_WITCH:
+    case BOT_CLASS_CRYPT_LORD:
+        break;
+    default:
+        LOG_ERROR("entities.player", "bot_ai: CheckAttackTarget() - unknown bot class {}", _botclass);
+        return false;
     }
 
     std::tie(opponent, disttarget) = _getTargets(byspell, ranged, reset);
@@ -4718,27 +4870,30 @@ bool bot_ai::CheckAttackTarget()
     }
 
     if (reset)
-        SetBotCommandState(BOT_COMMAND_COMBATRESET);//reset AttackStart()
+        SetBotCommandState(BOT_COMMAND_COMBATRESET); //reset AttackStart()
 
     if (mytar != me->GetVictim())
         me->Attack(mytar, !ranged);
 
     return true;
 }
+
 //IMMEDIATE TARGETS
 bool bot_ai::ProcessImmediateNonAttackTarget()
 {
     if ((me->GetMap()->GetEntry() && me->GetMap()->GetEntry()->IsWorldMap()) || IAmFree() || IsCasting())
         return false;
 
-    static constexpr std::array<uint32, 1> WMOAreaGroupLashlayer = { 29476 }; // Halls of Strife
-    static constexpr std::array<uint32, 2> WMOAreaGroupMuru = { 41736, 42759 }; // Shrine of the Eclipse
-    static constexpr std::array<uint32, 2> WMOAreaGroupNajentus = { 41129, 41130 }; // Karabor Sewers
-    static constexpr std::array<uint32, 1> WMOAreaGroupVashj = { 37594 }; // Serpentshrine Cavern
-    static constexpr std::array<uint32, 2> WMOAreaGroupSvalna = { 48061, 48335 }; // The Frostwing Halls
+    static constexpr std::array<uint32, 1> WMOAreaGroupLashlayer = {29476}; // Halls of Strife
+    static constexpr std::array<uint32, 2> WMOAreaGroupMuru = {41736, 42759}; // Shrine of the Eclipse
+    static constexpr std::array<uint32, 2> WMOAreaGroupNajentus = {41129, 41130}; // Karabor Sewers
+    static constexpr std::array<uint32, 1> WMOAreaGroupVashj = {37594}; // Serpentshrine Cavern
+    static constexpr std::array<uint32, 2> WMOAreaGroupSvalna = {48061, 48335}; // The Frostwing Halls
 
-    static auto isInWMOArea = [](auto lastWMO, auto const& ids) {
-        for (auto wmoId : ids) {
+    static auto isInWMOArea = [](auto lastWMO, auto const& ids)
+    {
+        for (auto wmoId : ids)
+        {
             if (wmoId == lastWMO)
                 return true;
         }
@@ -4765,7 +4920,7 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
             if (GameObject* device = goList.empty() ? nullptr : goList.size() == 1u ? goList.front() : Acore::Containers::SelectRandomContainerElement(goList))
             {
                 if (me->HasAuraType(SPELL_AURA_MOD_STEALTH) || doCast(me, GetSpell(1784)))
-                me->CastSpell(device, SPELL_DISARM_TRAP_1, false);
+                    me->CastSpell(device, SPELL_DISARM_TRAP_1, false);
                 return true;
             }
         }
@@ -4791,8 +4946,11 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
             //Dark Fiends do not die instantly, remove purged ones
             cList.remove_if(Acore::UnitAuraCheck(false, 45934)); // "Dark Fiend"
 
-            if (Unit* fiend = cList.empty() ? nullptr : cList.size() == 1u ? cList.front() :
-                Acore::Containers::SelectRandomContainerElement(cList))
+            if (Unit* fiend = cList.empty() ?
+                                  nullptr :
+                                  cList.size() == 1u ?
+                                  cList.front() :
+                                  Acore::Containers::SelectRandomContainerElement(cList))
             {
                 if (CheckBotCast(fiend, GetSpell(dspell)) == SPELL_CAST_OK)
                     if (doCast(fiend, GetSpell(dspell)))
@@ -4828,8 +4986,11 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
                             spiners.push_back(pl);
                     }
 
-                    if (Player* pl = spiners.empty() ? nullptr : spiners.size() == 1u ? spiners.front() :
-                        Acore::Containers::SelectRandomContainerElement(spiners))
+                    if (Player* pl = spiners.empty() ?
+                                         nullptr :
+                                         spiners.size() == 1u ?
+                                         spiners.front() :
+                                         Acore::Containers::SelectRandomContainerElement(spiners))
                     {
                         BotWhisper("Taking 1 Naj'entus Spine from you");
                         me->CastSpell(najentus, 39948, true); // Hurl Spine
@@ -4846,7 +5007,8 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
                 //We don't make bots run to player to "click" the spine, so range is rather big
                 if (pl && pl->IsInWorld() && me->GetMap() == pl->FindMap())
                 {
-                    auto is_impaled = [this](Unit const* unit) -> bool {
+                    auto is_impaled = [this](Unit const* unit) -> bool
+                    {
                         return unit->IsAlive() && unit->HasUnitState(UNIT_STATE_STUNNED) &&
                             me->GetDistance(unit) < 25.f && unit->HasAura(39837); // "Impaling Spine"
                     };
@@ -4866,8 +5028,11 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
                 }
             }
 
-            if (Unit* u = spines.empty() ? nullptr : spines.size() == 1u ? spines.front() :
-                Acore::Containers::SelectRandomContainerElement(spines))
+            if (Unit* u = spines.empty() ?
+                              nullptr :
+                              spines.size() == 1u ?
+                              spines.front() :
+                              Acore::Containers::SelectRandomContainerElement(spines))
             {
                 GameObject* spine = u->GetFirstGameObjectById(185584); // Naj'entus Spine
                 if (!spine)
@@ -4917,22 +5082,24 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
             Cell::VisitAllObjects(me, csearcher, 100.f);
 
             std::list<GameObject*> gList;
-            auto is_shield_go = [](GameObject const* gobject) {
+            auto is_shield_go = [](GameObject const* gobject)
+            {
                 switch (gobject->GetEntry())
                 {
-                    case 185051:
-                    case 185052:
-                    case 185053:
-                    case 185054:
-                        return true;
-                    default:
-                        return false;
+                case 185051:
+                case 185052:
+                case 185053:
+                case 185054:
+                    return true;
+                default:
+                    return false;
                 }
             };
             Acore::GameObjectListSearcher gsearcher(me, gList, is_shield_go);
             Cell::VisitAllObjects(me, gsearcher, 100.f);
 
-            static const auto get_shield_creature = [](GameObject const* gobject, std::list<Creature*> const& clist) {
+            static const auto get_shield_creature = [](GameObject const* gobject, std::list<Creature*> const& clist)
+            {
                 Creature* c = nullptr;
                 float mindist = 10.0f;
                 for (Creature* creature : clist)
@@ -4947,11 +5114,13 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
                 return c;
             };
 
-            gList.remove_if([&cList](GameObject const* gobject) {
+            gList.remove_if([&cList](GameObject const* gobject)
+            {
                 Creature const* c = get_shield_creature(gobject, cList);
                 return !c || c->GetCurrentSpell(CURRENT_CHANNELED_SPELL) == nullptr;
             });
-            cList.remove_if([](Creature const* creature) {
+            cList.remove_if([](Creature const* creature)
+            {
                 return creature->GetCurrentSpell(CURRENT_CHANNELED_SPELL) == nullptr;
             });
 
@@ -5007,8 +5176,11 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
                             spearers.push_back(pl);
                     }
 
-                    if (Player* pl = spearers.empty() ? nullptr : spearers.size() == 1u ? spearers.front() :
-                        Acore::Containers::SelectRandomContainerElement(spearers))
+                    if (Player* pl = spearers.empty() ?
+                                         nullptr :
+                                         spearers.size() == 1u ?
+                                         spearers.front() :
+                                         Acore::Containers::SelectRandomContainerElement(spearers))
                     {
                         BotWhisper("Taking 1 Infernal Spear from you");
                         me->CastSpell(svalna, 71466, true); // Hurl Spear
@@ -5017,7 +5189,8 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
                 }
             }
 
-            auto is_impaled = [this](Unit const* unit) -> bool {
+            auto is_impaled = [this](Unit const* unit) -> bool
+            {
                 return unit->IsAlive() && unit->HasUnitState(UNIT_STATE_STUNNED) &&
                     me->GetDistance(unit) < 25.f && unit->HasAura(71443); // "Impaling Spear"
             };
@@ -5030,7 +5203,6 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
                 //We don't make bots run to player to "click" the spine, so range is rather big
                 if (pl && pl->IsInWorld() && me->GetMap() == pl->FindMap())
                 {
-
                     if (is_impaled(pl))
                         spears.push_back(pl->ToUnit());
                     if (pl->HaveBot())
@@ -5046,8 +5218,11 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
                 }
             }
 
-            if (Unit* u = spears.empty() ? nullptr : spears.size() == 1u ? spears.front() :
-                Acore::Containers::SelectRandomContainerElement(spears))
+            if (Unit* u = spears.empty() ?
+                              nullptr :
+                              spears.size() == 1u ?
+                              spears.front() :
+                              Acore::Containers::SelectRandomContainerElement(spears))
             {
                 Creature* spear = nullptr;
                 Acore::NearestCreatureEntryWithLiveStateInObjectRangeCheck check(*u, 38248, true, 5.f);
@@ -5067,6 +5242,7 @@ bool bot_ai::ProcessImmediateNonAttackTarget()
 
     return false;
 }
+
 //POSITION
 AoeSpotsVec const& bot_ai::GetAoeSpots() const
 {
@@ -5107,13 +5283,14 @@ void bot_ai::CalculateAoeSpots(Unit const* unit, AoeSpotsVec& spots)
     if (unit->IsNPCBot() && unit->ToCreature()->IsFreeBot())
         return;
 
-    //Additional: aoe coming from spawned npcs
+        //Additional: aoe coming from spawned npcs
 
-    //Aucheai Crypts
+        //Aucheai Crypts
     else if (unit->GetMapId() == 558)
     {
         Creature* creature = nullptr;
-        static const auto focus_fire_check = [](Creature const* c) {
+        static const auto focus_fire_check = [](Creature const* c)
+        {
             return (c->GetEntry() == CREATURE_FOCUS_FIRE_N || c->GetEntry() == CREATURE_FOCUS_FIRE_H);
         };
         Acore::CreatureSearcher searcher2(unit, creature, focus_fire_check);
@@ -5158,7 +5335,8 @@ void bot_ai::CalculateAoeSpots(Unit const* unit, AoeSpotsVec& spots)
     else if (unit->GetMapId() == 574)
     {
         Creature* creature = nullptr;
-        static const auto shadow_axe_check = [](Creature const* c) {
+        static const auto shadow_axe_check = [](Creature const* c)
+        {
             return (c->GetEntry() == CREATURE_UK_SHADOW_AXE_N || c->GetEntry() == CREATURE_UK_SHADOW_AXE_H);
         };
         Acore::CreatureSearcher searcher2(unit, creature, shadow_axe_check);
@@ -5250,26 +5428,27 @@ bool bot_ai::IsPeriodicDynObjAOEDamage(SpellInfo const* spellInfo)
             {
                 switch (spellInfo->Effects[i].ApplyAuraName)
                 {
-                    case SPELL_AURA_PERIODIC_DAMAGE:
-                    case SPELL_AURA_PERIODIC_DAMAGE_PERCENT:
-                    case SPELL_AURA_POWER_BURN:
-                    case SPELL_AURA_PERIODIC_LEECH:
-                    //Most of these are damaging spells
-                    case SPELL_AURA_PERIODIC_TRIGGER_SPELL:
-                    case SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE:
-                    //Scripted spells (mostly, some of these are wrong or not periodic damage)
-                    case SPELL_AURA_PERIODIC_DUMMY:
-                    //Channeled spells with SPELL_AURA_PERIODIC_TRIGGER_SPELL -> damage on TARGET_DEST_CHANNEL_TARGET (mostly)
-                    case SPELL_AURA_DUMMY:
-                        return true;
-                    default:
-                        break;
+                case SPELL_AURA_PERIODIC_DAMAGE:
+                case SPELL_AURA_PERIODIC_DAMAGE_PERCENT:
+                case SPELL_AURA_POWER_BURN:
+                case SPELL_AURA_PERIODIC_LEECH:
+                //Most of these are damaging spells
+                case SPELL_AURA_PERIODIC_TRIGGER_SPELL:
+                case SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE:
+                //Scripted spells (mostly, some of these are wrong or not periodic damage)
+                case SPELL_AURA_PERIODIC_DUMMY:
+                //Channeled spells with SPELL_AURA_PERIODIC_TRIGGER_SPELL -> damage on TARGET_DEST_CHANNEL_TARGET (mostly)
+                case SPELL_AURA_DUMMY:
+                    return true;
+                default:
+                    break;
                 }
             }
         }
     }
     return false;
 }
+
 bool bot_ai::IsWithinAoERadius(Position const& pos) const
 {
     AoeSpotsVec const& spots = GetAoeSpots();
@@ -5284,6 +5463,7 @@ bool bot_ai::IsWithinAoERadius(Position const& pos) const
 
     return false;
 }
+
 //Returns attack range based on given range
 //If mounted: 20%
 //If ranged: 125%
@@ -5306,6 +5486,7 @@ float bot_ai::InitAttackRange(float origRange, bool ranged) const
 
     return origRange;
 }
+
 void bot_ai::_extendAttackRange(float& dist) const
 {
     ASSERT(!IAmFree());
@@ -5321,6 +5502,7 @@ void bot_ai::_extendAttackRange(float& dist) const
         dist = std::max<float>(dist, spelldist * 0.5f + 4.f);
     }
 }
+
 bool bot_ai::_canSwitchToTarget(Unit const* from, Unit const* newTarget, int8 byspell) const
 {
     if (newTarget)
@@ -5336,6 +5518,7 @@ bool bot_ai::_canSwitchToTarget(Unit const* from, Unit const* newTarget, int8 by
 
     return false;
 }
+
 //Ranged attack position
 void bot_ai::CalculateAttackPos(Unit* target, Position& pos, bool& force) const
 {
@@ -5347,7 +5530,7 @@ void bot_ai::CalculateAttackPos(Unit* target, Position& pos, bool& force) const
     float angle = target->GetAbsoluteAngle(me);
     if (_botclass == BOT_CLASS_SPHYNX && target->GetVictim() == me && me->GetExactDist(target) < 30.0f)
         dist = me->GetExactDist(target);
-    if ((target->m_movementInfo.GetMovementFlags() & MOVEMENTFLAG_FORWARD) && target->HasInArc(float(M_PI)/1.5f, me))
+    if ((target->m_movementInfo.GetMovementFlags() & MOVEMENTFLAG_FORWARD) && target->HasInArc(float(M_PI) / 1.5f, me))
         dist = std::min<float>(dist + 4.f, 30.f);
 
     //if ranged try to acquire a position in the back (will be ignored if too far away from master)
@@ -5360,8 +5543,8 @@ void bot_ai::CalculateAttackPos(Unit* target, Position& pos, bool& force) const
     }
 
     float clockwise = (me->GetEntry() % 2) ? 1.f : -1.f;
-    float angleDelta1 = ((IsTank(master) && !IsTank(me)) ? frand(float(M_PI)*0.40f, float(M_PI)*0.60f) : frand(0.0f, float(M_PI)*0.15f)) * clockwise;
-    float angleDelta2 = frand(0.0f, float(M_PI)*0.08f) * clockwise;
+    float angleDelta1 = ((IsTank(master) && !IsTank(me)) ? frand(float(M_PI) * 0.40f, float(M_PI) * 0.60f) : frand(0.0f, float(M_PI) * 0.15f)) * clockwise;
+    float angleDelta2 = frand(0.0f, float(M_PI) * 0.08f) * clockwise;
 
     Position ppos;
 
@@ -5395,7 +5578,7 @@ void bot_ai::CalculateAttackPos(Unit* target, Position& pos, bool& force) const
                 ppos = target->GetFirstCollisionPosition(dist, Position::NormalizeOrientation(angle - target->GetOrientation()));
             //target->GetNearPoint(me->GetVehicleBase(), x, y, z, 0.f, dist, Position::NormalizeOrientation(angle));
 
-            bool toofar = master->GetDistance(ppos) > (followdist > 30.f ? 60.f : followdist < 10 ? 20.f : float(followdist*2));
+            bool toofar = master->GetDistance(ppos) > (followdist > 30.f ? 60.f : followdist < 10 ? 20.f : float(followdist * 2));
             bool isinaoe = (i == 0 && me->GetVehicleBase()->GetDistance(ppos) < 4.f && IsWithinAoERadius(*me->GetVehicleBase())) || IsWithinAoERadius(ppos);
             if (!toofar && !isinaoe)
                 break;
@@ -5509,6 +5692,7 @@ void bot_ai::CalculateAttackPos(Unit* target, Position& pos, bool& force) const
     if (!me->IsWithinLOSInMap(target, VMAP::ModelIgnoreFlags::M2, LINEOFSIGHT_ALL_CHECKS))
         force = true;
 }
+
 // Forces bot to chase opponent (if ranged then distance depends on follow distance)
 void bot_ai::GetInPosition(bool force, Unit* newtarget, Position* mypos)
 {
@@ -5542,7 +5726,7 @@ void bot_ai::GetInPosition(bool force, Unit* newtarget, Position* mypos)
         attackpos.m_positionZ = newtarget->GetPositionZ();
         if (me->GetExactDist2d(&attackpos) > 3.5f)
             BotMovement(BOT_MOVE_POINT, &attackpos);
-            //me->GetMotionMaster()->MovePoint(newtarget->GetMapId(), attackpos);
+        //me->GetMotionMaster()->MovePoint(newtarget->GetMapId(), attackpos);
         return;
     }
 
@@ -5551,7 +5735,7 @@ void bot_ai::GetInPosition(bool force, Unit* newtarget, Position* mypos)
     {
         //do not allow constant runaway from player
         if (!force && newtarget->GetTypeId() == TYPEID_PLAYER &&
-            me->GetDistance(newtarget) < 6 + urand(followdist/4, followdist/3))
+            me->GetDistance(newtarget) < 6 + urand(followdist / 4, followdist / 3))
             return;
 
         if (!mypos)
@@ -5578,7 +5762,7 @@ void bot_ai::GetInPosition(bool force, Unit* newtarget, Position* mypos)
     {
         if (!JumpingOrFalling() && ((!mover->HasUnitState(UNIT_STATE_CHASE) && !mover->isMoving()) || (!mover->HasUnitState(UNIT_STATE_CHASE_MOVE) && mover->GetDistance(newtarget) > 1.5f)))
             BotMovement(BOT_MOVE_CHASE, nullptr, newtarget);
-            //me->GetMotionMaster()->MoveChase(newtarget);
+        //me->GetMotionMaster()->MoveChase(newtarget);
     }
 
     if (newtarget != me->GetVictim() && (mover == me || CanBotAttackOnVehicle()))
@@ -5587,16 +5771,17 @@ void bot_ai::GetInPosition(bool force, Unit* newtarget, Position* mypos)
             me->SetInFront(newtarget);
     }
 }
+
 //Bots cannot dodge/parry from behind so try to condense enemies at front
 //opponent is always valid
 bool bot_ai::AdjustTankingPosition(Unit const* mytarget) const
 {
     //problem: chasing unit is constantly moving. Whoever the hell did that
-//    if (/*!IsTank() || */!me->IsInCombat() || me->isMoving() || IsCasting() ||
-//        JumpingOrFalling() || CCed(me, true) || Rand() > 10 + 20*me->GetMap()->IsDungeon())
-//        return;
+    //    if (/*!IsTank() || */!me->IsInCombat() || me->isMoving() || IsCasting() ||
+    //        JumpingOrFalling() || CCed(me, true) || Rand() > 10 + 20*me->GetMap()->IsDungeon())
+    //        return;
     if (/*!IsTank() || */!me->IsInCombat() || IsCasting() || me->GetVehicle() ||
-        JumpingOrFalling() || CCed(me, true) || Rand() > 10 + 20*me->GetMap()->IsDungeon() ||
+        JumpingOrFalling() || CCed(me, true) || Rand() > 10 + 20 * me->GetMap()->IsDungeon() ||
         HasBotCommandState(BOT_COMMAND_MASK_UNMOVING))
         return false;
 
@@ -5626,8 +5811,8 @@ bool bot_ai::AdjustTankingPosition(Unit const* mytarget) const
     {
         if (/*!CCed(*itr) && */(*itr)->IsWithinMeleeRange(me) && !me->HasInArc(float(M_PI), *itr))
             ++bCount;
-            //if (++bCount)
-            //    break;
+        //if (++bCount)
+        //    break;
     }
 
     if (bCount == 0)
@@ -5648,7 +5833,7 @@ bool bot_ai::AdjustTankingPosition(Unit const* mytarget) const
     {
         if (i)
         {
-            ori = Position::NormalizeOrientation(ori + (i+1)*(M_PI*0.31f));
+            ori = Position::NormalizeOrientation(ori + (i + 1) * (M_PI * 0.31f));
         }
 
         //move back
@@ -5656,8 +5841,8 @@ bool bot_ai::AdjustTankingPosition(Unit const* mytarget) const
         moveY = moveDist * std::sin(ori);
 
         Position ppos;
-        ppos.Relocate(x+moveX, y+moveY, z);
-        if (me->IsWithinLOS(x+moveX, y+moveY, z) && !IsWithinAoERadius(ppos))
+        ppos.Relocate(x + moveX, y + moveY, z);
+        if (me->IsWithinLOS(x + moveX, y + moveY, z) && !IsWithinAoERadius(ppos))
             break;
 
         if (i == 2)
@@ -5667,8 +5852,8 @@ bool bot_ai::AdjustTankingPosition(Unit const* mytarget) const
         }
     }
 
-    x+= moveX;
-    y+= moveY;
+    x += moveX;
+    y += moveY;
 
     me->UpdateAllowedPositionZ(x, y, z);
     if (me->GetPositionZ() < z)
@@ -5693,6 +5878,7 @@ void bot_ai::CheckAttackState()
             DoMeleeAttackIfReady();
     }
 }
+
 //Move behind current target if needed (avoid cleaves and dodges/parries, also rogues/ferals)
 void bot_ai::MoveBehind(Unit const* target) const
 {
@@ -5720,6 +5906,7 @@ void bot_ai::MoveBehind(Unit const* target) const
         const_cast<bot_ai*>(this)->_moveBehindTimer = urand(1000, (_botclass == BOT_CLASS_ROGUE || GetBotStance() == DRUID_CAT_FORM) ? 2000 : 4000);
     }
 }
+
 //MOUNT SUPPORT
 uint32 bot_ai::_selectMountSpell() const
 {
@@ -5768,7 +5955,7 @@ uint32 bot_ai::_selectMountSpell() const
     if (!myMountSpellId && me->GetMapId() == 531) //Ahn'Qiraj
     {
         //Select AQ40 mount
-        static const std::array<uint32, 4> QirajiMountSpellIds = { QIRAJI_BATTLE_TANK_1, QIRAJI_BATTLE_TANK_2, QIRAJI_BATTLE_TANK_3, QIRAJI_BATTLE_TANK_4 };
+        static const std::array<uint32, 4> QirajiMountSpellIds = {QIRAJI_BATTLE_TANK_1, QIRAJI_BATTLE_TANK_2, QIRAJI_BATTLE_TANK_3, QIRAJI_BATTLE_TANK_4};
         //Count Black Qiraji Battle Tank too
         if (masterMountSpellId == 26656 || std::find(QirajiMountSpellIds.cbegin(), QirajiMountSpellIds.cend(), masterMountSpellId) != QirajiMountSpellIds.cend())
             myMountSpellId = QirajiMountSpellIds[me->GetEntry() % QirajiMountSpellIds.size()];
@@ -5786,63 +5973,73 @@ uint32 bot_ai::_selectMountSpell() const
             //Select by class
             switch (_botclass)
             {
-                case BOT_CLASS_DARK_RANGER:
-                    myMountSpellId = BOT_DARK_RANGER_MOUNT;
-                    break;
-                case BOT_CLASS_WARLOCK:
-                    myMountSpellId = useSlowMount ? BOT_WARLOCK_MOUNT : BOT_WARLOCK_FAST_MOUNT;
-                    break;
-                case BOT_CLASS_PALADIN:
-                    if (me->GetRace() == RACE_BLOODELF)
-                        myMountSpellId = useSlowMount ? BOT_BE_PALLY_MOUNT : BOT_BE_PALLY_FAST_MOUNT;
-                    else
-                        myMountSpellId = useSlowMount ? BOT_ALLI_PALLY_MOUNT : BOT_ALLI_PALLY_FAST_MOUNT;
-                    break;
-                case BOT_CLASS_DEATH_KNIGHT:
-                    myMountSpellId = BOT_DEATH_KNIGHT_MOUNT;
-                    break;
-                default:
-                    break;
+            case BOT_CLASS_DARK_RANGER:
+                myMountSpellId = BOT_DARK_RANGER_MOUNT;
+                break;
+            case BOT_CLASS_WARLOCK:
+                myMountSpellId = useSlowMount ? BOT_WARLOCK_MOUNT : BOT_WARLOCK_FAST_MOUNT;
+                break;
+            case BOT_CLASS_PALADIN:
+                if (me->GetRace() == RACE_BLOODELF)
+                    myMountSpellId = useSlowMount ? BOT_BE_PALLY_MOUNT : BOT_BE_PALLY_FAST_MOUNT;
+                else
+                    myMountSpellId = useSlowMount ? BOT_ALLI_PALLY_MOUNT : BOT_ALLI_PALLY_FAST_MOUNT;
+                break;
+            case BOT_CLASS_DEATH_KNIGHT:
+                myMountSpellId = BOT_DEATH_KNIGHT_MOUNT;
+                break;
+            default:
+                break;
             }
             //Select by race
             if (!myMountSpellId)
             {
-                static const MountArray MOUNTS_60_HUMAN = { BOT_MOUNT_HUMAN_60_1, BOT_MOUNT_HUMAN_60_2, BOT_MOUNT_HUMAN_60_3 };
-                static const MountArray MOUNTS_60_ORC = { BOT_MOUNT_ORC_60_1, BOT_MOUNT_ORC_60_2, BOT_MOUNT_ORC_60_3 };
-                static const MountArray MOUNTS_60_DWARF = { BOT_MOUNT_DWARF_60_1, BOT_MOUNT_DWARF_60_2, BOT_MOUNT_DWARF_60_3 };
-                static const MountArray MOUNTS_60_NIGHTELF = { BOT_MOUNT_NIGHTELF_60_1, BOT_MOUNT_NIGHTELF_60_2, BOT_MOUNT_NIGHTELF_60_3 };
-                static const MountArray MOUNTS_60_FORSAKEN = { BOT_MOUNT_FORSAKEN_60_1, BOT_MOUNT_FORSAKEN_60_2, BOT_MOUNT_FORSAKEN_60_3 };
-                static const MountArray MOUNTS_60_TAUREN = { BOT_MOUNT_TAUREN_60_1, BOT_MOUNT_TAUREN_60_2, BOT_MOUNT_TAUREN_60_3 };
-                static const MountArray MOUNTS_60_GNOME = { BOT_MOUNT_GNOME_60_1, BOT_MOUNT_GNOME_60_2, BOT_MOUNT_GNOME_60_3 };
-                static const MountArray MOUNTS_60_TROLL = { BOT_MOUNT_TROLL_60_1, BOT_MOUNT_TROLL_60_2, BOT_MOUNT_TROLL_60_3 };
-                static const MountArray MOUNTS_60_BLOODELF = { BOT_MOUNT_BLOODELF_60_1, BOT_MOUNT_BLOODELF_60_2, BOT_MOUNT_BLOODELF_60_3 };
-                static const MountArray MOUNTS_60_DRAENEI = { BOT_MOUNT_DRAENEI_60_1, BOT_MOUNT_DRAENEI_60_2, BOT_MOUNT_DRAENEI_60_3 };
+                static const MountArray MOUNTS_60_HUMAN = {BOT_MOUNT_HUMAN_60_1, BOT_MOUNT_HUMAN_60_2, BOT_MOUNT_HUMAN_60_3};
+                static const MountArray MOUNTS_60_ORC = {BOT_MOUNT_ORC_60_1, BOT_MOUNT_ORC_60_2, BOT_MOUNT_ORC_60_3};
+                static const MountArray MOUNTS_60_DWARF = {BOT_MOUNT_DWARF_60_1, BOT_MOUNT_DWARF_60_2, BOT_MOUNT_DWARF_60_3};
+                static const MountArray MOUNTS_60_NIGHTELF = {BOT_MOUNT_NIGHTELF_60_1, BOT_MOUNT_NIGHTELF_60_2, BOT_MOUNT_NIGHTELF_60_3};
+                static const MountArray MOUNTS_60_FORSAKEN = {BOT_MOUNT_FORSAKEN_60_1, BOT_MOUNT_FORSAKEN_60_2, BOT_MOUNT_FORSAKEN_60_3};
+                static const MountArray MOUNTS_60_TAUREN = {BOT_MOUNT_TAUREN_60_1, BOT_MOUNT_TAUREN_60_2, BOT_MOUNT_TAUREN_60_3};
+                static const MountArray MOUNTS_60_GNOME = {BOT_MOUNT_GNOME_60_1, BOT_MOUNT_GNOME_60_2, BOT_MOUNT_GNOME_60_3};
+                static const MountArray MOUNTS_60_TROLL = {BOT_MOUNT_TROLL_60_1, BOT_MOUNT_TROLL_60_2, BOT_MOUNT_TROLL_60_3};
+                static const MountArray MOUNTS_60_BLOODELF = {BOT_MOUNT_BLOODELF_60_1, BOT_MOUNT_BLOODELF_60_2, BOT_MOUNT_BLOODELF_60_3};
+                static const MountArray MOUNTS_60_DRAENEI = {BOT_MOUNT_DRAENEI_60_1, BOT_MOUNT_DRAENEI_60_2, BOT_MOUNT_DRAENEI_60_3};
 
-                static const MountArray MOUNTS_100_HUMAN = { BOT_MOUNT_HUMAN_100_1, BOT_MOUNT_HUMAN_100_2, BOT_MOUNT_HUMAN_100_3 };
-                static const MountArray MOUNTS_100_ORC = { BOT_MOUNT_ORC_100_1, BOT_MOUNT_ORC_100_2, BOT_MOUNT_ORC_100_3 };
-                static const MountArray MOUNTS_100_DWARF = { BOT_MOUNT_DWARF_100_1, BOT_MOUNT_DWARF_100_2, BOT_MOUNT_DWARF_100_3 };
-                static const MountArray MOUNTS_100_NIGHTELF = { BOT_MOUNT_NIGHTELF_100_1, BOT_MOUNT_NIGHTELF_100_2, BOT_MOUNT_NIGHTELF_100_3 };
-                static const MountArray MOUNTS_100_FORSAKEN = { BOT_MOUNT_FORSAKEN_100_1, BOT_MOUNT_FORSAKEN_100_2, BOT_MOUNT_FORSAKEN_100_3 };
-                static const MountArray MOUNTS_100_TAUREN = { BOT_MOUNT_TAUREN_100_1, BOT_MOUNT_TAUREN_100_2, BOT_MOUNT_TAUREN_100_3 };
-                static const MountArray MOUNTS_100_GNOME = { BOT_MOUNT_GNOME_100_1, BOT_MOUNT_GNOME_100_2, BOT_MOUNT_GNOME_100_3 };
-                static const MountArray MOUNTS_100_TROLL = { BOT_MOUNT_TROLL_100_1, BOT_MOUNT_TROLL_100_2, BOT_MOUNT_TROLL_100_3 };
-                static const MountArray MOUNTS_100_BLOODELF = { BOT_MOUNT_BLOODELF_100_1, BOT_MOUNT_BLOODELF_100_2, BOT_MOUNT_BLOODELF_100_3 };
-                static const MountArray MOUNTS_100_DRAENEI = { BOT_MOUNT_DRAENEI_100_1, BOT_MOUNT_DRAENEI_100_2, BOT_MOUNT_DRAENEI_100_3 };
+                static const MountArray MOUNTS_100_HUMAN = {BOT_MOUNT_HUMAN_100_1, BOT_MOUNT_HUMAN_100_2, BOT_MOUNT_HUMAN_100_3};
+                static const MountArray MOUNTS_100_ORC = {BOT_MOUNT_ORC_100_1, BOT_MOUNT_ORC_100_2, BOT_MOUNT_ORC_100_3};
+                static const MountArray MOUNTS_100_DWARF = {BOT_MOUNT_DWARF_100_1, BOT_MOUNT_DWARF_100_2, BOT_MOUNT_DWARF_100_3};
+                static const MountArray MOUNTS_100_NIGHTELF = {BOT_MOUNT_NIGHTELF_100_1, BOT_MOUNT_NIGHTELF_100_2, BOT_MOUNT_NIGHTELF_100_3};
+                static const MountArray MOUNTS_100_FORSAKEN = {BOT_MOUNT_FORSAKEN_100_1, BOT_MOUNT_FORSAKEN_100_2, BOT_MOUNT_FORSAKEN_100_3};
+                static const MountArray MOUNTS_100_TAUREN = {BOT_MOUNT_TAUREN_100_1, BOT_MOUNT_TAUREN_100_2, BOT_MOUNT_TAUREN_100_3};
+                static const MountArray MOUNTS_100_GNOME = {BOT_MOUNT_GNOME_100_1, BOT_MOUNT_GNOME_100_2, BOT_MOUNT_GNOME_100_3};
+                static const MountArray MOUNTS_100_TROLL = {BOT_MOUNT_TROLL_100_1, BOT_MOUNT_TROLL_100_2, BOT_MOUNT_TROLL_100_3};
+                static const MountArray MOUNTS_100_BLOODELF = {BOT_MOUNT_BLOODELF_100_1, BOT_MOUNT_BLOODELF_100_2, BOT_MOUNT_BLOODELF_100_3};
+                static const MountArray MOUNTS_100_DRAENEI = {BOT_MOUNT_DRAENEI_100_1, BOT_MOUNT_DRAENEI_100_2, BOT_MOUNT_DRAENEI_100_3};
 
                 Optional<MountArray> myMounts;
                 switch (me->GetRace())
                 {
-                    case RACE_HUMAN:         myMounts = useSlowMount ? MOUNTS_60_HUMAN : MOUNTS_100_HUMAN;       break;
-                    case RACE_ORC:           myMounts = useSlowMount ? MOUNTS_60_ORC : MOUNTS_100_ORC;           break;
-                    case RACE_DWARF:         myMounts = useSlowMount ? MOUNTS_60_DWARF : MOUNTS_100_DWARF;       break;
-                    case RACE_NIGHTELF:      myMounts = useSlowMount ? MOUNTS_60_NIGHTELF : MOUNTS_100_NIGHTELF; break;
-                    case RACE_UNDEAD_PLAYER: myMounts = useSlowMount ? MOUNTS_60_FORSAKEN : MOUNTS_100_FORSAKEN; break;
-                    case RACE_TAUREN:        myMounts = useSlowMount ? MOUNTS_60_TAUREN : MOUNTS_100_TAUREN;     break;
-                    case RACE_GNOME:         myMounts = useSlowMount ? MOUNTS_60_GNOME : MOUNTS_100_GNOME;       break;
-                    case RACE_TROLL:         myMounts = useSlowMount ? MOUNTS_60_TROLL : MOUNTS_100_TROLL;       break;
-                    case RACE_BLOODELF:      myMounts = useSlowMount ? MOUNTS_60_BLOODELF : MOUNTS_100_BLOODELF; break;
-                    case RACE_DRAENEI:       myMounts = useSlowMount ? MOUNTS_60_DRAENEI : MOUNTS_100_DRAENEI;   break;
-                    default:                                                                                     break;
+                case RACE_HUMAN: myMounts = useSlowMount ? MOUNTS_60_HUMAN : MOUNTS_100_HUMAN;
+                    break;
+                case RACE_ORC: myMounts = useSlowMount ? MOUNTS_60_ORC : MOUNTS_100_ORC;
+                    break;
+                case RACE_DWARF: myMounts = useSlowMount ? MOUNTS_60_DWARF : MOUNTS_100_DWARF;
+                    break;
+                case RACE_NIGHTELF: myMounts = useSlowMount ? MOUNTS_60_NIGHTELF : MOUNTS_100_NIGHTELF;
+                    break;
+                case RACE_UNDEAD_PLAYER: myMounts = useSlowMount ? MOUNTS_60_FORSAKEN : MOUNTS_100_FORSAKEN;
+                    break;
+                case RACE_TAUREN: myMounts = useSlowMount ? MOUNTS_60_TAUREN : MOUNTS_100_TAUREN;
+                    break;
+                case RACE_GNOME: myMounts = useSlowMount ? MOUNTS_60_GNOME : MOUNTS_100_GNOME;
+                    break;
+                case RACE_TROLL: myMounts = useSlowMount ? MOUNTS_60_TROLL : MOUNTS_100_TROLL;
+                    break;
+                case RACE_BLOODELF: myMounts = useSlowMount ? MOUNTS_60_BLOODELF : MOUNTS_100_BLOODELF;
+                    break;
+                case RACE_DRAENEI: myMounts = useSlowMount ? MOUNTS_60_DRAENEI : MOUNTS_100_DRAENEI;
+                    break;
+                default: break;
                 }
 
                 if (myMounts)
@@ -5851,10 +6048,10 @@ uint32 bot_ai::_selectMountSpell() const
         }
         else //if (can_fly)
         {
-            static const MountArray MOUNTS_150_ALLIANCE = { BOT_MOUNT_FLY_ALLIANCE_150_1, BOT_MOUNT_FLY_ALLIANCE_150_2, BOT_MOUNT_FLY_ALLIANCE_150_3 };
-            static const MountArray MOUNTS_150_HORDE = { BOT_MOUNT_FLY_HORDE_150_1, BOT_MOUNT_FLY_HORDE_150_2, BOT_MOUNT_FLY_HORDE_150_3 };
-            static const MountArray MOUNTS_280_ALLIANCE = { BOT_MOUNT_FLY_ALLIANCE_280_1, BOT_MOUNT_FLY_ALLIANCE_280_2, BOT_MOUNT_FLY_ALLIANCE_280_3 };
-            static const MountArray MOUNTS_280_HORDE = { BOT_MOUNT_FLY_HORDE_280_1, BOT_MOUNT_FLY_HORDE_280_2, BOT_MOUNT_FLY_HORDE_280_3 };
+            static const MountArray MOUNTS_150_ALLIANCE = {BOT_MOUNT_FLY_ALLIANCE_150_1, BOT_MOUNT_FLY_ALLIANCE_150_2, BOT_MOUNT_FLY_ALLIANCE_150_3};
+            static const MountArray MOUNTS_150_HORDE = {BOT_MOUNT_FLY_HORDE_150_1, BOT_MOUNT_FLY_HORDE_150_2, BOT_MOUNT_FLY_HORDE_150_3};
+            static const MountArray MOUNTS_280_ALLIANCE = {BOT_MOUNT_FLY_ALLIANCE_280_1, BOT_MOUNT_FLY_ALLIANCE_280_2, BOT_MOUNT_FLY_ALLIANCE_280_3};
+            static const MountArray MOUNTS_280_HORDE = {BOT_MOUNT_FLY_HORDE_280_1, BOT_MOUNT_FLY_HORDE_280_2, BOT_MOUNT_FLY_HORDE_280_3};
 
             Optional<MountArray> myMounts;
             if (me->GetRaceMask() & RACEMASK_ALLIANCE)
@@ -5877,6 +6074,7 @@ uint32 bot_ai::_selectMountSpell() const
 
     return myMountSpellId;
 }
+
 void bot_ai::_updateMountedState()
 {
     bool aura = me->HasAuraType(SPELL_AURA_MOUNTED);
@@ -5918,6 +6116,7 @@ void bot_ai::_updateMountedState()
             doCast(me, mount_spell_id);
     }
 }
+
 //STANDSTATE
 void bot_ai::_updateStandState() const
 {
@@ -5958,6 +6157,7 @@ void bot_ai::_updateStandState() const
         me->GetStandState() == UNIT_STAND_STATE_STAND)
         me->SetStandState(UNIT_STAND_STATE_SIT);
 }
+
 //RATIONS
 void bot_ai::_updateRations()
 {
@@ -6016,6 +6216,7 @@ void bot_ai::_updateRations()
         me->CastSpell(me, GetRation(false), true);
     }
 }
+
 //Health and Powers regeneration
 //Rage regen is handled inside class AI UpdateAI()
 void bot_ai::Regenerate()
@@ -6032,7 +6233,7 @@ void bot_ai::Regenerate()
         // Regen Health
         int32 baseRegen = int32(_getTotalBotStat(BOT_STAT_MOD_HEALTH_REGEN));
         if ((!me->IsInCombat() || me->IsPolymorphed() || CanRegenInCombat() || baseRegen > 0 ||
-            me->HasAuraType(SPELL_AURA_MOD_REGEN_DURING_COMBAT) || me->HasAuraType(SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT)) &&
+                me->HasAuraType(SPELL_AURA_MOD_REGEN_DURING_COMBAT) || me->HasAuraType(SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT)) &&
             me->GetHealth() < me->GetMaxHealth())
         {
             int32 add = me->IsInCombat() ? 0 : IAmFree() && !me->GetVictim() ? me->GetMaxHealth() / 64 : 5 + me->GetCreateHealth() / 256;
@@ -6138,9 +6339,10 @@ bool bot_ai::Feasting() const
 
     return
         me->IsSitState() &&
-        (me->HasAuraType(SPELL_AURA_MOD_REGEN)       || me->HasAuraType(SPELL_AURA_OBS_MOD_HEALTH) ||
-         me->HasAuraType(SPELL_AURA_MOD_POWER_REGEN) || me->HasAuraType(SPELL_AURA_OBS_MOD_POWER));
+        (me->HasAuraType(SPELL_AURA_MOD_REGEN) || me->HasAuraType(SPELL_AURA_OBS_MOD_HEALTH) ||
+            me->HasAuraType(SPELL_AURA_MOD_POWER_REGEN) || me->HasAuraType(SPELL_AURA_OBS_MOD_POWER));
 }
+
 uint32 bot_ai::GetRation(bool drink) const
 {
     for (int8 i = MAX_FEAST_SPELLS - 1; i >= 0; --i)
@@ -6157,10 +6359,12 @@ void bot_ai::DrinkPotion(bool mana)
 
     me->CastSpell(me, GetPotion(mana));
 }
+
 bool bot_ai::IsPotionReady() const
 {
     return _potionTimer <= lastdiff;
 }
+
 uint32 bot_ai::GetPotion(bool mana) const
 {
     for (int8 i = MAX_POTION_SPELLS - 1; i >= 0; --i)
@@ -6169,45 +6373,47 @@ uint32 bot_ai::GetPotion(bool mana) const
 
     return (mana ? ManaPotionSpells[0][1] : HealingPotionSpells[0][1]);
 }
+
 bool bot_ai::IsPotionSpell(uint32 spellId) const
 {
     return spellId == GetPotion(true) || spellId == GetPotion(false);
 }
 
-/*static */BotItemUseSpellTargeting SelectTargeTypetForItemSpell(uint32 spellId, Unit const* caster)
+/*static */
+BotItemUseSpellTargeting SelectTargeTypetForItemSpell(uint32 spellId, Unit const* caster)
 {
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
     if (!spellInfo || spellInfo->CalcCastTime() > 1500)
         return BOT_ITEM_USE_SPELL_TARGET_NONE;
 
     TSpellSummary const& sum = SpellSummary[spellId];
-    if (sum.Effects & (1u << (SELECT_EFFECT_DAMAGE-1)))
+    if (sum.Effects & (1u << (SELECT_EFFECT_DAMAGE - 1)))
     {
-        if (sum.Targets & ((1u << (SELECT_TARGET_SINGLE_ENEMY-1)) | (1u << (SELECT_TARGET_ANY_ENEMY-1))))
+        if (sum.Targets & ((1u << (SELECT_TARGET_SINGLE_ENEMY - 1)) | (1u << (SELECT_TARGET_ANY_ENEMY - 1))))
             return BOT_ITEM_USE_SPELL_TARGET_ATTACKTARGET;
-        else if (sum.Targets & (1u << (SELECT_TARGET_AOE_ENEMY-1)))
+        else if (sum.Targets & (1u << (SELECT_TARGET_AOE_ENEMY - 1)))
             return BOT_ITEM_USE_SPELL_TARGET_SELF;
     }
-    else if (sum.Effects & (1u << (SELECT_EFFECT_HEALING-1)))
+    else if (sum.Effects & (1u << (SELECT_EFFECT_HEALING - 1)))
     {
-        if (sum.Targets & ((1u << (SELECT_TARGET_SELF-1)) | (1u << (SELECT_TARGET_SINGLE_FRIEND-1)) | (1u << (SELECT_TARGET_AOE_FRIEND-1)) | (1u << (SELECT_TARGET_ANY_FRIEND-1))))
+        if (sum.Targets & ((1u << (SELECT_TARGET_SELF - 1)) | (1u << (SELECT_TARGET_SINGLE_FRIEND - 1)) | (1u << (SELECT_TARGET_AOE_FRIEND - 1)) | (1u << (SELECT_TARGET_ANY_FRIEND - 1))))
             if (caster->GetHealthPct() < 75.f)
                 return BOT_ITEM_USE_SPELL_TARGET_SELF;
     }
-    else if (sum.Effects & (1u << (SELECT_EFFECT_AURA-1)))
+    else if (sum.Effects & (1u << (SELECT_EFFECT_AURA - 1)))
     {
-        if (sum.Targets & ((1u << (SELECT_TARGET_SELF-1)) | (1u << (SELECT_TARGET_AOE_FRIEND-1)) | (1u << (SELECT_TARGET_AOE_ENEMY-1))))
+        if (sum.Targets & ((1u << (SELECT_TARGET_SELF - 1)) | (1u << (SELECT_TARGET_AOE_FRIEND - 1)) | (1u << (SELECT_TARGET_AOE_ENEMY - 1))))
             return BOT_ITEM_USE_SPELL_TARGET_SELF;
-        else if (sum.Targets & ((1u << (SELECT_TARGET_SINGLE_FRIEND-1)) | (1u << (SELECT_TARGET_ANY_FRIEND-1))))
+        else if (sum.Targets & ((1u << (SELECT_TARGET_SINGLE_FRIEND - 1)) | (1u << (SELECT_TARGET_ANY_FRIEND - 1))))
             return BOT_ITEM_USE_SPELL_TARGET_ALLY;
-        else if (sum.Targets & ((1u << (SELECT_TARGET_SINGLE_ENEMY-1)) | (1u << (SELECT_TARGET_ANY_ENEMY-1))))
+        else if (sum.Targets & ((1u << (SELECT_TARGET_SINGLE_ENEMY - 1)) | (1u << (SELECT_TARGET_ANY_ENEMY - 1))))
             return BOT_ITEM_USE_SPELL_TARGET_ATTACKTARGET;
     }
     else // if (sum.Effects == 0)
     {
-        if (sum.Targets & ((1u << (SELECT_TARGET_SINGLE_ENEMY-1)) | (1u << (SELECT_TARGET_ANY_ENEMY-1))))
+        if (sum.Targets & ((1u << (SELECT_TARGET_SINGLE_ENEMY - 1)) | (1u << (SELECT_TARGET_ANY_ENEMY - 1))))
             return BOT_ITEM_USE_SPELL_TARGET_ATTACKTARGET;
-        else if (sum.Targets & ((1u << (SELECT_TARGET_AOE_ENEMY-1)) | (1u << (SELECT_TARGET_SELF-1)) | (1u << (SELECT_TARGET_SINGLE_FRIEND-1)) | (1u << (SELECT_TARGET_AOE_FRIEND-1)) | (1u << (SELECT_TARGET_ANY_FRIEND-1))))
+        else if (sum.Targets & ((1u << (SELECT_TARGET_AOE_ENEMY - 1)) | (1u << (SELECT_TARGET_SELF - 1)) | (1u << (SELECT_TARGET_SINGLE_FRIEND - 1)) | (1u << (SELECT_TARGET_AOE_FRIEND - 1)) | (1u << (SELECT_TARGET_ANY_FRIEND - 1))))
             return BOT_ITEM_USE_SPELL_TARGET_SELF;
         else // if (sum.Targets == 0)
             return BOT_ITEM_USE_SPELL_TARGET_SELF;
@@ -6215,6 +6421,7 @@ bool bot_ai::IsPotionSpell(uint32 spellId) const
 
     return BOT_ITEM_USE_SPELL_TARGET_NONE;
 }
+
 bool bot_ai::IsUsableItem(Item const* item)
 {
     if (ItemTemplate const* proto = item->GetTemplate())
@@ -6228,6 +6435,7 @@ bool bot_ai::IsUsableItem(Item const* item)
 
     return false;
 }
+
 uint32 bot_ai::GetItemSpellCooldown(uint32 spellId) const
 {
     for (Item const* item : _equips)
@@ -6245,6 +6453,7 @@ uint32 bot_ai::GetItemSpellCooldown(uint32 spellId) const
 
     return 0;
 }
+
 void bot_ai::CheckUsableItems(uint32 diff)
 {
     if (!_usableItemSlotsMask || itemsAutouseTimer > diff || !me->IsInCombat() || IsCasting() || (!me->GetVictim() && me->getAttackers().empty()))
@@ -6283,20 +6492,20 @@ void bot_ai::CheckUsableItems(uint32 diff)
                 Unit* castTarget = nullptr;
                 switch (targetType)
                 {
-                    case BOT_ITEM_USE_SPELL_TARGET_SELF:
+                case BOT_ITEM_USE_SPELL_TARGET_SELF:
+                    castTarget = me;
+                    break;
+                case BOT_ITEM_USE_SPELL_TARGET_ATTACKTARGET:
+                    castTarget = me->GetVictim();
+                    break;
+                case BOT_ITEM_USE_SPELL_TARGET_ALLY:
+                    castTarget = me->GetNextRandomRaidMemberOrPet(10.f);
+                    if (!castTarget)
                         castTarget = me;
-                        break;
-                    case BOT_ITEM_USE_SPELL_TARGET_ATTACKTARGET:
-                        castTarget = me->GetVictim();
-                        break;
-                    case BOT_ITEM_USE_SPELL_TARGET_ALLY:
-                        castTarget = me->GetNextRandomRaidMemberOrPet(10.f);
-                        if (!castTarget)
-                            castTarget = me;
-                        break;
-                    case BOT_ITEM_USE_SPELL_TARGET_NONE:
-                    default:
-                        break;
+                    break;
+                case BOT_ITEM_USE_SPELL_TARGET_NONE:
+                default:
+                    break;
                 }
 
                 //LOG_ERROR("scripts", "bot_ai::CheckUsableItems(): bot {}, slot {}, spell {}, target {}",
@@ -6320,6 +6529,7 @@ void bot_ai::CheckUsableItems(uint32 diff)
         }
     }
 }
+
 //check if our party players are in duel. if so - ignore them, their opponents and any bots they have
 //Deprecated after 4c26c85
 //bool bot_ai::InDuel(Unit const* target) const
@@ -6345,7 +6555,7 @@ WorldObject* bot_ai::GetNearbyRezTarget(float dist) const
     std::list<WorldObject*> list;
 
     NearbyRezTargetCheck check(me, dist, this);
-    Acore::WorldObjectListSearcher <NearbyRezTargetCheck> searcher(me, list, check);
+    Acore::WorldObjectListSearcher<NearbyRezTargetCheck> searcher(me, list, check);
     Cell::VisitWorldObjects(me, searcher, dist);
 
     if (list.empty())
@@ -6355,22 +6565,24 @@ WorldObject* bot_ai::GetNearbyRezTarget(float dist) const
 
     return Acore::Containers::SelectRandomContainerElement(list);
 }
+
 //Finds target for warrior's Shattering Throw
 Unit* bot_ai::FindImmunityShieldDispelTarget(float dist) const
 {
     //not checking range
-    if (me->GetVictim() && me->GetVictim()->HasAuraWithMechanic(1<<MECHANIC_IMMUNE_SHIELD))
+    if (me->GetVictim() && me->GetVictim()->HasAuraWithMechanic(1 << MECHANIC_IMMUNE_SHIELD))
         return me->GetVictim();
 
     Unit* unit = nullptr;
 
     ImmunityShieldDispelTargetCheck check(me, dist, this);
-    Acore::UnitSearcher <ImmunityShieldDispelTargetCheck> searcher(me, unit, check);
+    Acore::UnitSearcher<ImmunityShieldDispelTargetCheck> searcher(me, unit, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
     return unit;
 }
+
 //Used to find target for priest's dispels, mage's spellsteal and shaman's purge
 //Returns dispellable/stealable 'Any Hostile Unit Attacking BotParty'
 Unit* bot_ai::FindHostileDispelTarget(float dist, bool stealable) const
@@ -6378,7 +6590,7 @@ Unit* bot_ai::FindHostileDispelTarget(float dist, bool stealable) const
     std::list<Unit*> unitList;
 
     HostileDispelTargetCheck check(me, dist, stealable, this);
-    Acore::UnitListSearcher <HostileDispelTargetCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<HostileDispelTargetCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
@@ -6389,6 +6601,7 @@ Unit* bot_ai::FindHostileDispelTarget(float dist, bool stealable) const
 
     return Acore::Containers::SelectRandomContainerElement(unitList);
 }
+
 //Finds single target affected by given spell (and given caster if is)
 //Can check:
 //    hostile targets  (hostile = 0) <default>
@@ -6412,19 +6625,20 @@ Unit* bot_ai::FindAffectedTarget(uint32 spellId, ObjectGuid caster, float dist, 
     Unit* unit = nullptr;
 
     AffectedTargetCheck check(caster, dist, spellId, master, hostile);
-    Acore::UnitSearcher <AffectedTargetCheck> searcher(master, unit, check);
+    Acore::UnitSearcher<AffectedTargetCheck> searcher(master, unit, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
     return unit;
 }
+
 //Finds target for mage's polymorph or shaman's hex
 Unit* bot_ai::FindPolyTarget(float dist) const
 {
     std::list<Unit*> unitList;
 
     PolyUnitCheck check(me, dist);
-    Acore::UnitListSearcher <PolyUnitCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<PolyUnitCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
@@ -6438,13 +6652,14 @@ Unit* bot_ai::FindPolyTarget(float dist) const
 
     return Acore::Containers::SelectRandomContainerElement(unitList);
 }
+
 //Finds target for direct fear (warlock, hunter)
 Unit* bot_ai::FindFearTarget(float dist) const
 {
     std::list<Unit*> unitList;
 
     FearUnitCheck check(me, dist);
-    Acore::UnitListSearcher <FearUnitCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<FearUnitCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
@@ -6458,13 +6673,14 @@ Unit* bot_ai::FindFearTarget(float dist) const
 
     return Acore::Containers::SelectRandomContainerElement(unitList);
 }
+
 //Finds target for CC spells with MECHANIC_STUN
 Unit* bot_ai::FindStunTarget(float dist) const
 {
     std::list<Unit*> unitList;
 
     StunUnitCheck check(me, dist);
-    Acore::UnitListSearcher <StunUnitCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<StunUnitCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
@@ -6478,6 +6694,7 @@ Unit* bot_ai::FindStunTarget(float dist) const
 
     return Acore::Containers::SelectRandomContainerElement(unitList);
 }
+
 //Finds target for priest's shackles
 Unit* bot_ai::FindUndeadCCTarget(float dist, uint32 spellId, bool unattacked) const
 {
@@ -6487,7 +6704,7 @@ Unit* bot_ai::FindUndeadCCTarget(float dist, uint32 spellId, bool unattacked) co
     std::list<Unit*> unitList;
 
     UndeadCCUnitCheck check(me, dist, this, spellId, unattacked);
-    Acore::UnitListSearcher <UndeadCCUnitCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<UndeadCCUnitCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
@@ -6501,6 +6718,7 @@ Unit* bot_ai::FindUndeadCCTarget(float dist, uint32 spellId, bool unattacked) co
 
     return Acore::Containers::SelectRandomContainerElement(unitList);
 }
+
 //Finds target for druid's Entangling Roots
 Unit* bot_ai::FindRootTarget(float dist, uint32 spellId) const
 {
@@ -6510,7 +6728,7 @@ Unit* bot_ai::FindRootTarget(float dist, uint32 spellId) const
     std::list<Unit*> unitList;
 
     RootUnitCheck check(me, dist, this, spellId);
-    Acore::UnitListSearcher <RootUnitCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<RootUnitCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
@@ -6524,6 +6742,7 @@ Unit* bot_ai::FindRootTarget(float dist, uint32 spellId) const
 
     return Acore::Containers::SelectRandomContainerElement(unitList);
 }
+
 //Finds casting target (neutral or enemy)
 //Can be used to get silence/interruption/reflect/grounding check
 Unit* bot_ai::FindCastingTarget(float maxdist, float mindist, uint32 spellId, uint8 minHpPct) const
@@ -6531,7 +6750,7 @@ Unit* bot_ai::FindCastingTarget(float maxdist, float mindist, uint32 spellId, ui
     std::list<Unit*> unitList;
 
     CastingUnitCheck check(me, mindist, maxdist, spellId, minHpPct);
-    Acore::UnitListSearcher <CastingUnitCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<CastingUnitCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, maxdist);
     //me->VisitNearbyObject(maxdist, searcher);
 
@@ -6545,6 +6764,7 @@ Unit* bot_ai::FindCastingTarget(float maxdist, float mindist, uint32 spellId, ui
 
     return Acore::Containers::SelectRandomContainerElement(unitList);
 }
+
 // Returns target for dest AOE spell (blizzard, hurricane, etc.) based on crowd size, movement state and direction
 Unit* bot_ai::FindAOETarget(float dist, WorldObject const* src) const
 {
@@ -6563,7 +6783,7 @@ Unit* bot_ai::FindAOETarget(float dist, WorldObject const* src) const
     {
         if ((*itr)->isMoving() && (*itr)->GetVictim() &&
             ((*itr)->GetDistance2d((*itr)->GetVictim()->GetPositionX(), (*itr)->GetVictim()->GetPositionY()) > 7.5f ||
-            !(*itr)->HasInArc(float(M_PI)*0.75f, (*itr)->GetVictim())))
+                !(*itr)->HasInArc(float(M_PI) * 0.75f, (*itr)->GetVictim())))
             continue;
 
         if (!unit && (*itr)->GetVictim() && (*itr)->GetDistance((*itr)->GetVictim()) < dist * 0.334f)
@@ -6589,7 +6809,7 @@ Unit* bot_ai::FindAOETarget(float dist, WorldObject const* src) const
                 {
                     if (++count > 2)
                     {
-                        if (src->GetDistance(*it) < src->GetDistance(unit) && unit->HasInArc(float(M_PI)/2, src))
+                        if (src->GetDistance(*it) < src->GetDistance(unit) && unit->HasInArc(float(M_PI) / 2, src))
                             unit = *it;
                         break;
                     }
@@ -6604,6 +6824,7 @@ Unit* bot_ai::FindAOETarget(float dist, WorldObject const* src) const
 
     return unit;
 }
+
 // Finds secondary target for spells like Cleave, Swipe, etc.
 Unit* bot_ai::FindSplashTarget(float dist, Unit* To, float splashdist) const
 {
@@ -6618,12 +6839,13 @@ Unit* bot_ai::FindSplashTarget(float dist, Unit* To, float splashdist) const
     Unit* unit = nullptr;
 
     SecondEnemyCheck check(me, dist, splashdist, To, this);
-    Acore::UnitSearcher <SecondEnemyCheck> searcher(me, unit, check);
+    Acore::UnitSearcher<SecondEnemyCheck> searcher(me, unit, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
     return unit;
 }
+
 // Finds secondary target for AoE spells like Mind Sear (not damaging primary target)
 Unit* bot_ai::FindSplashTarget(float dist, Unit* To, float splashdist, uint8 minTargets) const
 {
@@ -6636,7 +6858,7 @@ Unit* bot_ai::FindSplashTarget(float dist, Unit* To, float splashdist, uint8 min
     std::list<Unit*> unitList;
 
     SecondEnemyCheck check(me, dist, splashdist, To, this);
-    Acore::UnitListSearcher <SecondEnemyCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<SecondEnemyCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, dist);
     //me->VisitNearbyObject(dist, searcher);
 
@@ -6647,18 +6869,20 @@ Unit* bot_ai::FindSplashTarget(float dist, Unit* To, float splashdist, uint8 min
 
     return Acore::Containers::SelectRandomContainerElement(unitList);
 }
+
 //Finds target for hunter's Tranquilizing Shot (has dispellable magic or enrage effect)
 Unit* bot_ai::FindTranquilTarget(float mindist, float maxdist) const
 {
     Unit* unit = nullptr;
 
     TranquilTargetCheck check(me, mindist, maxdist, this);
-    Acore::UnitSearcher <TranquilTargetCheck> searcher(me, unit, check);
+    Acore::UnitSearcher<TranquilTargetCheck> searcher(me, unit, check);
     Cell::VisitAllObjects(me, searcher, maxdist);
     //me->VisitNearbyObject(maxdist, searcher);
 
     return unit;
 }
+
 //Find target to cast taunt on
 //In case of paladin's Righetoous Defense returns IsInBotParty() unit
 Unit* bot_ai::FindDistantTauntTarget(float maxdist, bool ally) const
@@ -6666,7 +6890,7 @@ Unit* bot_ai::FindDistantTauntTarget(float maxdist, bool ally) const
     std::list<Unit*> unitList;
 
     FarTauntUnitCheck check(me, maxdist, ally, this);
-    Acore::UnitListSearcher <FarTauntUnitCheck> searcher(me, unitList, check);
+    Acore::UnitListSearcher<FarTauntUnitCheck> searcher(me, unitList, check);
     Cell::VisitAllObjects(me, searcher, maxdist);
     //me->VisitNearbyObject(maxdist, searcher);
 
@@ -6676,6 +6900,7 @@ Unit* bot_ai::FindDistantTauntTarget(float maxdist, bool ally) const
     Unit* unit = unitList.size() == 1 ? *unitList.begin() : Acore::Containers::SelectRandomContainerElement(unitList);
     return ally ? unit->GetVictim() : unit;
 }
+
 //Finds target for Warlock's Mana Drain
 //Returns nearby CCed unit with most mana
 Unit* bot_ai::FindDrainTarget(float maxdist) const
@@ -6683,46 +6908,50 @@ Unit* bot_ai::FindDrainTarget(float maxdist) const
     Unit* unit = nullptr;
 
     ManaDrainUnitCheck check(me, maxdist, this);
-    Acore::UnitLastSearcher <ManaDrainUnitCheck> searcher(me, unit, check);
+    Acore::UnitLastSearcher<ManaDrainUnitCheck> searcher(me, unit, check);
     Cell::VisitAllObjects(me, searcher, maxdist);
     //me->VisitNearbyObject(maxdist, searcher);
 
     return unit;
 }
+
 //Finds all targets within given range
 //used for finding targets for spells which need reasonable amount of targets (ex. Death Knight AOE spells)
 //CCoption:= mask
 //1 - not CCed
 //2 - has no periodic damage auras (can be safely CCed)
-void bot_ai::GetNearbyTargetsList(std::list<Unit*> &targets, float maxdist, uint8 CCoption, WorldObject const* source) const
+void bot_ai::GetNearbyTargetsList(std::list<Unit*>& targets, float maxdist, uint8 CCoption, WorldObject const* source) const
 {
     if (!source)
         source = me;
 
     NearbyHostileUnitCheck check(me, maxdist, this, CCoption, source);
-    Acore::UnitListSearcher <NearbyHostileUnitCheck> searcher(me, targets, check);
+    Acore::UnitListSearcher<NearbyHostileUnitCheck> searcher(me, targets, check);
     Cell::VisitAllObjects(me, searcher, maxdist);
     //me->VisitNearbyObject(maxdist, searcher);
 }
+
 //Find all targets within given range in cone in front of caster; angle is PI/2 (TC confirmed)
 //used by mage Dragon's Breath and Cone of Cold spells
 //also Swipe (Bear) and Swipe (Cat)
-void bot_ai::GetNearbyTargetsInConeList(std::list<Unit*> &targets, float maxdist) const
+void bot_ai::GetNearbyTargetsInConeList(std::list<Unit*>& targets, float maxdist) const
 {
     NearbyHostileUnitInConeCheck check(me, maxdist, this);
-    Acore::UnitListSearcher <NearbyHostileUnitInConeCheck> searcher(me, targets, check);
+    Acore::UnitListSearcher<NearbyHostileUnitInConeCheck> searcher(me, targets, check);
     Cell::VisitAllObjects(me, searcher, maxdist);
     //me->VisitNearbyObject(maxdist, searcher);
 }
+
 //Finds all friendly targets within given range
 //used for finding targets to heal/buff for uncontrolled bots
-void bot_ai::GetNearbyFriendlyTargetsList(std::list<Unit*> &targets, float maxdist) const
+void bot_ai::GetNearbyFriendlyTargetsList(std::list<Unit*>& targets, float maxdist) const
 {
     NearbyFriendlyUnitCheck check(me, maxdist, this);
-    Acore::UnitListSearcher <NearbyFriendlyUnitCheck> searcher(me, targets, check);
+    Acore::UnitListSearcher<NearbyFriendlyUnitCheck> searcher(me, targets, check);
     Cell::VisitAllObjects(me, searcher, maxdist);
     //me->VisitNearbyObject(maxdist, searcher);
 }
+
 //////////
 //SPELLMAP
 //////////
@@ -6751,6 +6980,7 @@ uint32 bot_ai::InitSpell(Unit const* caster, uint32 spell)
 
     return spell; //max rank, use this
 }
+
 //Using first-rank spell as source, puts spell of max rank allowed for given caster in spellmap
 void bot_ai::InitSpellMap(uint32 basespell, bool forceadd, bool forwardRank)
 {
@@ -6791,12 +7021,14 @@ void bot_ai::InitSpellMap(uint32 basespell, bool forceadd, bool forwardRank)
         //    sSpellMgr->GetSpellInfo(basespell)->SpellName[0], basespell, spellId, me->GetName().c_str());
     }
 }
+
 //Using first-rank spell as source, return true if spell is inited
 bool bot_ai::HasSpell(uint32 basespell) const
 {
     BotSpellMap::const_iterator itr = _spells.find(basespell);
     return itr != _spells.end() && (itr->second->spellId != 0);
 }
+
 //Using spell name as source, return first-rank spell if spell is inited
 uint32 bot_ai::GetBaseSpell(std::string_view spell_name, LocaleConstant locale) const
 {
@@ -6825,28 +7057,33 @@ uint32 bot_ai::GetBaseSpell(std::string_view spell_name, LocaleConstant locale) 
 
     return basespell;
 }
+
 //Using first-rank spell as source, return current spell id if inited and enabled
 uint32 bot_ai::GetSpell(uint32 basespell) const
 {
     BotSpellMap::const_iterator itr = _spells.find(basespell);
     return itr != _spells.end() && (itr->second->enabled == true || IAmFree()) ? itr->second->spellId : 0;
 }
+
 //Using first-rank spell as source, returns cooldown on current spell
 uint32 bot_ai::GetSpellCooldown(uint32 basespell) const
 {
     BotSpellMap::const_iterator itr = _spells.find(basespell);
     return itr != _spells.end() ? itr->second->cooldown : 0;
 }
+
 bool bot_ai::IsSpellReady(uint32 basespell, uint32 diff, bool checkGCD) const
 {
     if (checkGCD && GC_Timer > diff)
         return false;
 
     BotSpellMap::const_iterator itr = _spells.find(basespell);
-    return itr == _spells.end() ? true :
-        ((itr->second->enabled == true || IAmFree() || IsLastOrder(BOT_ORDER_SPELLCAST, basespell)) &&
-            itr->second->spellId != 0 && itr->second->cooldown <= diff);
+    return itr == _spells.end() ?
+               true :
+               ((itr->second->enabled == true || IAmFree() || IsLastOrder(BOT_ORDER_SPELLCAST, basespell)) &&
+                   itr->second->spellId != 0 && itr->second->cooldown <= diff);
 }
+
 //Using first-rank spell as source, sets cooldown for current spell
 void bot_ai::SetSpellCooldown(uint32 basespell, uint32 msCooldown)
 {
@@ -6865,6 +7102,7 @@ void bot_ai::SetSpellCooldown(uint32 basespell, uint32 msCooldown)
     InitSpellMap(basespell, true, false);
     SetSpellCooldown(basespell, msCooldown);
 }
+
 //Using first-rank spell as source, sets cooldown for spells of that category
 void bot_ai::SetSpellCategoryCooldown(SpellInfo const* spellInfo, uint32 msCooldown)
 {
@@ -6891,13 +7129,14 @@ void bot_ai::SetSpellCategoryCooldown(SpellInfo const* spellInfo, uint32 msCoold
             //if (itr->first != 7814) // Lash of Pain
             {
                 LOG_ERROR("scripts", "Warning: SetSpellCategoryCooldown: {} has baseId {} but category {}, not {}!",
-                    info->Id, itr->first, info->GetCategory(), category);
+                          info->Id, itr->first, info->GetCategory(), category);
             }
         }
         if (info && (info->GetCategory() == category || info->StartRecoveryCategory == category || itr->first == spellInfo->Id) && itr->second->cooldown < msCooldown)
             itr->second->cooldown = msCooldown;
     }
 }
+
 //Handles spell cooldowns for spell with IsCooldownStartedOnEvent() == true
 void bot_ai::ReleaseSpellCooldown(uint32 basespell)
 {
@@ -6920,6 +7159,7 @@ void bot_ai::ReleaseSpellCooldown(uint32 basespell)
     SetSpellCooldown(baseInfo->Id, rec > 0 ? rec : 0);
     SetSpellCategoryCooldown(baseInfo, catrec > 0 && !(baseInfo->AttributesEx6 & SPELL_ATTR6_NO_CATEGORY_COOLDOWN_MODS) ? catrec : 0);
 }
+
 //Using first-rank spell as source, disables certain spell for this bot
 void bot_ai::RemoveSpell(uint32 basespell)
 {
@@ -6936,6 +7176,7 @@ void bot_ai::RemoveSpell(uint32 basespell)
     newSpell->spellId = 0;
     newSpell->cooldown = 0;
 }
+
 //
 //void bot_ai::RemoveAllSpells()
 //{
@@ -6955,6 +7196,7 @@ void bot_ai::EnableAllSpells()
         if (itr->second->enabled == false)
             itr->second->enabled = true;
 }
+
 //See CommonTimers(uint32)
 void bot_ai::SpellTimers(uint32 diff)
 {
@@ -6967,59 +7209,61 @@ void bot_ai::SpellTimers(uint32 diff)
             itr->second->cooldown = 0;
     }
 }
+
 uint32 bot_ai::RaceSpellForClass(uint8 myrace, uint8 myclass)
 {
     switch (myrace)
     {
-        case RACE_ORC:
-            switch (myclass)
-            {
-                case BOT_CLASS_WARLOCK:
-                    return RACIAL_BLOOD_FURY_WARLOCK;
-                case BOT_CLASS_SHAMAN:
-                    return RACIAL_BLOOD_FURY_SHAMAN;
-                default:
-                    return RACIAL_BLOOD_FURY_OTHERS;
-            }
-            break;
-        case RACE_BLOODELF:
-            switch (myclass)
-            {
-                case BOT_CLASS_DEATH_KNIGHT:
-                    return RACIAL_ARCANE_TORRENT_DEATHKNIGHT;
-                case BOT_CLASS_ROGUE:
-                    return RACIAL_ARCANE_TORRENT_ROGUE;
-                default:
-                    return RACIAL_ARCANE_TORRENT_OTHERS;
-            }
-            break;
-        case RACE_DRAENEI:
-            switch (myclass)
-            {
-                case BOT_CLASS_WARRIOR:
-                    return RACIAL_GIFT_OF_NAARU_WARRIOR;
-                case BOT_CLASS_PALADIN:
-                    return RACIAL_GIFT_OF_NAARU_PALADIN;
-                case BOT_CLASS_HUNTER:
-                    return RACIAL_GIFT_OF_NAARU_HUNTER;
-                case BOT_CLASS_PRIEST:
-                    return RACIAL_GIFT_OF_NAARU_PRIEST;
-                case BOT_CLASS_DEATH_KNIGHT:
-                    return RACIAL_GIFT_OF_NAARU_DEATHKNIGHT;
-                case BOT_CLASS_SHAMAN:
-                    return RACIAL_GIFT_OF_NAARU_SHAMAN;
-                case BOT_CLASS_MAGE:
-                    return RACIAL_GIFT_OF_NAARU_MAGE;
-                default:
-                    LOG_ERROR("entities.player", "RaceSpellForClass(): unknows race:class combo {}, {}", uint32(myrace), uint32(myclass));
-                    return 0;
-            }
-            break;
+    case RACE_ORC:
+        switch (myclass)
+        {
+        case BOT_CLASS_WARLOCK:
+            return RACIAL_BLOOD_FURY_WARLOCK;
+        case BOT_CLASS_SHAMAN:
+            return RACIAL_BLOOD_FURY_SHAMAN;
+        default:
+            return RACIAL_BLOOD_FURY_OTHERS;
+        }
+        break;
+    case RACE_BLOODELF:
+        switch (myclass)
+        {
+        case BOT_CLASS_DEATH_KNIGHT:
+            return RACIAL_ARCANE_TORRENT_DEATHKNIGHT;
+        case BOT_CLASS_ROGUE:
+            return RACIAL_ARCANE_TORRENT_ROGUE;
+        default:
+            return RACIAL_ARCANE_TORRENT_OTHERS;
+        }
+        break;
+    case RACE_DRAENEI:
+        switch (myclass)
+        {
+        case BOT_CLASS_WARRIOR:
+            return RACIAL_GIFT_OF_NAARU_WARRIOR;
+        case BOT_CLASS_PALADIN:
+            return RACIAL_GIFT_OF_NAARU_PALADIN;
+        case BOT_CLASS_HUNTER:
+            return RACIAL_GIFT_OF_NAARU_HUNTER;
+        case BOT_CLASS_PRIEST:
+            return RACIAL_GIFT_OF_NAARU_PRIEST;
+        case BOT_CLASS_DEATH_KNIGHT:
+            return RACIAL_GIFT_OF_NAARU_DEATHKNIGHT;
+        case BOT_CLASS_SHAMAN:
+            return RACIAL_GIFT_OF_NAARU_SHAMAN;
+        case BOT_CLASS_MAGE:
+            return RACIAL_GIFT_OF_NAARU_MAGE;
         default:
             LOG_ERROR("entities.player", "RaceSpellForClass(): unknows race:class combo {}, {}", uint32(myrace), uint32(myclass));
             return 0;
+        }
+        break;
+    default:
+        LOG_ERROR("entities.player", "RaceSpellForClass(): unknows race:class combo {}, {}", uint32(myrace), uint32(myclass));
+        return 0;
     }
 }
+
 //Health magement for minions
 //Including health calcs, set
 void bot_ai::_OnHealthUpdate() const
@@ -7071,6 +7315,7 @@ void bot_ai::_OnHealthUpdate() const
     //TC_LOG_ERROR("entities.player", "overall hp: %u", me->GetMaxHealth());
     me->SetHealth(fullhp ? me->GetMaxHealth() : uint32(0.5f + float(me->GetMaxHealth()) * pct / 100.f)); //restore pct
 }
+
 //Mana management for minions
 //Including calcs and set
 void bot_ai::_OnManaUpdate() const
@@ -7088,23 +7333,23 @@ void bot_ai::_OnManaUpdate() const
     float pct = fullmana ? 100.f : (float(me->GetPower(POWER_MANA)) * 100.f) / float(me->GetMaxPower(POWER_MANA));
     float m_basemana = _classinfo->basemana;
     if (_botclass == BOT_CLASS_BM)
-        m_basemana = float(BASE_MANA_1_BM) + float(BASE_MANA_10_BM - BASE_MANA_1_BM) * (mylevel/81.f);
+        m_basemana = float(BASE_MANA_1_BM) + float(BASE_MANA_10_BM - BASE_MANA_1_BM) * (mylevel / 81.f);
     if (_botclass == BOT_CLASS_SPHYNX)
         m_basemana = BASE_MANA_SPHYNX;
     if (_botclass == BOT_CLASS_ARCHMAGE)
-        m_basemana = float(BASE_MANA_1_ARCHMAGE) + float(BASE_MANA_10_ARCHMAGE - BASE_MANA_1_ARCHMAGE) * ((mylevel - 20)/81.f);
+        m_basemana = float(BASE_MANA_1_ARCHMAGE) + float(BASE_MANA_10_ARCHMAGE - BASE_MANA_1_ARCHMAGE) * ((mylevel - 20) / 81.f);
     if (_botclass == BOT_CLASS_DREADLORD)
-        m_basemana = float(BASE_MANA_1_DREADLORD) + float(BASE_MANA_10_DREADLORD - BASE_MANA_1_DREADLORD) * ((mylevel - 60)/83.f);
+        m_basemana = float(BASE_MANA_1_DREADLORD) + float(BASE_MANA_10_DREADLORD - BASE_MANA_1_DREADLORD) * ((mylevel - 60) / 83.f);
     if (_botclass == BOT_CLASS_SPELLBREAKER)
         m_basemana = BASE_MANA_SPELLBREAKER;
     if (_botclass == BOT_CLASS_DARK_RANGER)
-        m_basemana = float(BASE_MANA_1_DARK_RANGER) + float(BASE_MANA_10_DARK_RANGER - BASE_MANA_1_DARK_RANGER) * ((mylevel - 40)/82.f);
+        m_basemana = float(BASE_MANA_1_DARK_RANGER) + float(BASE_MANA_10_DARK_RANGER - BASE_MANA_1_DARK_RANGER) * ((mylevel - 40) / 82.f);
     if (_botclass == BOT_CLASS_NECROMANCER)
         m_basemana = BASE_MANA_NECROMANCER;
     if (_botclass == BOT_CLASS_SEA_WITCH)
-        m_basemana = float(BASE_MANA_1_SEA_WITCH) + float(BASE_MANA_10_SEA_WITCH - BASE_MANA_1_SEA_WITCH) * (mylevel/83.f);
+        m_basemana = float(BASE_MANA_1_SEA_WITCH) + float(BASE_MANA_10_SEA_WITCH - BASE_MANA_1_SEA_WITCH) * (mylevel / 83.f);
     if (_botclass == BOT_CLASS_CRYPT_LORD)
-        m_basemana = float(BASE_MANA_1_CRYPT_LORD) + float(BASE_MANA_10_CRYPT_LORD - BASE_MANA_1_CRYPT_LORD) * (mylevel/83.f);
+        m_basemana = float(BASE_MANA_1_CRYPT_LORD) + float(BASE_MANA_10_CRYPT_LORD - BASE_MANA_1_CRYPT_LORD) * (mylevel / 83.f);
     //TC_LOG_ERROR("entities.player", "classinfo base mana = %f", m_basemana);
 
     me->SetCreateMana(uint32(m_basemana));
@@ -7131,17 +7376,19 @@ void bot_ai::_OnManaUpdate() const
     //m_basemana = float(uint32(m_basemana) - (uint32(m_basemana) % 5));
     me->SetModifierValue(UNIT_MOD_MANA, BASE_VALUE, m_basemana);
     me->UpdateMaxPower(POWER_MANA);
-    me->SetPower(POWER_MANA, fullmana ? me->GetMaxPower(POWER_MANA) :
-        uint32(0.5f + float(me->GetMaxPower(POWER_MANA)) * pct / 100.f)); //restore pct
+    me->SetPower(POWER_MANA, fullmana ?
+                                 me->GetMaxPower(POWER_MANA) :
+                                 uint32(0.5f + float(me->GetMaxPower(POWER_MANA)) * pct / 100.f)); //restore pct
 
     _OnManaRegenUpdate();
 }
+
 //Mana regen for minions
 void bot_ai::_OnManaRegenUpdate() const
 {
     //regen_normal
     uint8 mylevel = me->GetLevel();
-    float value = (IAmFree() && _botclass != BOT_CLASS_SPHYNX) ? mylevel/2 : 0; //200/0 mp5 at 80
+    float value = (IAmFree() && _botclass != BOT_CLASS_SPHYNX) ? mylevel / 2 : 0; //200/0 mp5 at 80
 
     float power_regen_mp5;
     int32 modManaRegenInterrupt;
@@ -7149,7 +7396,7 @@ void bot_ai::_OnManaRegenUpdate() const
     {
         // Mana regen from spirit and intellect
         float spiregen = 0.001f;
-        if (GtRegenMPPerSptEntry const* moreRatio = sGtRegenMPPerSptStore.LookupEntry((_botclass-1)*GT_MAX_LEVEL + mylevel-1))
+        if (GtRegenMPPerSptEntry const* moreRatio = sGtRegenMPPerSptStore.LookupEntry((_botclass - 1) * GT_MAX_LEVEL + mylevel - 1))
             spiregen = moreRatio->ratio * _getTotalBotStat(BOT_STAT_MOD_SPIRIT);
 
         // PCT bonus from SPELL_AURA_MOD_POWER_REGEN_PERCENT aura on spirit base regen
@@ -7234,7 +7481,7 @@ void bot_ai::_UpdateWMOArea()
     uint32 mogpFlags;
     int32 adtId, rootId, groupId;
     if (!me->GetMap()->GetAreaInfo(me->GetPhaseMask(), me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(),
-        mogpFlags, adtId, rootId, groupId))
+                                   mogpFlags, adtId, rootId, groupId))
         return;
 
     if (WMOAreaTableEntry const* wmoEntry = GetWMOAreaTableEntryByTripple(rootId, adtId, groupId))
@@ -7368,7 +7615,8 @@ void bot_ai::OnSpellHit(Unit* caster, SpellInfo const* spell)
     {
         if (spell->HasAura(SPELL_AURA_MOD_TAUNT) || spell->HasEffect(SPELL_EFFECT_ATTACK_ME))
             if (caster && me->Attack(caster, !HasRole(BOT_ROLE_RANGED)))
-            {}//me->GetMotionMaster()->MoveChase(caster);
+            {
+            } //me->GetMotionMaster()->MoveChase(caster);
     }
 
     if (spell->GetSpellSpecific() == SPELL_SPECIFIC_DRINK)
@@ -7385,17 +7633,18 @@ void bot_ai::OnSpellHit(Unit* caster, SpellInfo const* spell)
 
     switch (spell->Id)
     {
-        case WANDERER_HEARTHSTONE:
-            if (IsWanderer())
-            {
-                Map* targetMap = (me->GetMap()->GetEntry()->IsContinent() && _travel_node_cur->GetMapId() != me->GetMap()->GetId()) ?
-                    sMapMgr->CreateBaseMap(_travel_node_cur->GetMapId()) : me->GetMap();
-                BotMgr::TeleportBot(me, targetMap, _travel_node_cur, true);
-                _evadeCount = 0;
-            }
-            return;
-        default:
-            break;
+    case WANDERER_HEARTHSTONE:
+        if (IsWanderer())
+        {
+            Map* targetMap = (me->GetMap()->GetEntry()->IsContinent() && _travel_node_cur->GetMapId() != me->GetMap()->GetId()) ?
+                                 sMapMgr->CreateBaseMap(_travel_node_cur->GetMapId()) :
+                                 me->GetMap();
+            BotMgr::TeleportBot(me, targetMap, _travel_node_cur, true);
+            _evadeCount = 0;
+        }
+        return;
+    default:
+        break;
     }
 
     for (uint8 i = 0; i != MAX_SPELL_EFFECTS; ++i)
@@ -7446,7 +7695,7 @@ void bot_ai::OnSpellHit(Unit* caster, SpellInfo const* spell)
             shouldUpdateStats = true;
         else if (auraname == SPELL_AURA_MOD_INCREASE_HEALTH ||
             auraname == SPELL_AURA_MOD_INCREASE_HEALTH_2 ||
-            auraname == SPELL_AURA_230 ||//SPELL_AURA_MOD_INCREASE_HEALTH_2 blood pact, commanding shout
+            auraname == SPELL_AURA_230 || //SPELL_AURA_MOD_INCREASE_HEALTH_2 blood pact, commanding shout
             auraname == SPELL_AURA_MOD_INCREASE_HEALTH_PERCENT)
             UpdateHealth();
         else if (auraname == SPELL_AURA_MOD_INCREASE_ENERGY || auraname == SPELL_AURA_MOD_INCREASE_ENERGY_PERCENT)
@@ -7511,15 +7760,15 @@ void bot_ai::OnSpellHit(Unit* caster, SpellInfo const* spell)
             if (!IAmFree())
                 master->GetSession()->SendEnchantmentLog(me->GetGUID(), caster->GetGUID(), weap->GetEntry(), enchant_id);
 
-            weap->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + slot*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_ID_OFFSET, enchant_id);
-            weap->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + slot*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_DURATION_OFFSET, duration * IN_MILLISECONDS);
-            weap->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + slot*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_CHARGES_OFFSET, 0);
+            weap->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + slot * MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_ID_OFFSET, enchant_id);
+            weap->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + slot * MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_DURATION_OFFSET, duration * IN_MILLISECONDS);
+            weap->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + slot * MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_CHARGES_OFFSET, 0);
             ApplyItemBonuses(weap == _equips[BOT_SLOT_MAINHAND] ? BOT_SLOT_MAINHAND : BOT_SLOT_OFFHAND);
         }
     }
 
     //TODO:
-    if (/*!(spell->AttributesEx & SPELL_ATTR1_NO_THREAT) &&
+    if ( /*!(spell->AttributesEx & SPELL_ATTR1_NO_THREAT) &&
         !(spell->AttributesEx3 & SPELL_ATTR3_SUPRESS_TARGET_PROCS) && !CCed(me) && */
         !me->GetVictim() &&
         (me->IsHostileTo(caster) || caster->IsHostileTo(me)))
@@ -7535,6 +7784,7 @@ void bot_ai::OnSpellHit(Unit* caster, SpellInfo const* spell)
         //if (_evadeMode == true && me->isMoving() && IAmFree())
     }
 }
+
 void bot_ai::OnSpellHitTarget(Unit* /*target*/, SpellInfo const* spell)
 {
     if (me->GetVehicle())
@@ -7555,6 +7805,7 @@ void bot_ai::OnSpellHitTarget(Unit* /*target*/, SpellInfo const* spell)
         }
     }
 }
+
 //Update delay
 //Skip UpdateAI cycles for randomization of bots' reaction and performance adjustments
 bool bot_ai::Wait()
@@ -7573,6 +7824,7 @@ bool bot_ai::Wait()
 
     return false;
 }
+
 //Spell Mod Hooks
 void bot_ai::ApplyBotDamageMultiplierMelee(uint32& damage, CalcDamageInfo& damageinfo) const
 {
@@ -7581,6 +7833,7 @@ void bot_ai::ApplyBotDamageMultiplierMelee(uint32& damage, CalcDamageInfo& damag
     damage *= BotMgr::GetBotDamageModByLevel(me->GetLevel());
     ApplyClassDamageMultiplierMelee(damage, damageinfo);
 }
+
 void bot_ai::ApplyBotDamageMultiplierMelee(int32& damage, SpellNonMeleeDamage& damageinfo, SpellInfo const* spellInfo, WeaponAttackType attackType, bool iscrit) const
 {
     //MELEE ABILITIES damage bonus (DMG_CLASS != DMG_CLASS_MAGIC)
@@ -7588,6 +7841,7 @@ void bot_ai::ApplyBotDamageMultiplierMelee(int32& damage, SpellNonMeleeDamage& d
     damage *= BotMgr::GetBotDamageModByLevel(me->GetLevel());
     ApplyClassDamageMultiplierMeleeSpell(damage, damageinfo, spellInfo, attackType, iscrit);
 }
+
 void bot_ai::ApplyBotDamageMultiplierSpell(int32& damage, SpellNonMeleeDamage& damageinfo, SpellInfo const* spellInfo, WeaponAttackType attackType, bool iscrit) const
 {
     //DAMAGE SPELLS damage bonus (DMG_CLASS_MAGIC)
@@ -7595,78 +7849,93 @@ void bot_ai::ApplyBotDamageMultiplierSpell(int32& damage, SpellNonMeleeDamage& d
     damage *= BotMgr::GetBotDamageModByLevel(me->GetLevel());
     ApplyClassDamageMultiplierSpell(damage, damageinfo, spellInfo, attackType, iscrit);
 }
+
 void bot_ai::ApplyBotDamageMultiplierHeal(Unit const* victim, float& heal, SpellInfo const* spellInfo, DamageEffectType damagetype, uint32 stack) const
 {
     //HEALING SPELLS amount bonus
     ApplyClassDamageMultiplierHeal(victim, heal, spellInfo, damagetype, stack);
     heal = (heal * (BotMgr::IsWanderingWorldBot(me) ? BotMgr::GetBotWandererHealingMod() : BotMgr::GetBotHealingMod()));
 }
+
 void bot_ai::ApplyBotCritMultiplierAll(Unit const* victim, float& crit_chance, SpellInfo const* spellInfo, SpellSchoolMask schoolMask, WeaponAttackType attackType) const
 {
     //ALL SPELLS crit bonus + base
     ApplyClassSpellCritMultiplierAll(victim, crit_chance, spellInfo, schoolMask, attackType);
     crit_chance += crit;
 }
+
 void bot_ai::ApplyBotSpellCostMods(SpellInfo const* spellInfo, int32& cost) const
 {
     //ALL SPELLS power cost bonus
     ApplyClassSpellCostMods(spellInfo, cost);
 }
+
 void bot_ai::ApplyBotSpellCastTimeMods(SpellInfo const* spellInfo, int32& casttime) const
 {
     //ALL SPELLS cast time bonus
     ApplyClassSpellCastTimeMods(spellInfo, casttime);
 }
+
 void bot_ai::ApplyBotSpellCooldownMods(SpellInfo const* spellInfo, uint32& cooldown) const
 {
     //ALL SPELLS cooldown bonus
     ApplyClassSpellCooldownMods(spellInfo, cooldown);
 }
+
 void bot_ai::ApplyBotSpellCategoryCooldownMods(SpellInfo const* spellInfo, uint32& cooldown) const
 {
     //ALL SPELLS category cooldown bonus
     ApplyClassSpellCategoryCooldownMods(spellInfo, cooldown);
 }
+
 void bot_ai::ApplyBotSpellGlobalCooldownMods(SpellInfo const* spellInfo, float& cooldown) const
 {
     //ALL SPELLS global cooldown bonus
     ApplyClassSpellGlobalCooldownMods(spellInfo, cooldown);
 }
+
 void bot_ai::ApplyBotSpellRadiusMods(SpellInfo const* spellInfo, float& radius) const
 {
     //ALL SPELLS radius bonus (not range)
     ApplyClassSpellRadiusMods(spellInfo, radius);
 }
+
 void bot_ai::ApplyBotSpellRangeMods(SpellInfo const* spellInfo, float& maxrange) const
 {
     //ALL SPELLS range bonus
     ApplyClassSpellRangeMods(spellInfo, maxrange);
 }
+
 void bot_ai::ApplyBotSpellMaxTargetsMods(SpellInfo const* spellInfo, uint32& targets) const
 {
     //ALL SPELLS max targets bonus
     ApplyClassSpellMaxTargetsMods(spellInfo, targets);
 }
+
 void bot_ai::ApplyBotSpellChanceOfSuccessMods(SpellInfo const* spellInfo, float& chance) const
 {
     //ALL CLASS PROC_TRIGGER_SPELL SPELLS chance of success bonus
     ApplyClassSpellChanceOfSuccessMods(spellInfo, chance);
 }
+
 void bot_ai::ApplyBotEffectMods(SpellInfo const* spellInfo, uint8 effIndex, float& value) const
 {
     //ALL SPELLS SPELLMOD_EFFECT_X bonus
     ApplyClassEffectMods(spellInfo, effIndex, value);
 }
+
 void bot_ai::ApplyBotThreatMods(SpellInfo const* spellInfo, float& threat) const
 {
     //ALL threat mods
     ApplyClassThreatMods(spellInfo, threat);
 }
+
 void bot_ai::ApplyBotEffectValueMultiplierMods(SpellInfo const* spellInfo, SpellEffIndex effIndex, float& multiplier) const
 {
     //ALL SPELLMOD_VALUE_MULTIPLIER mods
     ApplyClassEffectValueMultiplierMods(spellInfo, effIndex, multiplier);
 }
+
 //Spell Mod Utilities
 float bot_ai::CalcSpellMaxRange(uint32 spellId, bool enemy) const
 {
@@ -7681,6 +7950,7 @@ float bot_ai::CalcSpellMaxRange(uint32 spellId, bool enemy) const
     ApplyClassSpellRangeMods(spellInfo, maxRange);
     return maxRange;
 }
+
 //////////
 //GOSSIP//
 //////////
@@ -7801,7 +8071,7 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
             if (!reason)
             {
                 player->PlayerTalkClass->GetGossipMenu().AddMenuItem(-1, GOSSIP_ICON_TAXI, message2.str().c_str(),
-                    GOSSIP_SENDER_HIRE, GOSSIP_ACTION_INFO_DEF + 0, message1.str().c_str(), cost, false);
+                                                                     GOSSIP_SENDER_HIRE, GOSSIP_ACTION_INFO_DEF + 0, message1.str().c_str(), cost, false);
             }
             else
                 AddGossipItemFor(player, GOSSIP_ICON_TAXI, message2.str().c_str(), GOSSIP_SENDER_HIRE, GOSSIP_ACTION_INFO_DEF + reason);
@@ -7830,7 +8100,7 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                 AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_GIVE_CONSUMABLE), GOSSIP_SENDER_USEITEM, GOSSIP_ACTION_INFO_DEF + 1);
             }
 
-            if(!me->IsPlayerNpcBot())
+            if (!me->IsPlayerNpcBot())
             {
                 if (!gr)
                 {
@@ -7862,7 +8132,7 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
             //TODO: priest lightwell (manual only) maybe move into abilities
             switch (_botclass)
             {
-                case BOT_CLASS_MAGE:
+            case BOT_CLASS_MAGE:
                 {
                     AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_MAGE_FOOD), GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 1);
                     AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_MAGE_DRINK), GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 2);
@@ -7871,7 +8141,7 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                     menus = true;
                     break;
                 }
-                case BOT_CLASS_ROGUE:
+            case BOT_CLASS_ROGUE:
                 {
                     //Learned at 16
                     //Allow rogues to gain skill with bot's help
@@ -7884,7 +8154,7 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                     }
                     break;
                 }
-                case BOT_CLASS_WARLOCK:
+            case BOT_CLASS_WARLOCK:
                 {
                     AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_WARLOCK_HEALTHSTONE), GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 1);
                     if (me->GetLevel() >= 68)
@@ -7892,8 +8162,8 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                     menus = true;
                     break;
                 }
-                default:
-                    break;
+            default:
+                break;
             }
         }
         if (player == master)
@@ -7901,13 +8171,13 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
             //class-specific for owner: poisons, enchants, etc.
             switch (_botclass)
             {
-                case BOT_CLASS_MAGE:
+            case BOT_CLASS_MAGE:
                 {
                     if (me->GetLevel() >= 40)
                         AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_I_NEED_A_PORTAL), GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 4);
                     break;
                 }
-                case BOT_CLASS_ROGUE:
+            case BOT_CLASS_ROGUE:
                 {
                     if (me->GetLevel() >= 20)
                     {
@@ -7919,7 +8189,7 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                     }
                     break;
                 }
-                case BOT_CLASS_SHAMAN:
+            case BOT_CLASS_SHAMAN:
                 {
                     if (me->GetLevel() >= 10)
                     {
@@ -7933,34 +8203,34 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_REMOVE_SHAPESHIFT), GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 5);
                     break;
                 }
-                case BOT_CLASS_DRUID:
+            case BOT_CLASS_DRUID:
                 {
                     if (me->GetShapeshiftForm() != FORM_NONE)
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_REMOVE_SHAPESHIFT), GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 1);
                     break;
                 }
-                case BOT_CLASS_HUNTER:
+            case BOT_CLASS_HUNTER:
                 {
                     if (me->GetLevel() >= 10)
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_CHOOSE_PET_TYPE), GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 2);
 
                     break;
                 }
-                case BOT_CLASS_WARLOCK:
+            case BOT_CLASS_WARLOCK:
                 {
                     AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_CHOOSE_PET_TYPE), GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 2);
                     break;
                 }
-                default:
-                    break;
+            default:
+                break;
             }
 
-            if(!me->IsPlayerNpcBot())
+            if (!me->IsPlayerNpcBot())
             {
                 std::ostringstream astr;
                 astr << LocalizedNpcText(player, BOT_TEXT_ABANDON_WARN_1) << me->GetName() << "? " << (BotMgr::IsEnrageOnDimissEnabled() ? LocalizedNpcText(player, BOT_TEXT_ABANDON_WARN_2) : "");
                 player->PlayerTalkClass->GetGossipMenu().AddMenuItem(-1, GOSSIP_ICON_TAXI, LocalizedNpcText(player, BOT_TEXT_UR_DISMISSED),
-                    GOSSIP_SENDER_DISMISS, GOSSIP_ACTION_INFO_DEF + 1, astr.str().c_str(), 0, false);
+                                                                     GOSSIP_SENDER_DISMISS, GOSSIP_ACTION_INFO_DEF + 1, astr.str().c_str(), 0, false);
             }
 
 
@@ -7985,6 +8255,96 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
     return true;
 }
 
+
+std::string bot_ai::GetItemIcon(uint32 entry, uint32 width, uint32 height, int x, int y) const
+{
+    LOG_DEBUG("module", "Transmogrification::GetItemIcon");
+
+    std::ostringstream ss;
+    ss << "|TInterface";
+    const ItemTemplate* temp = sObjectMgr->GetItemTemplate(entry);
+    const ItemDisplayInfoEntry* dispInfo = NULL;
+    if (temp)
+    {
+        dispInfo = sItemDisplayInfoStore.LookupEntry(temp->DisplayInfoID);
+        if (dispInfo)
+            ss << "/ICONS/" << dispInfo->inventoryIcon;
+    }
+    if (!dispInfo)
+        ss << "/InventoryItems/WoWUnknownItem01";
+    ss << ":" << width << ":" << height << ":" << x << ":" << y << "|t";
+    return ss.str();
+}
+
+std::string bot_ai::GetSlotIcon(uint8 slot, uint32 width, uint32 height, int x, int y) const
+{
+    LOG_DEBUG("module", "Transmogrification::GetSlotIcon");
+
+    std::ostringstream ss;
+    ss << "|TInterface/PaperDoll/";
+    switch (slot)
+    {
+    case EQUIPMENT_SLOT_HEAD: ss << "UI-PaperDoll-Slot-Head";
+        break;
+    case EQUIPMENT_SLOT_SHOULDERS: ss << "UI-PaperDoll-Slot-Shoulder";
+        break;
+    case EQUIPMENT_SLOT_BODY: ss << "UI-PaperDoll-Slot-Shirt";
+        break;
+    case EQUIPMENT_SLOT_CHEST: ss << "UI-PaperDoll-Slot-Chest";
+        break;
+    case EQUIPMENT_SLOT_WAIST: ss << "UI-PaperDoll-Slot-Waist";
+        break;
+    case EQUIPMENT_SLOT_LEGS: ss << "UI-PaperDoll-Slot-Legs";
+        break;
+    case EQUIPMENT_SLOT_FEET: ss << "UI-PaperDoll-Slot-Feet";
+        break;
+    case EQUIPMENT_SLOT_WRISTS: ss << "UI-PaperDoll-Slot-Wrists";
+        break;
+    case EQUIPMENT_SLOT_HANDS: ss << "UI-PaperDoll-Slot-Hands";
+        break;
+    case EQUIPMENT_SLOT_BACK: ss << "UI-PaperDoll-Slot-Chest";
+        break;
+    case EQUIPMENT_SLOT_MAINHAND: ss << "UI-PaperDoll-Slot-MainHand";
+        break;
+    case EQUIPMENT_SLOT_OFFHAND: ss << "UI-PaperDoll-Slot-SecondaryHand";
+        break;
+    case EQUIPMENT_SLOT_RANGED: ss << "UI-PaperDoll-Slot-Ranged";
+        break;
+    case EQUIPMENT_SLOT_TABARD: ss << "UI-PaperDoll-Slot-Tabard";
+        break;
+    default: ss << "UI-Backpack-EmptySlot";
+    }
+    ss << ":" << width << ":" << height << ":" << x << ":" << y << "|t";
+    return ss.str();
+}
+
+std::string bot_ai::GetItemLink(uint32 entry/*, WorldSession* session*/) const
+{
+    LOG_DEBUG("module", "Transmogrification::GetItemLink");
+
+    const ItemTemplate* temp = sObjectMgr->GetItemTemplate(entry);
+    // int loc_idx = session->GetSessionDbLocaleIndex();
+    std::string name = temp->Name1;
+    // if (ItemLocale const* il = sObjectMgr->GetItemLocale(entry))
+    //     ObjectMgr::GetLocaleString(il->Name, loc_idx, name);
+
+    std::ostringstream oss;
+    oss << "|c" << std::hex << ItemQualityColors[temp->Quality] << std::dec <<
+        "|Hitem:" << entry << ":0:0:0:0:0:0:0:0:0|h[" << name << "]|h|r";
+
+    return oss.str();
+}
+
+std::string bot_ai::GetItemIconAndLink(Item const* item, uint8 slot) const
+{
+    std::string icon = item ? GetItemIcon(item->GetEntry(), 30, 30, -18, 0) : GetSlotIcon(slot, 30, 30, -18, 0);
+    std::string name = item ? GetItemLink(item->GetEntry()):"";
+    uint32 gs = item ? uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate())):0;
+
+    return (gs>0?"GS:"+std::to_string(gs):"") + "\r\n\r\n    "+ icon + name +"\r\n  ";
+}
+
+
 //GossipSelect
 bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32 sender, uint32 action)
 {
@@ -7993,6 +8353,11 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
     //    player->PlayerTalkClass->SendCloseGossip();
     //    return true;
     //}
+
+    if (me->IsPlayerNpcBot() && IAmFree())
+    {
+        return true;
+    }
 
     if (!BotMgr::IsNpcBotModEnabled() || me->HasUnitState(UNIT_STATE_CASTING) || CCed(me) || IsDuringTeleport() ||
         HasBotCommandState(BOT_COMMAND_ISSUED_ORDER) ||
@@ -8044,20 +8409,20 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
     switch (sender)
     {
-        case 0: //any kind of fail
+    case 0: //any kind of fail
         {
             BotSay("...", player);
             break;
         }
-        case 1: //BACK: return to main menu
+    case 1: //BACK: return to main menu
         {
             return bot_ai::OnGossipHello(player, 0);
         }
-        case GOSSIP_SENDER_CLASS:
+    case GOSSIP_SENDER_CLASS:
         {
             switch (_botclass)
             {
-                case BOT_CLASS_MAGE:
+            case BOT_CLASS_MAGE:
                 {
                     if (IsCasting())
                     {
@@ -8080,9 +8445,9 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         bool iswater = (option == 2);
                         if (!food)
                         {
-                            if (!iswater)// Conjure Food rank 1
+                            if (!iswater) // Conjure Food rank 1
                                 food = InitSpell(checker, 587);
-                            else// Conjure Water rank 1
+                            else // Conjure Water rank 1
                                 food = InitSpell(checker, 5504);
                         }
                         if (!food)
@@ -8129,13 +8494,13 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                             BotWhisper(LocalizedNpcText(player, BOT_TEXT_INVALID_OBJECT_TYPE), player);
                             break;
                         }
-                        float x,y,z;
+                        float x, y, z;
                         me->GetClosePoint(x, y, z, me->GetCombatReach(), 0.f, 0.f);
                         G3D::Quat rot = G3D::Matrix3::fromEulerAnglesZYX(me->GetOrientation(), 0.f, 0.f);
 
                         GameObject* table = new GameObject;
                         if (!table->Create(me->GetMap()->GenerateLowGuid<HighGuid::GameObject>(), tableGOForSpell, me->GetMap(),
-                            me->GetPhaseMask(), x,y,z, me->GetOrientation(), rot, 255, GO_STATE_READY))
+                                           me->GetPhaseMask(), x, y, z, me->GetOrientation(), rot, 255, GO_STATE_READY))
                         {
                             delete table;
                             BotWhisper(LocalizedNpcText(player, BOT_TEXT_FAILED), player);
@@ -8181,7 +8546,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     }
                     break;
                 }
-                case BOT_CLASS_ROGUE:
+            case BOT_CLASS_ROGUE:
                 {
                     action -= GOSSIP_ACTION_INFO_DEF;
 
@@ -8316,7 +8681,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
                     break;
                 }
-                case BOT_CLASS_SHAMAN:
+            case BOT_CLASS_SHAMAN:
                 {
                     action -= GOSSIP_ACTION_INFO_DEF;
 
@@ -8379,7 +8744,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
                     break;
                 }
-                case BOT_CLASS_HUNTER:
+            case BOT_CLASS_HUNTER:
                 {
                     if (IsCasting())
                     {
@@ -8430,7 +8795,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     }
                     break;
                 }
-                case BOT_CLASS_WARLOCK:
+            case BOT_CLASS_WARLOCK:
                 {
                     if (IsCasting())
                     {
@@ -8474,7 +8839,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         else
                             checker = me;
 
-                        static uint32 HealthStones[8] = { 19005,19007,19009,19011,19013,22105,36891,36894 };
+                        static uint32 HealthStones[8] = {19005, 19007, 19009, 19011, 19013, 22105, 36891, 36894};
                         uint32 spellId = InitSpell(me, 6201); //Create Healthstone Rank 1
                         SpellInfo const* spellInfo = spellId ? sSpellMgr->GetSpellInfo(spellId) : nullptr;
                         if (!spellInfo)
@@ -8529,13 +8894,13 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                             BotWhisper(LocalizedNpcText(player, BOT_TEXT_INVALID_OBJECT_TYPE), player);
                             break;
                         }
-                        float x,y,z;
+                        float x, y, z;
                         me->GetClosePoint(x, y, z, me->GetCombatReach(), 0.f, 0.f);
                         G3D::Quat rot = G3D::Matrix3::fromEulerAnglesZYX(me->GetOrientation(), 0.f, 0.f);
 
                         GameObject* soulwell = new GameObject;
                         if (!soulwell->Create(me->GetMap()->GenerateLowGuid<HighGuid::GameObject>(), wellGOForSpell, me->GetMap(),
-                            me->GetPhaseMask(), x,y,z, me->GetOrientation(), rot, 255, GO_STATE_READY))
+                                              me->GetPhaseMask(), x, y, z, me->GetOrientation(), rot, 255, GO_STATE_READY))
                         {
                             delete soulwell;
                             BotWhisper(LocalizedNpcText(player, BOT_TEXT_FAILED), player);
@@ -8555,7 +8920,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     }
                     break;
                 }
-                case BOT_CLASS_DRUID:
+            case BOT_CLASS_DRUID:
                 {
                     if (IsCasting())
                     {
@@ -8572,16 +8937,16 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     break;
                 }
 
-                default:
-                    break;
+            default:
+                break;
             }
             break;
         }
-        case GOSSIP_SENDER_CLASS_ACTION1:
+    case GOSSIP_SENDER_CLASS_ACTION1:
         {
             switch (_botclass)
             {
-                case BOT_CLASS_MAGE:
+            case BOT_CLASS_MAGE:
                 {
                     if (!IsCasting())
                     {
@@ -8601,7 +8966,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     }
                     break;
                 }
-                case BOT_CLASS_ROGUE:
+            case BOT_CLASS_ROGUE:
                 {
                     if (!IsCasting())
                     {
@@ -8695,22 +9060,22 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     return OnGossipSelect(player, creature, GOSSIP_SENDER_CLASS, GOSSIP_ACTION_INFO_DEF + 1);
                     //break;
                 }
-                default:
-                    break;
+            default:
+                break;
             }
             break;
         }
-        case GOSSIP_SENDER_CLASS_ACTION2: //set cur MH enchant
+    case GOSSIP_SENDER_CLASS_ACTION2: //set cur MH enchant
         {
             switch (_botclass)
             {
-                case BOT_CLASS_ROGUE:
+            case BOT_CLASS_ROGUE:
                 {
                     uint32 baseId = action - GOSSIP_ACTION_INFO_DEF;
                     SetAIMiscValue(BOTAI_MISC_ENCHANT_CURRENT_MH, baseId);
                     break;
                 }
-                case BOT_CLASS_SHAMAN:
+            case BOT_CLASS_SHAMAN:
                 {
                     uint32 baseId = action - GOSSIP_ACTION_INFO_DEF;
                     SetAIMiscValue(BOTAI_MISC_ENCHANT_CURRENT_MH, baseId);
@@ -8719,17 +9084,17 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             }
             return OnGossipHello(player, 0);
         }
-        case GOSSIP_SENDER_CLASS_ACTION3: //set cur OH enchant
+    case GOSSIP_SENDER_CLASS_ACTION3: //set cur OH enchant
         {
             switch (_botclass)
             {
-                case BOT_CLASS_ROGUE:
+            case BOT_CLASS_ROGUE:
                 {
                     uint32 baseId = action - GOSSIP_ACTION_INFO_DEF;
                     SetAIMiscValue(BOTAI_MISC_ENCHANT_CURRENT_OH, baseId);
                     break;
                 }
-                case BOT_CLASS_SHAMAN:
+            case BOT_CLASS_SHAMAN:
                 {
                     uint32 baseId = action - GOSSIP_ACTION_INFO_DEF;
                     SetAIMiscValue(BOTAI_MISC_ENCHANT_CURRENT_OH, baseId);
@@ -8738,17 +9103,17 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             }
             return OnGossipHello(player, 0);
         }
-        case GOSSIP_SENDER_CLASS_ACTION4: //set pet type
+    case GOSSIP_SENDER_CLASS_ACTION4: //set pet type
         {
             switch (_botclass)
             {
-                case BOT_CLASS_HUNTER:
+            case BOT_CLASS_HUNTER:
                 {
                     uint32 petType = action - GOSSIP_ACTION_INFO_DEF;
                     SetAIMiscValue(BOTAI_MISC_PET_TYPE, petType);
                     break;
                 }
-                case BOT_CLASS_WARLOCK:
+            case BOT_CLASS_WARLOCK:
                 {
                     uint32 petType = action - GOSSIP_ACTION_INFO_DEF;
                     SetAIMiscValue(BOTAI_MISC_PET_TYPE, petType);
@@ -8757,7 +9122,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             }
             return OnGossipHello(player, 0);
         }
-        case GOSSIP_SENDER_MODEL_UPDATE:
+    case GOSSIP_SENDER_MODEL_UPDATE:
         {
             if (Aura* trans = me->AddAura(MODEL_TRANSITION, me))
             {
@@ -8767,12 +9132,77 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             }
             break;
         }
-        case GOSSIP_SENDER_EQUIPMENT: //equips change s1: send what slots we can use
+    case GOSSIP_SENDER_EQUIPMENT: //equips change s1: send what slots we can use
         {
             subMenu = true;
 
+             EquipmentInfo const* einfo = BotDataMgr::GetBotEquipmentInfo(me->GetEntry());
+            ASSERT(einfo, "Trying to send equipment show for bot with no equip info!");
+
+            std::set<uint32> itemList, idsList;
+
+            //s2.1: build list
+            //s2.1.1: backpack
+            for (uint8 i = INVENTORY_SLOT_ITEM_START; i != INVENTORY_SLOT_ITEM_END; ++i)
+            {
+                if (Item const* pItem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+                {
+                    bool standard = false;
+                    for (uint8 j = 0; j != MAX_EQUIPMENT_ITEMS; ++j)
+                    {
+                        if (einfo->ItemEntry[j] == pItem->GetEntry())
+                        {
+                            standard = true;
+                            break;
+                        }
+                    }
+                    if (standard)
+                        continue;
+                    if (_canEquip(pItem->GetTemplate(), action - GOSSIP_ACTION_INFO_DEF, true, pItem) &&
+                        /*itemList.find(pItem->GetGUID().GetCounter()) == itemList.end() &&*/
+                        (pItem->GetItemRandomPropertyId() == 0 ? idsList.find(pItem->GetEntry()) == idsList.end() : true))
+                    {
+                        itemList.insert(pItem->GetGUID().GetCounter());
+                        idsList.insert(pItem->GetEntry());
+                    }
+                }
+            }
+
+            //s2.1.2: other bags
+            for (uint8 i = INVENTORY_SLOT_BAG_START; i != INVENTORY_SLOT_BAG_END; ++i)
+            {
+                if (Bag const* pBag = player->GetBagByPos(i))
+                {
+                    for (uint32 j = 0; j != pBag->GetBagSize(); ++j)
+                    {
+                        if (Item const* pItem = player->GetItemByPos(i, j))
+                        {
+                            bool standard = false;
+                            for (uint8 k = 0; k != MAX_EQUIPMENT_ITEMS; ++k)
+                            {
+                                if (einfo->ItemEntry[k] == pItem->GetEntry())
+                                {
+                                    standard = true;
+                                    break;
+                                }
+                            }
+                            if (standard)
+                                continue;
+                            if (_canEquip(pItem->GetTemplate(), action - GOSSIP_ACTION_INFO_DEF, true, pItem) &&
+                                /*itemList.find(pItem->GetGUID().GetCounter()) == itemList.end() &&*/
+                                (pItem->GetItemRandomPropertyId() == 0 ? idsList.find(pItem->GetEntry()) == idsList.end() : true))
+                            {
+                                itemList.insert(pItem->GetGUID().GetCounter());
+                                idsList.insert(pItem->GetEntry());
+                            }
+                        }
+                    }
+                }
+            }
+
+
             //general
-            AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_SHOW_INVENTORY), GOSSIP_SENDER_EQUIPMENT_LIST, GOSSIP_ACTION_INFO_DEF + 1);
+            AddGossipItemFor(player, GOSSIP_ICON_CHAT, "让我看看你的装备", GOSSIP_SENDER_EQUIPMENT_LIST, GOSSIP_ACTION_INFO_DEF + 1);
             if (BotMgr::IsGearBankEnabled())
                 AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_BOT_GEAR_BANK), GOSSIP_SENDER_EQUIPMENT_BANK_MENU, GOSSIP_ACTION_INFO_DEF + 1);
 
@@ -8780,33 +9210,37 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_AUTOEQUIP) + "...", GOSSIP_SENDER_EQUIP_AUTOEQUIP, GOSSIP_ACTION_INFO_DEF + 1);
 
             //weapons
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_MH) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_MAINHAND));
+
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_MH) +GetItemIconAndLink(_equips[BOT_SLOT_MAINHAND],BOT_SLOT_MAINHAND), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_MAINHAND));
+
             if (_canUseOffHand())
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_OH) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_OFFHAND));
+            {
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_OH) + GetItemIconAndLink(_equips[BOT_SLOT_OFFHAND],BOT_SLOT_OFFHAND), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_OFFHAND));
+            }
             if (_canUseRanged())
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_RH) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_RANGED));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_RH) + GetItemIconAndLink(_equips[BOT_SLOT_RANGED],BOT_SLOT_RANGED), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_RANGED));
             if (_canUseRelic())
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_RELIC) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_RANGED));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_RELIC) + GetItemIconAndLink(_equips[BOT_SLOT_RANGED],BOT_SLOT_RANGED), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_RANGED));
 
             //armor
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_HEAD) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_HEAD));
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_SHOULDERS) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_SHOULDERS));
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_CHEST) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_CHEST));
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_WAIST) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_WAIST));
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_LEGS) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_LEGS));
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_FEET) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_FEET));
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_WRIST) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_WRIST));
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_HANDS) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_HANDS));
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_HEAD) + GetItemIconAndLink(_equips[BOT_SLOT_HEAD],BOT_SLOT_HEAD), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_HEAD));
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_SHOULDERS) + GetItemIconAndLink(_equips[BOT_SLOT_SHOULDERS],BOT_SLOT_SHOULDERS), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_SHOULDERS));
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_CHEST) + GetItemIconAndLink(_equips[BOT_SLOT_CHEST],BOT_SLOT_CHEST), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_CHEST));
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_WAIST) + GetItemIconAndLink(_equips[BOT_SLOT_WAIST],BOT_SLOT_WAIST), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_WAIST));
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_LEGS) + GetItemIconAndLink(_equips[BOT_SLOT_LEGS],BOT_SLOT_LEGS), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_LEGS));
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_FEET) + GetItemIconAndLink(_equips[BOT_SLOT_FEET],BOT_SLOT_FEET), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_FEET));
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_WRIST) + GetItemIconAndLink(_equips[BOT_SLOT_WRIST],BOT_SLOT_WRIST), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_WRIST));
+            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_HANDS) + GetItemIconAndLink(_equips[BOT_SLOT_HANDS],BOT_SLOT_HANDS), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_HANDS));
 
             if (IsHumanoidClass(_botclass))
             {
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_BACK) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_BACK));
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_SHIRT) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_BODY));
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_FINGER1) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_FINGER1));
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_FINGER2) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_FINGER2));
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_TRINKET1) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_TRINKET1));
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_TRINKET2) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_TRINKET2));
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_NECK) + "...", GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_NECK));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_BACK) + GetItemIconAndLink(_equips[BOT_SLOT_BACK],BOT_SLOT_BACK), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_BACK));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_SHIRT) + GetItemIconAndLink(_equips[BOT_SLOT_BODY],BOT_SLOT_BODY), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_BODY));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_FINGER1) + GetItemIconAndLink(_equips[BOT_SLOT_FINGER1],BOT_SLOT_FINGER1), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_FINGER1));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_FINGER2) + GetItemIconAndLink(_equips[BOT_SLOT_FINGER2],BOT_SLOT_FINGER2), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_FINGER2));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_TRINKET1) + GetItemIconAndLink(_equips[BOT_SLOT_TRINKET1],BOT_SLOT_TRINKET1), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_TRINKET1));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_TRINKET2) + GetItemIconAndLink(_equips[BOT_SLOT_TRINKET2],BOT_SLOT_TRINKET2), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_TRINKET2));
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_SLOT_NECK) + GetItemIconAndLink(_equips[BOT_SLOT_NECK],BOT_SLOT_NECK), GOSSIP_SENDER_EQUIPMENT_SHOW, GOSSIP_ACTION_INFO_DEF + uint32(BOT_SLOT_NECK));
             }
 
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_UNEQUIP_ALL), GOSSIP_SENDER_UNEQUIP_ALL, GOSSIP_ACTION_INFO_DEF + 1, LocalizedNpcText(player, BOT_TEXT_UNEQUIP_ALL) + "?", 0, false);
@@ -8816,7 +9250,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_EQUIPMENT_LIST: //list inventory
+    case GOSSIP_SENDER_EQUIPMENT_LIST: //list inventory
         {
             //if (action - GOSSIP_ACTION_INFO_DEF != BOT_SLOT_NONE)
             //    break;
@@ -8843,19 +9277,19 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_MHAND:     //0 - 1 main hand
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_OHAND:     //1 - 1 off hand
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_RANGED:    //2 - 1 ranged
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_HEAD:      //3 - 1 head
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_SHOULDERS: //4 - 1 shoulders
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_CHEST:     //5 - 1 chest
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_WAIST:     //6 - 1 waist
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_LEGS:      //7 - 1 legs
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_FEET:      //8 - 1 feet
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_WRIST:     //9 - 1 wrist
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_HANDS:     //10 - 1 hands
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_BACK:      //11 - 1 back
-        case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_BODY:      //12 - 1 body
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_MHAND: //0 - 1 main hand
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_OHAND: //1 - 1 off hand
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_RANGED: //2 - 1 ranged
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_HEAD: //3 - 1 head
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_SHOULDERS: //4 - 1 shoulders
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_CHEST: //5 - 1 chest
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_WAIST: //6 - 1 waist
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_LEGS: //7 - 1 legs
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_FEET: //8 - 1 feet
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_WRIST: //9 - 1 wrist
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_HANDS: //10 - 1 hands
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_BACK: //11 - 1 back
+    case GOSSIP_SENDER_EQUIP_TRANSMOGRIFY_BODY: //12 - 1 body
         {
             uint8 slot = sender - GOSSIP_SENDER_EQUIP_TRANSMOGRIFY;
             int32 itemId = (action == std::numeric_limits<uint32>::max()) ? -1 : int32(action);
@@ -8863,23 +9297,23 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             Item const* item = _equips[slot];
             ASSERT(item);
-                /*player_npcbot*/
-            NewUpdateNpcBotTransmogData( slot, item->GetEntry(), itemId);
+            /*player_npcbot*/
+            NewUpdateNpcBotTransmogData(slot, item->GetEntry(), itemId);
             // BotDataMgr::UpdateNpcBotTransmogData(me->GetEntry(), slot, item->GetEntry(), itemId);
-                /*player_npcbot*/
+            /*player_npcbot*/
 
             if (slot <= BOT_SLOT_RANGED)
                 me->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + slot, itemId_u ? itemId_u : item->GetEntry());
 
             return OnGossipSelect(player, creature, GOSSIP_SENDER_EQUIPMENT, GOSSIP_ACTION_INFO_DEF + 1);
         }
-        case GOSSIP_SENDER_EQUIP_TRANSMOG_INFO:
+    case GOSSIP_SENDER_EQUIP_TRANSMOG_INFO:
         {
             uint8 slot = action - GOSSIP_ACTION_INFO_DEF;
-                /*player_npcbot*/
+            /*player_npcbot*/
             NpcBotTransmogData const* tramsmogData = NewSelectNpcBotTransmogs();
             // NpcBotTransmogData const* tramsmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
-                /*player_npcbot end*/
+            /*player_npcbot end*/
 
             ASSERT(tramsmogData);
             ASSERT(tramsmogData->transmogs[slot].second >= 0);
@@ -8897,7 +9331,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             //break; //no break here - return to menu
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_EQUIP_TRANSMOGS:
+    case GOSSIP_SENDER_EQUIP_TRANSMOGS:
         {
             subMenu = true;
 
@@ -8954,10 +9388,10 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             }
 
             //s5.2: add gossips
-                /*player_npcbot*/
+            /*player_npcbot*/
             NpcBotTransmogData const* tramsmogData = NewSelectNpcBotTransmogs();
             // NpcBotTransmogData const* tramsmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
-                /*player_npcbot end*/
+            /*player_npcbot end*/
 
             if (tramsmogData && tramsmogData->transmogs[slot].first)
             {
@@ -9064,7 +9498,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_EQUIPMENT_INFO: //request equip item info
+    case GOSSIP_SENDER_EQUIPMENT_INFO: //request equip item info
         {
             //GOSSIP ITEMS RESTRICTED
             //subMenu = true; //needed for return
@@ -9089,7 +9523,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             //break; //no break here - return to menu
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_EQUIPMENT_SHOW: //equips change s2: send list of equippable items
+    case GOSSIP_SENDER_EQUIPMENT_SHOW: //equips change s2: send list of equippable items
         {
             subMenu = true;
 
@@ -9272,13 +9706,14 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_UNEQUIP: //equips change s3: Unequip DEPRECATED
+    case GOSSIP_SENDER_UNEQUIP: //equips change s3: Unequip DEPRECATED
         {
             if (!_unequip(action - GOSSIP_ACTION_INFO_DEF, player->GetGUID()))
-            {} //BotWhisper("Impossible...", player);
+            {
+            } //BotWhisper("Impossible...", player);
             return OnGossipSelect(player, creature, GOSSIP_SENDER_EQUIPMENT, GOSSIP_ACTION_INFO_DEF + 1);
         }
-        case GOSSIP_SENDER_UNEQUIP_ALL:
+    case GOSSIP_SENDER_UNEQUIP_ALL:
         {
             bool suc = true;
             for (uint8 i = BOT_SLOT_MAINHAND; i != BOT_INVENTORY_SIZE; ++i)
@@ -9297,26 +9732,26 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        //autoequips change s5b: AtoEquip item
-        //base is GOSSIP_SENDER_EQUIP_AUTOEQUIP + 0...1...2... etc.
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_MHAND:     //0 - 1 main hand
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_OHAND:     //1 - 1 off hand
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_RANGED:    //2 - 1 ranged
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_HEAD:      //3 - 1 head
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_SHOULDERS: //4 - 1 shoulders
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_CHEST:     //5 - 1 chest
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_WAIST:     //6 - 1 waist
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_LEGS:      //7 - 1 legs
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_FEET:      //8 - 1 feet
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_WRIST:     //9 - 1 wrist
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_HANDS:     //10 - 1 hands
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_BACK:      //11 - 1 back
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_BODY:      //12 - 1 body
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_FINGER1:   //13 - 1 finger
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_FINGER2:   //14 - 2 finger
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_TRINKET1:  //15 - 1 trinket
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_TRINKET2:  //16 - 2 trinket
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP_NECK:      //17 - 1 neck
+    //autoequips change s5b: AtoEquip item
+    //base is GOSSIP_SENDER_EQUIP_AUTOEQUIP + 0...1...2... etc.
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_MHAND: //0 - 1 main hand
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_OHAND: //1 - 1 off hand
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_RANGED: //2 - 1 ranged
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_HEAD: //3 - 1 head
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_SHOULDERS: //4 - 1 shoulders
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_CHEST: //5 - 1 chest
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_WAIST: //6 - 1 waist
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_LEGS: //7 - 1 legs
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_FEET: //8 - 1 feet
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_WRIST: //9 - 1 wrist
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_HANDS: //10 - 1 hands
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_BACK: //11 - 1 back
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_BODY: //12 - 1 body
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_FINGER1: //13 - 1 finger
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_FINGER2: //14 - 2 finger
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_TRINKET1: //15 - 1 trinket
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_TRINKET2: //16 - 2 trinket
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP_NECK: //17 - 1 neck
         {
             Item* item = nullptr;
             uint32 guidLow = action - GOSSIP_ACTION_INFO_DEF;
@@ -9354,12 +9789,14 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 }
             }
 
-            if (found && _equip(sender - GOSSIP_SENDER_EQUIP_AUTOEQUIP_EQUIP, item, player->GetGUID())){}
+            if (found && _equip(sender - GOSSIP_SENDER_EQUIP_AUTOEQUIP_EQUIP, item, player->GetGUID()))
+            {
+            }
 
             //break; //no break: update list
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_EQUIP_AUTOEQUIP:
+    case GOSSIP_SENDER_EQUIP_AUTOEQUIP:
         {
             subMenu = true;
 
@@ -9397,7 +9834,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         }
                     }
 
-                    if (canEquip &&/* itemList.find(pItem->GetGUID().GetCounter()) == itemList.end() &&*/
+                    if (canEquip && /* itemList.find(pItem->GetGUID().GetCounter()) == itemList.end() &&*/
                         (pItem->GetItemRandomPropertyId() == 0 ? idsList.find(pItem->GetEntry()) == idsList.end() : true))
                     {
                         itemList.insert(pItem->GetGUID().GetCounter());
@@ -9438,7 +9875,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                                 }
                             }
 
-                            if (canEquip &&/* itemList.find(pItem->GetGUID().GetCounter()) == itemList.end() &&*/
+                            if (canEquip && /* itemList.find(pItem->GetGUID().GetCounter()) == itemList.end() &&*/
                                 (pItem->GetItemRandomPropertyId() == 0 ? idsList.find(pItem->GetEntry()) == idsList.end() : true))
                             {
                                 itemList.insert(pItem->GetGUID().GetCounter());
@@ -9544,31 +9981,33 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), GOSSIP_SENDER_EQUIPMENT, GOSSIP_ACTION_INFO_DEF + 2);
             break;
         }
-        case GOSSIP_SENDER_EQUIP_RESET: //equips change s4a: reset equipment
+    case GOSSIP_SENDER_EQUIP_RESET: //equips change s4a: reset equipment
         {
-            if (_resetEquipment(action - GOSSIP_ACTION_INFO_DEF, player->GetGUID())){}
+            if (_resetEquipment(action - GOSSIP_ACTION_INFO_DEF, player->GetGUID()))
+            {
+            }
             return OnGossipSelect(player, creature, GOSSIP_SENDER_EQUIPMENT, GOSSIP_ACTION_INFO_DEF + 1);
         }
-        //equips change s4b: Equip item
-        //base is GOSSIP_SENDER_EQUIP + 0...1...2... etc.
-        case GOSSIP_SENDER_EQUIP_MHAND:     //0 - 1 main hand
-        case GOSSIP_SENDER_EQUIP_OHAND:     //1 - 1 off hand
-        case GOSSIP_SENDER_EQUIP_RANGED:    //2 - 1 ranged
-        case GOSSIP_SENDER_EQUIP_HEAD:      //3 - 1 head
-        case GOSSIP_SENDER_EQUIP_SHOULDERS: //4 - 1 shoulders
-        case GOSSIP_SENDER_EQUIP_CHEST:     //5 - 1 chest
-        case GOSSIP_SENDER_EQUIP_WAIST:     //6 - 1 waist
-        case GOSSIP_SENDER_EQUIP_LEGS:      //7 - 1 legs
-        case GOSSIP_SENDER_EQUIP_FEET:      //8 - 1 feet
-        case GOSSIP_SENDER_EQUIP_WRIST:     //9 - 1 wrist
-        case GOSSIP_SENDER_EQUIP_HANDS:     //10 - 1 hands
-        case GOSSIP_SENDER_EQUIP_BACK:      //11 - 1 back
-        case GOSSIP_SENDER_EQUIP_BODY:      //12 - 1 body
-        case GOSSIP_SENDER_EQUIP_FINGER1:   //13 - 1 finger
-        case GOSSIP_SENDER_EQUIP_FINGER2:   //14 - 1 finger
-        case GOSSIP_SENDER_EQUIP_TRINKET1:  //15 - 1 trinket
-        case GOSSIP_SENDER_EQUIP_TRINKET2:  //16 - 1 trinket
-        case GOSSIP_SENDER_EQUIP_NECK:      //17 - 1 neck
+    //equips change s4b: Equip item
+    //base is GOSSIP_SENDER_EQUIP + 0...1...2... etc.
+    case GOSSIP_SENDER_EQUIP_MHAND: //0 - 1 main hand
+    case GOSSIP_SENDER_EQUIP_OHAND: //1 - 1 off hand
+    case GOSSIP_SENDER_EQUIP_RANGED: //2 - 1 ranged
+    case GOSSIP_SENDER_EQUIP_HEAD: //3 - 1 head
+    case GOSSIP_SENDER_EQUIP_SHOULDERS: //4 - 1 shoulders
+    case GOSSIP_SENDER_EQUIP_CHEST: //5 - 1 chest
+    case GOSSIP_SENDER_EQUIP_WAIST: //6 - 1 waist
+    case GOSSIP_SENDER_EQUIP_LEGS: //7 - 1 legs
+    case GOSSIP_SENDER_EQUIP_FEET: //8 - 1 feet
+    case GOSSIP_SENDER_EQUIP_WRIST: //9 - 1 wrist
+    case GOSSIP_SENDER_EQUIP_HANDS: //10 - 1 hands
+    case GOSSIP_SENDER_EQUIP_BACK: //11 - 1 back
+    case GOSSIP_SENDER_EQUIP_BODY: //12 - 1 body
+    case GOSSIP_SENDER_EQUIP_FINGER1: //13 - 1 finger
+    case GOSSIP_SENDER_EQUIP_FINGER2: //14 - 1 finger
+    case GOSSIP_SENDER_EQUIP_TRINKET1: //15 - 1 trinket
+    case GOSSIP_SENDER_EQUIP_TRINKET2: //16 - 1 trinket
+    case GOSSIP_SENDER_EQUIP_NECK: //17 - 1 neck
         {
             Item* item = nullptr;
             uint32 guidLow = action - GOSSIP_ACTION_INFO_DEF;
@@ -9606,17 +10045,19 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 }
             }
 
-            if (found && _equip(sender - GOSSIP_SENDER_EQUIP, item, player->GetGUID())){}
+            if (found && _equip(sender - GOSSIP_SENDER_EQUIP, item, player->GetGUID()))
+            {
+            }
             return OnGossipSelect(player, creature, GOSSIP_SENDER_EQUIPMENT, GOSSIP_ACTION_INFO_DEF + 1);
         }
-        case GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT_ITEM:
+    case GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT_ITEM:
         {
             ObjectGuid::LowType itemGuidLow = action - GOSSIP_ACTION_INFO_DEF;
             Item* item = player->GetItemByGuid(ObjectGuid::Create<HighGuid::Item>(itemGuidLow));
             if (!item)
             {
                 LOG_ERROR("npcbots", "GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT_ITEM: item {} not found on player {}! Cheater?",
-                    itemGuidLow, player->GetName().c_str());
+                          itemGuidLow, player->GetName().c_str());
                 break;
             }
 
@@ -9627,7 +10068,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             //break;
             [[fallthrough]];
         }
-        case GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT:
+    case GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT:
         {
             subMenu = true;
             uint32 page = action - GOSSIP_ACTION_INFO_DEF;
@@ -9636,13 +10077,18 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             uint32 can_add_count = 0;
             uint32 k = 0;
 
-            static const auto is_bot_equippable_item = [](ItemTemplate const* proto) {
+            static const auto is_bot_equippable_item = [](ItemTemplate const* proto)
+            {
                 switch (proto->InventoryType)
                 {
-                    case INVTYPE_NON_EQUIP: case INVTYPE_BAG: case INVTYPE_TABARD: case INVTYPE_AMMO: case INVTYPE_QUIVER:
-                        return false;
-                    default:
-                        return true;
+                case INVTYPE_NON_EQUIP:
+                case INVTYPE_BAG:
+                case INVTYPE_TABARD:
+                case INVTYPE_AMMO:
+                case INVTYPE_QUIVER:
+                    return false;
+                default:
+                    return true;
                 }
             };
 
@@ -9701,7 +10147,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), GOSSIP_SENDER_EQUIPMENT_BANK_MENU, GOSSIP_ACTION_INFO_DEF + 1);
             break;
         }
-        case GOSSIP_SENDER_EQUIPMENT_BANK_WITHDRAW_ITEM:
+    case GOSSIP_SENDER_EQUIPMENT_BANK_WITHDRAW_ITEM:
         {
             ObjectGuid::LowType itemGuidLow = action - GOSSIP_ACTION_INFO_DEF;
 
@@ -9713,7 +10159,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             if (!item)
             {
                 LOG_ERROR("npcbots", "GOSSIP_SENDER_EQUIPMENT_BANK_WITHDRAW_ITEM: item {} not found on player {}! Cheater?",
-                    itemGuidLow, player->GetName().c_str());
+                          itemGuidLow, player->GetName().c_str());
                 break;
             }
 
@@ -9747,7 +10193,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             //break;
             [[fallthrough]];
         }
-        case GOSSIP_SENDER_EQUIPMENT_BANK_WITHDRAW:
+    case GOSSIP_SENDER_EQUIPMENT_BANK_WITHDRAW:
         {
             uint32 page = action - GOSSIP_ACTION_INFO_DEF;
             uint32 items_per_page = BOT_GOSSIP_MAX_ITEMS - 3; // page prev, page next, back
@@ -9797,7 +10243,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), GOSSIP_SENDER_EQUIPMENT_BANK_MENU, GOSSIP_ACTION_INFO_DEF + 1);
             break;
         }
-        case GOSSIP_SENDER_EQUIPMENT_BANK_MENU:
+    case GOSSIP_SENDER_EQUIPMENT_BANK_MENU:
         {
             subMenu = true;
 
@@ -9807,20 +10253,25 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_ROLES_MAIN_TOGGLE: //ROLES 2: set/unset
+    case GOSSIP_SENDER_ROLES_MAIN_TOGGLE: //ROLES 2: set/unset
         {
             ToggleRole(action - GOSSIP_ACTION_INFO_DEF, false);
 
             [[fallthrough]];
             //break;
         }
-        case GOSSIP_SENDER_ROLES_MAIN: //ROLES 1: list
+    case GOSSIP_SENDER_ROLES_MAIN: //ROLES 1: list
         {
             subMenu = true;
 
-            if (IsHumanoidClass(_botclass))
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_GATHERING) + "...", GOSSIP_SENDER_ROLES_GATHERING, GOSSIP_ACTION_INFO_DEF + 1);
-            AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_LOOTING) + "...", GOSSIP_SENDER_ROLES_LOOTING, GOSSIP_ACTION_INFO_DEF + 2);
+            //拾取
+            /*bool _enable = sConfigMgr->GetOption<bool>("AOELoot.Enable", false);
+            if (!_enable) {
+                if (IsHumanoidClass(_botclass))
+                    AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_GATHERING) + "...", GOSSIP_SENDER_ROLES_GATHERING, GOSSIP_ACTION_INFO_DEF + 1);
+
+                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_LOOTING) + "...", GOSSIP_SENDER_ROLES_LOOTING, GOSSIP_ACTION_INFO_DEF + 2);
+            }*/
 
             uint32 role = BOT_ROLE_TANK;
             for (; role != BOT_MAX_ROLE; role <<= 1)
@@ -9837,14 +10288,14 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_ROLES_GATHERING_TOGGLE:
+    case GOSSIP_SENDER_ROLES_GATHERING_TOGGLE:
         {
             ToggleRole(action - GOSSIP_ACTION_INFO_DEF, false);
 
             [[fallthrough]];
             //break;
         }
-        case GOSSIP_SENDER_ROLES_GATHERING:
+    case GOSSIP_SENDER_ROLES_GATHERING:
         {
             subMenu = true;
 
@@ -9861,14 +10312,14 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_ROLES_LOOTING_TOGGLE:
+    case GOSSIP_SENDER_ROLES_LOOTING_TOGGLE:
         {
             ToggleRole(action - GOSSIP_ACTION_INFO_DEF, false);
 
             [[fallthrough]];
             //break;
         }
-        case GOSSIP_SENDER_ROLES_LOOTING:
+    case GOSSIP_SENDER_ROLES_LOOTING:
         {
             subMenu = true;
 
@@ -9885,18 +10336,18 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_ABILITIES_USE:
+    case GOSSIP_SENDER_ABILITIES_USE:
         {
             if (uint32 basespell = action - GOSSIP_ACTION_INFO_DEF)
                 //if (CheckBotCast(me, basespell, me->GetBotClass()) == SPELL_CAST_OK)
-                    if (IsSpellReady(basespell, lastdiff, true))
-                        doCast(player, GetSpell(basespell));
+                if (IsSpellReady(basespell, lastdiff, true))
+                    doCast(player, GetSpell(basespell));
 
             //break;
             action = GOSSIP_ACTION_INFO_DEF;
             [[fallthrough]];
         }
-        case GOSSIP_SENDER_ABILITIES:
+    case GOSSIP_SENDER_ABILITIES:
         {
             subMenu = true;
 
@@ -9925,7 +10376,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_ABILITIES_SPECIFICS_LIST:
+    case GOSSIP_SENDER_ABILITIES_SPECIFICS_LIST:
         {
             subMenu = true;
 
@@ -9938,15 +10389,15 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_DAMAGE:
-        case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_CC:
-        case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_HEAL:
-        case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_SUPPORT:
+    case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_DAMAGE:
+    case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_CC:
+    case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_HEAL:
+    case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_SUPPORT:
         {
-                /*player_npcbot*/
+            /*player_npcbot*/
             NpcBotData* npcBotData = const_cast<NpcBotData*>(NewSelectNpcBotData());
             // NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
-                /*player_npcbot end*/
+            /*player_npcbot end*/
 
             uint32 basespell = action - GOSSIP_ACTION_INFO_DEF;
             BotSpellMap const& myspells = GetSpellMap();
@@ -9968,24 +10419,28 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             uint32 newSender;
             switch (sender)
             {
-                case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_DAMAGE:
-                    newSender = GOSSIP_SENDER_ABILITIES_USAGE_LIST_DAMAGE;  break;
-                case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_CC:
-                    newSender = GOSSIP_SENDER_ABILITIES_USAGE_LIST_CC;      break;
-                case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_HEAL:
-                    newSender = GOSSIP_SENDER_ABILITIES_USAGE_LIST_HEAL;    break;
-                case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_SUPPORT:
-                    newSender = GOSSIP_SENDER_ABILITIES_USAGE_LIST_SUPPORT; break;
-                default:
-                    ASSERT(false);
+            case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_DAMAGE:
+                newSender = GOSSIP_SENDER_ABILITIES_USAGE_LIST_DAMAGE;
+                break;
+            case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_CC:
+                newSender = GOSSIP_SENDER_ABILITIES_USAGE_LIST_CC;
+                break;
+            case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_HEAL:
+                newSender = GOSSIP_SENDER_ABILITIES_USAGE_LIST_HEAL;
+                break;
+            case GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_SUPPORT:
+                newSender = GOSSIP_SENDER_ABILITIES_USAGE_LIST_SUPPORT;
+                break;
+            default:
+                ASSERT(false);
             }
             sender = newSender;
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_ABILITIES_USAGE_LIST_DAMAGE:
-        case GOSSIP_SENDER_ABILITIES_USAGE_LIST_CC:
-        case GOSSIP_SENDER_ABILITIES_USAGE_LIST_HEAL:
-        case GOSSIP_SENDER_ABILITIES_USAGE_LIST_SUPPORT:
+    case GOSSIP_SENDER_ABILITIES_USAGE_LIST_DAMAGE:
+    case GOSSIP_SENDER_ABILITIES_USAGE_LIST_CC:
+    case GOSSIP_SENDER_ABILITIES_USAGE_LIST_HEAL:
+    case GOSSIP_SENDER_ABILITIES_USAGE_LIST_SUPPORT:
         {
             subMenu = true;
 
@@ -9993,24 +10448,24 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             std::vector<uint32> const* myspells;
             switch (sender)
             {
-                case GOSSIP_SENDER_ABILITIES_USAGE_LIST_DAMAGE:
-                    toggleSender = GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_DAMAGE;
-                    myspells = GetDamagingSpellsList();
-                    break;
-                case GOSSIP_SENDER_ABILITIES_USAGE_LIST_CC:
-                    toggleSender = GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_CC;
-                    myspells = GetCCSpellsList();
-                    break;
-                case GOSSIP_SENDER_ABILITIES_USAGE_LIST_HEAL:
-                    toggleSender = GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_HEAL;
-                    myspells = GetHealingSpellsList();
-                    break;
-                case GOSSIP_SENDER_ABILITIES_USAGE_LIST_SUPPORT:
-                    toggleSender = GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_SUPPORT;
-                    myspells = GetSupportSpellsList();
-                    break;
-                default:
-                    ASSERT(false);
+            case GOSSIP_SENDER_ABILITIES_USAGE_LIST_DAMAGE:
+                toggleSender = GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_DAMAGE;
+                myspells = GetDamagingSpellsList();
+                break;
+            case GOSSIP_SENDER_ABILITIES_USAGE_LIST_CC:
+                toggleSender = GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_CC;
+                myspells = GetCCSpellsList();
+                break;
+            case GOSSIP_SENDER_ABILITIES_USAGE_LIST_HEAL:
+                toggleSender = GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_HEAL;
+                myspells = GetHealingSpellsList();
+                break;
+            case GOSSIP_SENDER_ABILITIES_USAGE_LIST_SUPPORT:
+                toggleSender = GOSSIP_SENDER_ABILITIES_USAGE_TOGGLE_SUPPORT;
+                myspells = GetSupportSpellsList();
+                break;
+            default:
+                ASSERT(false);
             }
 
             ASSERT(myspells);
@@ -10031,7 +10486,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 if (++counter >= BOT_GOSSIP_MAX_ITEMS - 1) //back
                 {
                     LOG_ERROR("scripts", "bot_ai: gossip abilities list overflow with sender {} for bot class {}!",
-                        sender, uint32(_botclass));
+                              sender, uint32(_botclass));
                     break;
                 }
             }
@@ -10039,7 +10494,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), GOSSIP_SENDER_ABILITIES_USAGE_LIST, GOSSIP_ACTION_INFO_DEF + 2);
             break;
         }
-        case GOSSIP_SENDER_ABILITIES_USAGE_LIST:
+    case GOSSIP_SENDER_ABILITIES_USAGE_LIST:
         {
             subMenu = true;
 
@@ -10055,7 +10510,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), GOSSIP_SENDER_ABILITIES, GOSSIP_ACTION_INFO_DEF + 5);
             break;
         }
-        case GOSSIP_SENDER_SPEC_SET:
+    case GOSSIP_SENDER_SPEC_SET:
         {
             uint8 newSpec = action - GOSSIP_ACTION_INFO_DEF;
 
@@ -10068,26 +10523,36 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             }
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_SPEC:
+    case GOSSIP_SENDER_SPEC:
         {
             subMenu = true;
 
             uint8 specIndex;
             switch (_botclass)
             {
-                case BOT_CLASS_WARRIOR:         specIndex = BOT_SPEC_WARRIOR_ARMS;          break;
-                case BOT_CLASS_PALADIN:         specIndex = BOT_SPEC_PALADIN_HOLY;          break;
-                case BOT_CLASS_HUNTER:          specIndex = BOT_SPEC_HUNTER_BEASTMASTERY;   break;
-                case BOT_CLASS_ROGUE:           specIndex = BOT_SPEC_ROGUE_ASSASINATION;    break;
-                case BOT_CLASS_PRIEST:          specIndex = BOT_SPEC_PRIEST_DISCIPLINE;     break;
-                case BOT_CLASS_DEATH_KNIGHT:    specIndex = BOT_SPEC_DK_BLOOD;              break;
-                case BOT_CLASS_SHAMAN:          specIndex = BOT_SPEC_SHAMAN_ELEMENTAL;      break;
-                case BOT_CLASS_MAGE:            specIndex = BOT_SPEC_MAGE_ARCANE;           break;
-                case BOT_CLASS_WARLOCK:         specIndex = BOT_SPEC_WARLOCK_AFFLICTION;    break;
-                case BOT_CLASS_DRUID:           specIndex = BOT_SPEC_DRUID_BALANCE;         break;
-                default:
-                    LOG_ERROR("entities.unit", "bot_ai:GOSSIP_SENDER_SPEC called for class {} with no specs!", uint32(_botclass));
-                    return true;
+            case BOT_CLASS_WARRIOR: specIndex = BOT_SPEC_WARRIOR_ARMS;
+                break;
+            case BOT_CLASS_PALADIN: specIndex = BOT_SPEC_PALADIN_HOLY;
+                break;
+            case BOT_CLASS_HUNTER: specIndex = BOT_SPEC_HUNTER_BEASTMASTERY;
+                break;
+            case BOT_CLASS_ROGUE: specIndex = BOT_SPEC_ROGUE_ASSASINATION;
+                break;
+            case BOT_CLASS_PRIEST: specIndex = BOT_SPEC_PRIEST_DISCIPLINE;
+                break;
+            case BOT_CLASS_DEATH_KNIGHT: specIndex = BOT_SPEC_DK_BLOOD;
+                break;
+            case BOT_CLASS_SHAMAN: specIndex = BOT_SPEC_SHAMAN_ELEMENTAL;
+                break;
+            case BOT_CLASS_MAGE: specIndex = BOT_SPEC_MAGE_ARCANE;
+                break;
+            case BOT_CLASS_WARLOCK: specIndex = BOT_SPEC_WARLOCK_AFFLICTION;
+                break;
+            case BOT_CLASS_DRUID: specIndex = BOT_SPEC_DRUID_BALANCE;
+                break;
+            default:
+                LOG_ERROR("entities.unit", "bot_ai:GOSSIP_SENDER_SPEC called for class {} with no specs!", uint32(_botclass));
+                return true;
             }
 
             for (uint8 i = specIndex; i < specIndex + 3; ++i)
@@ -10099,7 +10564,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 2);
             break;
         }
-        case GOSSIP_SENDER_USEITEM_USE:
+    case GOSSIP_SENDER_USEITEM_USE:
         {
             if (uint32 guidLow = action - GOSSIP_ACTION_INFO_DEF)
             {
@@ -10155,7 +10620,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             action = GOSSIP_ACTION_INFO_DEF;
             [[fallthrough]];
         }
-        case GOSSIP_SENDER_USEITEM:
+    case GOSSIP_SENDER_USEITEM:
         {
             subMenu = true;
 
@@ -10163,7 +10628,8 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             uint32 maxcounter = BOT_GOSSIP_MAX_ITEMS - 2; //update, back
             Item const* item;
 
-            static const auto is_consumable_item = [](Item const* item, Creature const* bot) {
+            static const auto is_consumable_item = [](Item const* item, Creature const* bot)
+            {
                 if (ItemTemplate const* proto = item ? item->GetTemplate() : nullptr)
                 {
                     if (!(proto->Class != ITEM_CLASS_WEAPON && proto->Class != ITEM_CLASS_ARMOR &&
@@ -10171,7 +10637,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         proto->RequiredSkill == 0 && proto->RequiredSpell == 0 && bot->GetLevel() >= proto->RequiredLevel))
                         return false;
                     bool has_spell = false;
-                    for (auto const& ispell: proto->Spells)
+                    for (auto const& ispell : proto->Spells)
                     {
                         if (ispell.SpellId != 0)
                         {
@@ -10191,12 +10657,12 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                                     {
                                         switch (effect.Effect)
                                         {
-                                            case SPELL_EFFECT_SUMMON:
-                                            case SPELL_EFFECT_CREATE_ITEM:
-                                                valid_effect = false;
-                                                break;
-                                            default:
-                                                break;
+                                        case SPELL_EFFECT_SUMMON:
+                                        case SPELL_EFFECT_CREATE_ITEM:
+                                            valid_effect = false;
+                                            break;
+                                        default:
+                                            break;
                                         }
                                     }
                                 }
@@ -10246,7 +10712,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             break;
         }
-        case GOSSIP_SENDER_HIRE:
+    case GOSSIP_SENDER_HIRE:
         {
             int32 reason = action - GOSSIP_ACTION_INFO_DEF;
             if (!reason)
@@ -10273,26 +10739,30 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     uint32 locStringId;
                     switch (minlvl)
                     {
-                        case 55: locStringId = BOT_TEXT_HIREFAIL_LVL55; break;
-                        case 20: locStringId = BOT_TEXT_HIREFAIL_LVL20; break;
-                        case 40: locStringId = BOT_TEXT_HIREFAIL_LVL40; break;
-                        case 60: locStringId = BOT_TEXT_HIREFAIL_LVL60; break;
-                        default:
-                            LOG_ERROR("scripts", "No message exists for min class level {}!", uint32(minlvl));
-                            locStringId = BOT_TEXT_HIREFAIL_LVL60;
-                            break;
+                    case 55: locStringId = BOT_TEXT_HIREFAIL_LVL55;
+                        break;
+                    case 20: locStringId = BOT_TEXT_HIREFAIL_LVL20;
+                        break;
+                    case 40: locStringId = BOT_TEXT_HIREFAIL_LVL40;
+                        break;
+                    case 60: locStringId = BOT_TEXT_HIREFAIL_LVL60;
+                        break;
+                    default:
+                        LOG_ERROR("scripts", "No message exists for min class level {}!", uint32(minlvl));
+                        locStringId = BOT_TEXT_HIREFAIL_LVL60;
+                        break;
                     }
                     switch (_botclass)
                     {
-                        case BOT_CLASS_DEATH_KNIGHT:
-                            BotWhisper(LocalizedNpcText(player, BOT_TEXT_HIREDENY_DK), player);
-                            break;
-                        case BOT_CLASS_SPHYNX:
-                            me->TextEmote((me->GetName() + LocalizedNpcText(player, BOT_TEXT_HIREDENY_SPHYNX)).c_str());
-                            break;
-                        case BOT_CLASS_ARCHMAGE:
-                            BotWhisper(LocalizedNpcText(player, BOT_TEXT_HIREDENY_ARCHMAGE), player);
-                            break;
+                    case BOT_CLASS_DEATH_KNIGHT:
+                        BotWhisper(LocalizedNpcText(player, BOT_TEXT_HIREDENY_DK), player);
+                        break;
+                    case BOT_CLASS_SPHYNX:
+                        me->TextEmote((me->GetName() + LocalizedNpcText(player, BOT_TEXT_HIREDENY_SPHYNX)).c_str());
+                        break;
+                    case BOT_CLASS_ARCHMAGE:
+                        BotWhisper(LocalizedNpcText(player, BOT_TEXT_HIREDENY_ARCHMAGE), player);
+                        break;
                     }
                     ch.PSendSysMessage(LocalizedNpcText(player, locStringId).c_str(), me->GetName().c_str());
                     break;
@@ -10325,7 +10795,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 ChatHandler ch(player->GetSession());
                 switch (reason)
                 {
-                    case 1: //has owner
+                case 1: //has owner
                     {
                         std::ostringstream ostr;
                         std::string name;
@@ -10338,11 +10808,11 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         ch.PSendSysMessage(LocalizedNpcText(player, BOT_TEXT_HIREFAIL_OWNED).c_str(), me->GetName().c_str());
                         break;
                     }
-                    case 2: //max npcbots exceed
-                        ch.PSendSysMessage(LocalizedNpcText(player, BOT_TEXT_HIREFAIL_MAXBOTS).c_str(), BotMgr::GetMaxNpcBots(player->GetLevel()));
-                        BotSay("...", player);
-                        break;
-                    case 3: //not enough money
+                case 2: //max npcbots exceed
+                    ch.PSendSysMessage(LocalizedNpcText(player, BOT_TEXT_HIREFAIL_MAXBOTS).c_str(), BotMgr::GetMaxNpcBots(player->GetLevel()));
+                    BotSay("...", player);
+                    break;
+                case 3: //not enough money
                     {
                         std::string str = LocalizedNpcText(player, BOT_TEXT_HIREFAIL_COST) + " (";
                         str += BotMgr::GetNpcBotCostStr(player->GetLevel(), _botclass);
@@ -10352,7 +10822,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         BotSay("...", player);
                         break;
                     }
-                    case 4: //class bots exceed
+                case 4: //class bots exceed
                     {
                         uint8 count = 0;
                         BotMap const* map = player->GetBotMgr()->GetBotMap();
@@ -10364,13 +10834,13 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         BotSay("...", player);
                         break;
                     }
-                    default:
-                        break;
+                default:
+                    break;
                 }
             }
             break;
         }
-        case GOSSIP_SENDER_DISMISS:
+    case GOSSIP_SENDER_DISMISS:
         {
             BotMgr* mgr = player->GetBotMgr();
             ASSERT(mgr);
@@ -10383,7 +10853,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 {
                     ChatHandler ch(player->GetSession());
                     ch.PSendSysMessage(LocalizedNpcText(player, BOT_TEXT_CANT_DISMISS_EQUIPMENT).c_str(),
-                        uint32(i), LocalizedNpcText(player, BOT_TEXT_SLOT_MH + i).c_str());
+                                       uint32(i), LocalizedNpcText(player, BOT_TEXT_SLOT_MH + i).c_str());
                     abort = true;
                     break;
                 }
@@ -10411,19 +10881,19 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             //    me->Attack(player, true);
             //}
             //else
-                BotSay("...", player);
+            BotSay("...", player);
 
             break;
         }
-        case GOSSIP_SENDER_JOIN_GROUP:
+    case GOSSIP_SENDER_JOIN_GROUP:
         {
             uint32 option = action - GOSSIP_ACTION_INFO_DEF;
             switch (option)
             {
-                case 1: //single bot
-                    player->GetBotMgr()->AddBotToGroup(me);
-                    break;
-                case 2: //all bots
+            case 1: //single bot
+                player->GetBotMgr()->AddBotToGroup(me);
+                break;
+            case 2: //all bots
                 {
                     BotMap const* bmap = player->GetBotMgr()->GetBotMap();
                     for (BotMap::const_iterator citr = bmap->begin(); citr != bmap->end(); ++citr)
@@ -10437,48 +10907,48 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             }
             break;
         }
-        case GOSSIP_SENDER_LEAVE_GROUP:
+    case GOSSIP_SENDER_LEAVE_GROUP:
         {
             player->GetBotMgr()->RemoveBotFromGroup(me);
             break;
         }
-        case GOSSIP_SENDER_HOLDPOSITION:
+    case GOSSIP_SENDER_HOLDPOSITION:
         {
             SetBotCommandState(BOT_COMMAND_STAY);
             //BotWhisper("Standing still");
             break;
         }
-        case GOSSIP_SENDER_DONOTHING:
+    case GOSSIP_SENDER_DONOTHING:
         {
             SetBotCommandState(BOT_COMMAND_FULLSTOP);
             //BotWhisper("As you wish");
             break;
         }
-        case GOSSIP_SENDER_FOLLOWME:
+    case GOSSIP_SENDER_FOLLOWME:
         {
             SetBotCommandState(BOT_COMMAND_FOLLOW, true);
             //BotWhisper("Following");
             break;
         }
-        case GOSSIP_SENDER_FORMATION_TOGGLE_COMBAT_POSITIONING:
+    case GOSSIP_SENDER_FORMATION_TOGGLE_COMBAT_POSITIONING:
         {
             player->GetBotMgr()->SetBotAllowCombatPositioning(!player->GetBotMgr()->GetBotAllowCombatPositioning());
 
             //break; //return to menu
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_FORMATION:
+    case GOSSIP_SENDER_FORMATION:
         {
             subMenu = true;
             std::ostringstream diststr;
             diststr << LocalizedNpcText(player, BOT_TEXT_FOLLOW_DISTANCE) << " (" << LocalizedNpcText(player, BOT_TEXT_CURRENT) << ": " << uint32(master->GetBotMgr()->GetBotFollowDist()) << ')';
             player->PlayerTalkClass->GetGossipMenu().AddMenuItem(-1, GOSSIP_ICON_CHAT, diststr.str(),
-                GOSSIP_SENDER_FORMATION_FOLLOW_DISTANCE_SET, GOSSIP_ACTION_INFO_DEF + 1, "", 0, true);
+                                                                 GOSSIP_SENDER_FORMATION_FOLLOW_DISTANCE_SET, GOSSIP_ACTION_INFO_DEF + 1, "", 0, true);
 
             if (HasRole(BOT_ROLE_RANGED))
             {
                 AddGossipItemFor(player, !player->GetBotMgr()->GetBotAllowCombatPositioning() ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT,
-                    LocalizedNpcText(player, BOT_TEXT_DISABLE_COMBAT_POSITIONING), GOSSIP_SENDER_FORMATION_TOGGLE_COMBAT_POSITIONING, GOSSIP_ACTION_INFO_DEF + 2);
+                                 LocalizedNpcText(player, BOT_TEXT_DISABLE_COMBAT_POSITIONING), GOSSIP_SENDER_FORMATION_TOGGLE_COMBAT_POSITIONING, GOSSIP_ACTION_INFO_DEF + 2);
                 AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_ATTACK_DISTANCE) + "...", GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE, GOSSIP_ACTION_INFO_DEF + 3);
                 AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_ATTACK_ANGLE) + "...", GOSSIP_SENDER_FORMATION_ATTACK_ANGLE, GOSSIP_ACTION_INFO_DEF + 4);
             }
@@ -10498,7 +10968,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 6);
             break;
         }
-        case GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE_SET:
+    case GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE_SET:
         {
             uint32 choice = action - GOSSIP_ACTION_INFO_DEF;
             if (choice == 1) //short
@@ -10513,7 +10983,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             //break; //return to menu
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE:
+    case GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE:
         {
             subMenu = true;
 
@@ -10527,12 +10997,12 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             else
                 diststr << LocalizedNpcText(player, BOT_TEXT_EXACT) << " (0-50)";
             player->PlayerTalkClass->GetGossipMenu().AddMenuItem(-1, mode == BOT_ATTACK_RANGE_EXACT ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT,
-                diststr.str(), GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE_SET, GOSSIP_ACTION_INFO_DEF + 3, "", 0, true);
+                                                                 diststr.str(), GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE_SET, GOSSIP_ACTION_INFO_DEF + 3, "", 0, true);
 
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 4);
             break;
         }
-        case GOSSIP_SENDER_FORMATION_ATTACK_ANGLE_SET:
+    case GOSSIP_SENDER_FORMATION_ATTACK_ANGLE_SET:
         {
             uint32 choice = action - GOSSIP_ACTION_INFO_DEF;
             if (choice == 1) //normal
@@ -10547,7 +11017,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             //break; //return to menu
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_FORMATION_ATTACK_ANGLE:
+    case GOSSIP_SENDER_FORMATION_ATTACK_ANGLE:
         {
             subMenu = true;
 
@@ -10558,7 +11028,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 3);
             break;
         }
-        case GOSSIP_SENDER_ENGAGE_BEHAVIOR:
+    case GOSSIP_SENDER_ENGAGE_BEHAVIOR:
         {
             subMenu = true;
 
@@ -10569,7 +11039,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 delaystr.precision(2);
                 delaystr << LocalizedNpcText(player, BOT_TEXT_DELAY_ATTACK_BY) << ": " << float(player->GetBotMgr()->GetEngageDelayDPS() / 1000.f) << LocalizedNpcText(player, BOT_TEXT_SECOND_SHORT);
                 player->PlayerTalkClass->GetGossipMenu().AddMenuItem(-1, GOSSIP_ICON_CHAT, delaystr.str(),
-                    GOSSIP_SENDER_ENGAGE_DELAY_SET_ATTACK, GOSSIP_ACTION_INFO_DEF + 1, "", 0, true);
+                                                                     GOSSIP_SENDER_ENGAGE_DELAY_SET_ATTACK, GOSSIP_ACTION_INFO_DEF + 1, "", 0, true);
             }
             if (HasRole(BOT_ROLE_HEAL))
             {
@@ -10589,8 +11059,8 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 4);
             break;
         }
-        case GOSSIP_SENDER_PRIORITY_TARGET_SET_TANK:
-        case GOSSIP_SENDER_PRIORITY_TARGET_SET_DPS:
+    case GOSSIP_SENDER_PRIORITY_TARGET_SET_TANK:
+    case GOSSIP_SENDER_PRIORITY_TARGET_SET_DPS:
         {
             Group const* gr = player->GetGroup();
             if (!gr)
@@ -10601,21 +11071,21 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
             switch (role)
             {
-                case BOT_ROLE_TANK:
-                    _primaryIconTank = icon;
-                    break;
-                case BOT_ROLE_DPS:
-                    _primaryIconDamage = icon;
-                    break;
-                default:
-                    break;
+            case BOT_ROLE_TANK:
+                _primaryIconTank = icon;
+                break;
+            case BOT_ROLE_DPS:
+                _primaryIconDamage = icon;
+                break;
+            default:
+                break;
             }
 
             //break;
             action = uint32(GOSSIP_ACTION_INFO_DEF) + role; //restore role value and return to the menu
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_PRIORITY_TARGET:
+    case GOSSIP_SENDER_PRIORITY_TARGET:
         {
             Group const* gr = player->GetGroup();
             if (!gr)
@@ -10626,38 +11096,38 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             uint32 role = action - GOSSIP_ACTION_INFO_DEF;
             switch (role)
             {
-                case BOT_ROLE_TANK:
-                    for (int8 i = TARGETICONCOUNT - 1; i >= 0; --i)
-                    {
-                        bool prio = i == _primaryIconTank;
-                        ObjectGuid guid = gr->GetTargetIcons()[i];
-                        if (guid && BotMgr::GetTankTargetIconFlags() & GroupIconsFlags[i])
-                            AddGossipItemFor(player, prio ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT, player->GetBotMgr()->GetTargetIconString(uint8(i + 1)), GOSSIP_SENDER_PRIORITY_TARGET_SET_TANK, uint32(GOSSIP_ACTION_INFO_DEF) + uint32(i));
-                    }
-                    AddGossipItemFor(player, (_primaryIconTank == -1) ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_NONE2), GOSSIP_SENDER_PRIORITY_TARGET_SET_TANK, uint32(GOSSIP_ACTION_INFO_DEF - 1));
-                    break;
-                case BOT_ROLE_DPS:
-                    for (int8 i = TARGETICONCOUNT - 1; i >= 0; --i)
-                    {
-                        bool prio = i == _primaryIconDamage;
-                        ObjectGuid guid = gr->GetTargetIcons()[i];
-                        uint32 iconMask = BotMgr::GetDPSTargetIconFlags();
-                        if (HasRole(BOT_ROLE_RANGED))
-                            iconMask |= BotMgr::GetRangedDPSTargetIconFlags();
-                        if (guid && iconMask & GroupIconsFlags[i])
-                            AddGossipItemFor(player, prio ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT, player->GetBotMgr()->GetTargetIconString(uint8(i + 1)), GOSSIP_SENDER_PRIORITY_TARGET_SET_DPS, uint32(GOSSIP_ACTION_INFO_DEF) + uint32(i));
-                    }
-                    AddGossipItemFor(player, (_primaryIconDamage == -1) ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_NONE2), GOSSIP_SENDER_PRIORITY_TARGET_SET_DPS, uint32(GOSSIP_ACTION_INFO_DEF - 1));
-                    break;
-                default:
-                    BotWhisper("unknown role " + std::to_string(role));
-                    break;
+            case BOT_ROLE_TANK:
+                for (int8 i = TARGETICONCOUNT - 1; i >= 0; --i)
+                {
+                    bool prio = i == _primaryIconTank;
+                    ObjectGuid guid = gr->GetTargetIcons()[i];
+                    if (guid && BotMgr::GetTankTargetIconFlags() & GroupIconsFlags[i])
+                        AddGossipItemFor(player, prio ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT, player->GetBotMgr()->GetTargetIconString(uint8(i + 1)), GOSSIP_SENDER_PRIORITY_TARGET_SET_TANK, uint32(GOSSIP_ACTION_INFO_DEF) + uint32(i));
+                }
+                AddGossipItemFor(player, (_primaryIconTank == -1) ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_NONE2), GOSSIP_SENDER_PRIORITY_TARGET_SET_TANK, uint32(GOSSIP_ACTION_INFO_DEF - 1));
+                break;
+            case BOT_ROLE_DPS:
+                for (int8 i = TARGETICONCOUNT - 1; i >= 0; --i)
+                {
+                    bool prio = i == _primaryIconDamage;
+                    ObjectGuid guid = gr->GetTargetIcons()[i];
+                    uint32 iconMask = BotMgr::GetDPSTargetIconFlags();
+                    if (HasRole(BOT_ROLE_RANGED))
+                        iconMask |= BotMgr::GetRangedDPSTargetIconFlags();
+                    if (guid && iconMask & GroupIconsFlags[i])
+                        AddGossipItemFor(player, prio ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT, player->GetBotMgr()->GetTargetIconString(uint8(i + 1)), GOSSIP_SENDER_PRIORITY_TARGET_SET_DPS, uint32(GOSSIP_ACTION_INFO_DEF) + uint32(i));
+                }
+                AddGossipItemFor(player, (_primaryIconDamage == -1) ? GOSSIP_ICON_BATTLE : GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_NONE2), GOSSIP_SENDER_PRIORITY_TARGET_SET_DPS, uint32(GOSSIP_ACTION_INFO_DEF - 1));
+                break;
+            default:
+                BotWhisper("unknown role " + std::to_string(role));
+                break;
             }
 
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 3);
             break;
         }
-        case GOSSIP_SENDER_TROUBLESHOOTING_AURA:
+    case GOSSIP_SENDER_TROUBLESHOOTING_AURA:
         {
             uint32 spellId = action - GOSSIP_ACTION_INFO_DEF;
             Unit::AuraMap const& auras = me->GetOwnedAuras();
@@ -10698,29 +11168,29 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             action = GOSSIP_ACTION_INFO_DEF + 2; //return to the list and update
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_TROUBLESHOOTING_FIX:
+    case GOSSIP_SENDER_TROUBLESHOOTING_FIX:
         {
             uint32 option = action - GOSSIP_ACTION_INFO_DEF;
             switch (option)
             {
-                //MOVED TO RECEIVEEMOTE
-                //case 1: //Bot is not mounting, not following while player is mounted
-                //{
-                //    //Reason: creature can sometimes retain UNIT_FLAG_X and UNIT_STATE_X
-                //    //rare occasion, even for bots, you can still talk to them so yeah, stange
-                //    if (me->HasUnitState(UNIT_STATE_STUNNED) && !me->HasAuraType(SPELL_AURA_MOD_STUN))
-                //    {
-                //        me->ClearUnitState(UNIT_STATE_STUNNED);
-                //        me->RemoveUnitFlag(UNIT_FLAG_STUNNED);
-                //    }
-                //    if (me->HasUnitState(UNIT_STATE_CONFUSED) && !me->HasAuraType(SPELL_AURA_MOD_CONFUSE))
-                //    {
-                //        me->ClearUnitState(UNIT_STATE_CONFUSED);
-                //        me->RemoveUnitFlag(UNIT_FLAG_CONFUSED);
-                //    }
-                //    break;
-                //}
-                case 2: //Remove a visible buff
+            //MOVED TO RECEIVEEMOTE
+            //case 1: //Bot is not mounting, not following while player is mounted
+            //{
+            //    //Reason: creature can sometimes retain UNIT_FLAG_X and UNIT_STATE_X
+            //    //rare occasion, even for bots, you can still talk to them so yeah, stange
+            //    if (me->HasUnitState(UNIT_STATE_STUNNED) && !me->HasAuraType(SPELL_AURA_MOD_STUN))
+            //    {
+            //        me->ClearUnitState(UNIT_STATE_STUNNED);
+            //        me->RemoveUnitFlag(UNIT_FLAG_STUNNED);
+            //    }
+            //    if (me->HasUnitState(UNIT_STATE_CONFUSED) && !me->HasAuraType(SPELL_AURA_MOD_CONFUSE))
+            //    {
+            //        me->ClearUnitState(UNIT_STATE_CONFUSED);
+            //        me->RemoveUnitFlag(UNIT_FLAG_CONFUSED);
+            //    }
+            //    break;
+            //}
+            case 2: //Remove a visible buff
                 {
                     subMenu = true;
                     uint32 count = 0;
@@ -10768,18 +11238,18 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 1);
                     break;
                 }
-                case 3: //Fix Powers
+            case 3: //Fix Powers
                 {
                     InitPowers();
                     break;
                 }
-                default:
-                    //BotWhisper("Unknown action in GOSSIP_SENDER_TROUBLESHOOTING_FIX", player);
-                    break;
+            default:
+                //BotWhisper("Unknown action in GOSSIP_SENDER_TROUBLESHOOTING_FIX", player);
+                break;
             }
             break;
         }
-        case GOSSIP_SENDER_TROUBLESHOOTING:
+    case GOSSIP_SENDER_TROUBLESHOOTING:
         {
             subMenu = true;
             //AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Fix not mounting/following", GOSSIP_SENDER_TROUBLESHOOTING_FIX, GOSSIP_ACTION_INFO_DEF + 1);
@@ -10788,36 +11258,36 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 4);
             break;
         }
-        case GOSSIP_SENDER_DEBUG_ACTION:
+    case GOSSIP_SENDER_DEBUG_ACTION:
         {
             //!!! player != owner !!!
             //DEBUG ACTIONS ARE NOT LOCALIZED
             bool close = true;
             switch (action - GOSSIP_ACTION_INFO_DEF)
             {
-                case 1: //reset owner
-                    if (!IAmFree())
-                        master->GetBotMgr()->RemoveBot(me->GetGUID(), BOT_REMOVE_DISMISS);
-                    else
-                    {
-                        uint32 newOwner = 0;
-                        /*player_npcbot*/
-                        NewUpdateNpcBotData( NPCBOT_UPDATE_OWNER, &newOwner);
-                        // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_OWNER, &newOwner);
-                        /*player_npcbot end*/
+            case 1: //reset owner
+                if (!IAmFree())
+                    master->GetBotMgr()->RemoveBot(me->GetGUID(), BOT_REMOVE_DISMISS);
+                else
+                {
+                    uint32 newOwner = 0;
+                    /*player_npcbot*/
+                    NewUpdateNpcBotData(NPCBOT_UPDATE_OWNER, &newOwner);
+                    // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_OWNER, &newOwner);
+                    /*player_npcbot end*/
 
-                        ResetBotAI(BOTAI_RESET_DISMISS);
-                    }
-                    break;
-                case 2: //reset stats
-                    spawned = false;
-                    DefaultInit();
-                    break;
-                case 3: //list stats
-                    close = false;
-                    ReceiveEmote(player, TEXT_EMOTE_BONK);
-                    break;
-                case 4: //list roles
+                    ResetBotAI(BOTAI_RESET_DISMISS);
+                }
+                break;
+            case 2: //reset stats
+                spawned = false;
+                DefaultInit();
+                break;
+            case 3: //list stats
+                close = false;
+                ReceiveEmote(player, TEXT_EMOTE_BONK);
+                break;
+            case 4: //list roles
                 {
                     close = false;
                     ChatHandler ch(player->GetSession());
@@ -10828,36 +11298,36 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         {
                             switch (i)
                             {
-                                case BOT_ROLE_TANK:
-                                    ch.SendSysMessage("BOT_ROLE_TANK");
-                                    break;
-                                case BOT_ROLE_TANK_OFF:
-                                    ch.SendSysMessage("BOT_ROLE_TANK_OFF");
-                                    break;
-                                case BOT_ROLE_DPS:
-                                    ch.SendSysMessage("BOT_ROLE_DPS");
-                                    break;
-                                case BOT_ROLE_HEAL:
-                                    ch.SendSysMessage("BOT_ROLE_HEAL");
-                                    break;
-                                //case BOT_ROLE_MELEE:
-                                //    ch.SendSysMessage("BOT_ROLE_MELEE");
-                                //    break;
-                                case BOT_ROLE_RANGED:
-                                    ch.SendSysMessage("BOT_ROLE_RANGED");
-                                    break;
-                                case BOT_ROLE_PARTY:
-                                    ch.SendSysMessage("BOT_ROLE_PARTY");
-                                    break;
-                                default:
-                                    ch.PSendSysMessage("BOT_ROLE_%u",i);
-                                    break;
+                            case BOT_ROLE_TANK:
+                                ch.SendSysMessage("BOT_ROLE_TANK");
+                                break;
+                            case BOT_ROLE_TANK_OFF:
+                                ch.SendSysMessage("BOT_ROLE_TANK_OFF");
+                                break;
+                            case BOT_ROLE_DPS:
+                                ch.SendSysMessage("BOT_ROLE_DPS");
+                                break;
+                            case BOT_ROLE_HEAL:
+                                ch.SendSysMessage("BOT_ROLE_HEAL");
+                                break;
+                            //case BOT_ROLE_MELEE:
+                            //    ch.SendSysMessage("BOT_ROLE_MELEE");
+                            //    break;
+                            case BOT_ROLE_RANGED:
+                                ch.SendSysMessage("BOT_ROLE_RANGED");
+                                break;
+                            case BOT_ROLE_PARTY:
+                                ch.SendSysMessage("BOT_ROLE_PARTY");
+                                break;
+                            default:
+                                ch.PSendSysMessage("BOT_ROLE_%u", i);
+                                break;
                             }
                         }
                     }
                     break;
                 }
-                case 5: //list spells
+            case 5: //list spells
                 {
                     close = false;
                     ChatHandler ch(player->GetSession());
@@ -10874,7 +11344,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         std::ostringstream sstr;
                         spellInfo = sSpellMgr->GetSpellInfo(itr->first); //always valid
                         _AddSpellLink(player, spellInfo, sstr);
-                        sstr << " id: " <<  itr->second->spellId << ", base: " << itr->first
+                        sstr << " id: " << itr->second->spellId << ", base: " << itr->first
                             << ", cd: " << itr->second->cooldown << ", base: " << std::max<uint32>(spellInfo->RecoveryTime, spellInfo->CategoryRecoveryTime);
                         if (itr->second->enabled == false)
                             sstr << " (disabled)";
@@ -10882,7 +11352,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     }
                     break;
                 }
-                case 6: //reload config
+            case 6: //reload config
                 {
                     close = false;
                     ChatHandler ch(player->GetSession());
@@ -10896,16 +11366,16 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
 
                     break;
                 }
-                default:
-                    close = false;
-                    break;
+            default:
+                close = false;
+                break;
             }
 
             if (close)
                 break;
         }
         [[fallthrough]];
-        case GOSSIP_SENDER_DEBUG:
+    case GOSSIP_SENDER_DEBUG:
         {
             //!!! player != owner !!!
             subMenu = true;
@@ -10936,49 +11406,49 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 1);
             break;
         }
-        case GOSSIP_SENDER_SCAN:
+    case GOSSIP_SENDER_SCAN:
         {
             subMenu = true;
 
             switch (_botclass)
             {
-                case BOT_CLASS_BM:
-                    gossipTextId = GOSSIP_CLASSDESC_BM;
-                    break;
-                case BOT_CLASS_SPHYNX:
-                    gossipTextId = GOSSIP_CLASSDESC_SPHYNX;
-                    break;
-                case BOT_CLASS_ARCHMAGE:
-                    gossipTextId = GOSSIP_CLASSDESC_ARCHMAGE;
-                    break;
-                case BOT_CLASS_DREADLORD:
-                    gossipTextId = GOSSIP_CLASSDESC_DREADLORD;
-                    break;
-                case BOT_CLASS_SPELLBREAKER:
-                    gossipTextId = GOSSIP_CLASSDESC_SPELLBREAKER;
-                    break;
-                case BOT_CLASS_DARK_RANGER:
-                    gossipTextId = GOSSIP_CLASSDESC_DARKRANGER;
-                    break;
-                case BOT_CLASS_NECROMANCER:
-                    gossipTextId = GOSSIP_CLASSDESC_NECROMANCER;
-                    break;
-                case BOT_CLASS_SEA_WITCH:
-                    gossipTextId = GOSSIP_CLASSDESC_SEAWITCH;
-                    break;
-                case BOT_CLASS_CRYPT_LORD:
-                    gossipTextId = GOSSIP_CLASSDESC_CRYPTLORD;
-                    break;
-                default:
-                    break;
+            case BOT_CLASS_BM:
+                gossipTextId = GOSSIP_CLASSDESC_BM;
+                break;
+            case BOT_CLASS_SPHYNX:
+                gossipTextId = GOSSIP_CLASSDESC_SPHYNX;
+                break;
+            case BOT_CLASS_ARCHMAGE:
+                gossipTextId = GOSSIP_CLASSDESC_ARCHMAGE;
+                break;
+            case BOT_CLASS_DREADLORD:
+                gossipTextId = GOSSIP_CLASSDESC_DREADLORD;
+                break;
+            case BOT_CLASS_SPELLBREAKER:
+                gossipTextId = GOSSIP_CLASSDESC_SPELLBREAKER;
+                break;
+            case BOT_CLASS_DARK_RANGER:
+                gossipTextId = GOSSIP_CLASSDESC_DARKRANGER;
+                break;
+            case BOT_CLASS_NECROMANCER:
+                gossipTextId = GOSSIP_CLASSDESC_NECROMANCER;
+                break;
+            case BOT_CLASS_SEA_WITCH:
+                gossipTextId = GOSSIP_CLASSDESC_SEAWITCH;
+                break;
+            case BOT_CLASS_CRYPT_LORD:
+                gossipTextId = GOSSIP_CLASSDESC_CRYPTLORD;
+                break;
+            default:
+                break;
             }
 
             //AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_BACK), 1, GOSSIP_ACTION_INFO_DEF + 1);
 
             break;
         }
-        default:
-            break;
+    default:
+        break;
     }
 
     //if we add submenus send them else we should return
@@ -11042,7 +11512,7 @@ bool bot_ai::OnGossipSelectCode(Player* player, Creature* creature/* == me*/, ui
 
     switch (sender)
     {
-        case GOSSIP_SENDER_FORMATION_FOLLOW_DISTANCE_SET:
+    case GOSSIP_SENDER_FORMATION_FOLLOW_DISTANCE_SET:
         {
             char* dist = strtok((char*)code, "");
             uint8 distance = (uint8)std::min<int32>(std::max<int32>(atoi(dist), 0), 100);
@@ -11052,7 +11522,7 @@ bool bot_ai::OnGossipSelectCode(Player* player, Creature* creature/* == me*/, ui
             player->PlayerTalkClass->SendCloseGossip();
             return OnGossipSelect(player, creature, GOSSIP_SENDER_FORMATION, action);
         }
-        case GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE_SET:
+    case GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE_SET:
         {
             uint32 choice = action - GOSSIP_ACTION_INFO_DEF;
             if (choice == 3) //exact
@@ -11066,7 +11536,7 @@ bool bot_ai::OnGossipSelectCode(Player* player, Creature* creature/* == me*/, ui
             player->PlayerTalkClass->SendCloseGossip();
             return OnGossipSelect(player, creature, GOSSIP_SENDER_FORMATION_ATTACK_DISTANCE, action);
         }
-        case GOSSIP_SENDER_ENGAGE_DELAY_SET_ATTACK:
+    case GOSSIP_SENDER_ENGAGE_DELAY_SET_ATTACK:
         {
             char* dist = strtok((char*)code, "");
             float delay = std::min<float>(std::max<float>(atof(dist), 0.f), 10.f);
@@ -11076,7 +11546,7 @@ bool bot_ai::OnGossipSelectCode(Player* player, Creature* creature/* == me*/, ui
             player->PlayerTalkClass->SendCloseGossip();
             return OnGossipSelect(player, creature, GOSSIP_SENDER_ENGAGE_BEHAVIOR, action);
         }
-        case GOSSIP_SENDER_ENGAGE_DELAY_SET_HEALING:
+    case GOSSIP_SENDER_ENGAGE_DELAY_SET_HEALING:
         {
             char* dist = strtok((char*)code, "");
             float delay = std::min<float>(std::max<float>(atof(dist), 0.f), 10.f);
@@ -11086,7 +11556,7 @@ bool bot_ai::OnGossipSelectCode(Player* player, Creature* creature/* == me*/, ui
             player->PlayerTalkClass->SendCloseGossip();
             return OnGossipSelect(player, creature, GOSSIP_SENDER_ENGAGE_BEHAVIOR, action);
         }
-        case GOSSIP_SENDER_HEAL_HEALTH_THRESHOLD_SET:
+    case GOSSIP_SENDER_HEAL_HEALTH_THRESHOLD_SET:
         {
             char* dist = strtok((char*)code, "");
             float threshold = std::min<float>(std::max<float>(atof(dist), 0.f), 99.f);
@@ -11096,8 +11566,8 @@ bool bot_ai::OnGossipSelectCode(Player* player, Creature* creature/* == me*/, ui
             player->PlayerTalkClass->SendCloseGossip();
             return OnGossipSelect(player, creature, GOSSIP_SENDER_ENGAGE_BEHAVIOR, action);
         }
-        default:
-            break;
+    default:
+        break;
     }
 
     if (subMenu)
@@ -11107,6 +11577,7 @@ bool bot_ai::OnGossipSelectCode(Player* player, Creature* creature/* == me*/, ui
 
     return true;
 }
+
 //PvP trinket for minions
 void bot_ai::BreakCC(uint32 diff)
 {
@@ -11133,7 +11604,7 @@ void bot_ai::BreakCC(uint32 diff)
         (me->IsInCombat() || !me->getAttackers().empty()) && CCed(me) &&
         Rand() < 10 && !me->HasAuraType(SPELL_AURA_MOD_STEALTH) && !IsCasting() &&
         (me->GetLevel() < 60 || !IsSpellReady(PVPTRINKET, diff, false)) &&
-        me->HasAuraWithMechanic((1<<MECHANIC_CHARM)|(1<<MECHANIC_FEAR)|(1<<MECHANIC_SLEEP)))
+        me->HasAuraWithMechanic((1 << MECHANIC_CHARM) | (1 << MECHANIC_FEAR) | (1 << MECHANIC_SLEEP)))
     {
         if (doCast(me, RACIAL_WILL_OF_THE_FORSAKEN))
             return;
@@ -11143,12 +11614,13 @@ void bot_ai::BreakCC(uint32 diff)
         !me->HasAuraType(SPELL_AURA_MOD_STEALTH) &&
         (me->IsInCombat() || !me->getAttackers().empty()) && Rand() < 40 && !IsCasting() &&
         (me->GetLevel() < 60 || !IsSpellReady(PVPTRINKET, diff, false)) &&
-        me->HasAuraWithMechanic((1<<MECHANIC_SNARE)|(1<<MECHANIC_ROOT)))
+        me->HasAuraWithMechanic((1 << MECHANIC_SNARE) | (1 << MECHANIC_ROOT)))
     {
         if (doCast(me, RACIAL_ESCAPE_ARTIST))
             return;
     }
 }
+
 //Racial abilities
 void bot_ai::CheckRacials(uint32 diff)
 {
@@ -11184,7 +11656,8 @@ void bot_ai::CheckRacials(uint32 diff)
     {
         //Unholy Blight prevents diseases from being dispelled
         uint32 const dispelMask = me->GetAuraEffect(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_DEATHKNIGHT, 1494, 0) ?
-            (1<<DISPEL_POISON) : (1<<DISPEL_DISEASE)|(1<<DISPEL_POISON);
+                                      (1 << DISPEL_POISON) :
+                                      (1 << DISPEL_DISEASE) | (1 << DISPEL_POISON);
         uint8 count = 0;
         Unit::AuraMap const& auras = me->GetOwnedAuras();
         for (Unit::AuraMap::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
@@ -11206,7 +11679,7 @@ void bot_ai::CheckRacials(uint32 diff)
                     break;
         }
 
-        if (count > 1 - 1*(me->IsInCombat()) && doCast(me, RACIAL_STONEFORM))
+        if (count > 1 - 1 * (me->IsInCombat()) && doCast(me, RACIAL_STONEFORM))
             return;
     }
     //Racial 4) Night Elf (Shadowmeld)
@@ -11259,7 +11732,7 @@ void bot_ai::CheckRacials(uint32 diff)
     {
         uint32 giftOfNaaru = RaceSpellForClass(myrace, _botclass);
         if (IsSpellReady(giftOfNaaru, diff, false) && (me->IsInCombat() || !me->getAttackers().empty()) &&
-            GetHealthPCT(me) < 60 - 10*me->HasAuraType(SPELL_AURA_PERIODIC_HEAL) &&
+            GetHealthPCT(me) < 60 - 10 * me->HasAuraType(SPELL_AURA_PERIODIC_HEAL) &&
             Rand() < 50 && !IsCasting())
         {
             if (doCast(me, giftOfNaaru))
@@ -11267,6 +11740,7 @@ void bot_ai::CheckRacials(uint32 diff)
         }
     }
 }
+
 //Force bots to start attack anyone who tries to DAMAGE me or master
 //This means that anyone who attacks party will be attacked by whole bot party (see GetTarget())
 void bot_ai::OnOwnerDamagedBy(Unit* attacker)
@@ -11277,20 +11751,20 @@ void bot_ai::OnOwnerDamagedBy(Unit* attacker)
     bool byspell = false;
     switch (_botclass)
     {
-        case BOT_CLASS_DRUID:
-            byspell = GetBotStance() == BOT_STANCE_NONE || GetBotStance() == DRUID_MOONKIN_FORM;
-            break;
-        case BOT_CLASS_PRIEST:
-        case BOT_CLASS_MAGE:
-        case BOT_CLASS_WARLOCK:
-        case BOT_CLASS_SHAMAN:
-        case BOT_CLASS_SPHYNX:
-        case BOT_CLASS_ARCHMAGE:
-            byspell = true;
-            break;
-        default:
-            //TC_LOG_ERROR("entities.player", "minion_ai: OnOwnerDamagedBy() - unknown bot class %u", uint8(_botclass));
-            break;
+    case BOT_CLASS_DRUID:
+        byspell = GetBotStance() == BOT_STANCE_NONE || GetBotStance() == DRUID_MOONKIN_FORM;
+        break;
+    case BOT_CLASS_PRIEST:
+    case BOT_CLASS_MAGE:
+    case BOT_CLASS_WARLOCK:
+    case BOT_CLASS_SHAMAN:
+    case BOT_CLASS_SPHYNX:
+    case BOT_CLASS_ARCHMAGE:
+        byspell = true;
+        break;
+    default:
+        //TC_LOG_ERROR("entities.player", "minion_ai: OnOwnerDamagedBy() - unknown bot class %u", uint8(_botclass));
+        break;
     }
 
     if (!_canSwitchToTarget(me->GetVictim(), attacker, byspell))
@@ -11299,6 +11773,7 @@ void bot_ai::OnOwnerDamagedBy(Unit* attacker)
     SetBotCommandState(BOT_COMMAND_COMBATRESET); //reset AttackStart()
     me->Attack(attacker, !HasRole(BOT_ROLE_RANGED));
 }
+
 //force vehicle targeting and attack if vehicle is damaged
 void bot_ai::OnOwnerVehicleDamagedBy(Unit* attacker)
 {
@@ -11313,6 +11788,7 @@ void bot_ai::OnOwnerVehicleDamagedBy(Unit* attacker)
     SetBotCommandState(BOT_COMMAND_ATTACK);
     me->GetVehicleBase()->Attack(attacker, false);
 }
+
 //////////
 ///LOOT///
 //////////
@@ -11326,6 +11802,7 @@ void bot_ai::SpawnKillReward(Player* looter) const
     GameObject* moneyBag = looter->SummonGameObject(GO_BOT_MONEY_BAG, me->m_positionX, me->m_positionY, me->m_positionZ, me->GetOrientation(), 0, 0, 0, 0, REVIVE_TIMER_DEFAULT);
     moneyBag->SetSpellId(GO_BOT_MONEY_BAG + me->GetEntry());
 }
+
 void bot_ai::FillKillReward(GameObject* go) const
 {
     static const uint32 MAX_KILL_REWARD_ITEMS = 2;
@@ -11346,15 +11823,24 @@ void bot_ai::FillKillReward(GameObject* go) const
     float gold = 125.0f;
     switch (me->GetLevel() / 10)
     {
-        case 0: gold *= 0.100f; break;
-        case 1: gold *= 0.125f; break;
-        case 2: gold *= 0.175f; break;
-        case 3: gold *= 0.225f; break;
-        case 4: gold *= 0.300f; break;
-        case 5: gold *= 0.400f; break;
-        case 6: gold *= 0.550f; break;
-        case 7: gold *= 0.750f; break;
-        default:gold *= 1.000f; break;
+    case 0: gold *= 0.100f;
+        break;
+    case 1: gold *= 0.125f;
+        break;
+    case 2: gold *= 0.175f;
+        break;
+    case 3: gold *= 0.225f;
+        break;
+    case 4: gold *= 0.300f;
+        break;
+    case 5: gold *= 0.400f;
+        break;
+    case 6: gold *= 0.550f;
+        break;
+    case 7: gold *= 0.750f;
+        break;
+    default: gold *= 1.000f;
+        break;
     }
 
     loot.gold = uint32(lvl * std::min<float>(std::max<float>(gold + _killsCount * gold * 0.04f - _deathsCount * gold * 0.4f, gold), gold * 10.0f));
@@ -11379,6 +11865,7 @@ void bot_ai::FillKillReward(GameObject* go) const
         }
     }
 }
+
 uint32 bot_ai::_getLootQualityMask() const
 {
     uint32 lootRoleMask = (_roleMask & BOT_ROLE_MASK_LOOTING);
@@ -11399,6 +11886,7 @@ uint32 bot_ai::_getLootQualityMask() const
 
     return lootMask;
 }
+
 uint32 bot_ai::_getLootQualityThreshold() const
 {
     uint32 lootThreshold;
@@ -11409,15 +11897,20 @@ uint32 bot_ai::_getLootQualityThreshold() const
     {
         switch (gr->GetLootMethod())
         {
-            case GROUP_LOOT: case NEED_BEFORE_GREED: case MASTER_LOOT:
-                lootThreshold = uint32(gr->GetLootThreshold()); break;
-            default:
-                lootThreshold = uint32(MAX_ITEM_QUALITY);       break;
+        case GROUP_LOOT:
+        case NEED_BEFORE_GREED:
+        case MASTER_LOOT:
+            lootThreshold = uint32(gr->GetLootThreshold());
+            break;
+        default:
+            lootThreshold = uint32(MAX_ITEM_QUALITY);
+            break;
         }
     }
 
     return lootThreshold;
 }
+
 bool bot_ai::_canLootItemForPlayer(Player* player, Creature* creature, uint8 slot) const
 {
     QuestItem* qitem = nullptr;
@@ -11450,6 +11943,7 @@ bool bot_ai::_canLootItemForPlayer(Player* player, Creature* creature, uint8 slo
     //TC_LOG_ERROR("scripts", "can't loot item %u (%u), can't store", slot, item->itemid);
     return false;
 }
+
 bool bot_ai::_canLootCreatureForPlayer(Player* player, Creature* creature, uint32 lootQualityMask, uint32 lootThreshold) const
 {
     if (!player || master->GetMap() != player->FindMap()/* || !player->IsAlive() || !p->IsAtGroupRewardDistance(creature)*/)
@@ -11547,6 +12041,7 @@ bool bot_ai::_canLootCreatureForPlayer(Player* player, Creature* creature, uint3
 
     return canLoot;
 }
+
 bool bot_ai::_canLootCreature(Creature* creature) const
 {
     Loot* loot = &creature->loot;
@@ -11637,6 +12132,7 @@ bool bot_ai::_canLootCreature(Creature* creature) const
 
     return true;
 }
+
 void bot_ai::_autoLootCreatureGold(Creature* creature) const
 {
     Loot* loot = &creature->loot;
@@ -11650,7 +12146,7 @@ void bot_ai::_autoLootCreatureGold(Creature* creature) const
 
         WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 4 + 1);
         data << uint32(loot->gold);
-        data << uint8(1);   // "You loot..."
+        data << uint8(1); // "You loot..."
         master->GetSession()->SendPacket(&data);
     }
     else
@@ -11687,6 +12183,7 @@ void bot_ai::_autoLootCreatureGold(Creature* creature) const
         loot->clear();
     }
 }
+
 void bot_ai::_autoLootCreatureItems(Player* receiver, Creature* creature, uint32 lootQualityMask, uint32 lootThreshold) const
 {
     uint8 slot = 0;
@@ -11707,6 +12204,10 @@ void bot_ai::_autoLootCreatureItems(Player* receiver, Creature* creature, uint32
         }
 
         ItemTemplate const* itemProto = sObjectMgr->GetItemTemplate(i->itemid);
+        if (!itemProto)
+        {
+            continue;
+        }
 
         if (itemProto->Quality >= lootThreshold)
             continue;
@@ -11769,8 +12270,12 @@ void bot_ai::_autoLootCreatureItems(Player* receiver, Creature* creature, uint32
         creature->loot.clear();
     }
 }
+
 void bot_ai::_autoLootCreature(Creature* creature)
 {
+    //自动拾取关闭
+    return;
+
     //money
     if (creature->loot.gold)
     {
@@ -11807,18 +12312,24 @@ void bot_ai::_autoLootCreature(Creature* creature)
     {
         switch (gr->GetLootMethod())
         {
-            case GROUP_LOOT:        gr->GroupLoot(&creature->loot, creature);       break;
-            case NEED_BEFORE_GREED: gr->NeedBeforeGreed(&creature->loot, creature); break;
-            case MASTER_LOOT:       gr->MasterLoot(&creature->loot, creature);      break;
-            default:                                                                break;
+        case GROUP_LOOT: gr->GroupLoot(&creature->loot, creature);
+            break;
+        case NEED_BEFORE_GREED: gr->NeedBeforeGreed(&creature->loot, creature);
+            break;
+        case MASTER_LOOT: gr->MasterLoot(&creature->loot, creature);
+            break;
+        default: break;
         }
     }
 
     if (creature->loot.loot_type != LOOT_SKINNING)
         creature->loot.loot_type = LOOT_CORPSE;
 
-    Player* receiver = pLooters.size() == 1 ? *pLooters.begin() :
-        creature->loot.roundRobinPlayer ? ObjectAccessor::GetPlayer(*creature, creature->loot.roundRobinPlayer) : nullptr;
+    Player* receiver = pLooters.size() == 1 ?
+                           *pLooters.begin() :
+                           creature->loot.roundRobinPlayer ?
+                           ObjectAccessor::GetPlayer(*creature, creature->loot.roundRobinPlayer) :
+                           nullptr;
 
     if (!receiver)
     {
@@ -11830,13 +12341,15 @@ void bot_ai::_autoLootCreature(Creature* creature)
         do
         {
             receiver = Acore::Containers::SelectRandomContainerElement(pLooters);
-        } while (receiver == _prevRRobin);
+        }
+        while (receiver == _prevRRobin);
     }
 
     _prevRRobin = receiver;
 
     _autoLootCreatureItems(receiver, creature, lootQualityMask, lootThreshold);
 }
+
 //////////
 //EQUIPS//
 //////////
@@ -11869,8 +12382,8 @@ bool bot_ai::_canUseOffHand() const
     if (protoMH->Class == ITEM_CLASS_WEAPON &&
         (protoMH->InventoryType == INVTYPE_WEAPON || protoMH->InventoryType == INVTYPE_WEAPONMAINHAND) &&
         (protoMH->SubClass == ITEM_SUBCLASS_WEAPON_AXE || protoMH->SubClass == ITEM_SUBCLASS_WEAPON_DAGGER ||
-        protoMH->SubClass == ITEM_SUBCLASS_WEAPON_FIST || protoMH->SubClass == ITEM_SUBCLASS_WEAPON_MACE ||
-        protoMH->SubClass == ITEM_SUBCLASS_WEAPON_SWORD))
+            protoMH->SubClass == ITEM_SUBCLASS_WEAPON_FIST || protoMH->SubClass == ITEM_SUBCLASS_WEAPON_MACE ||
+            protoMH->SubClass == ITEM_SUBCLASS_WEAPON_SWORD))
         return true;
 
     //NO
@@ -11917,7 +12430,7 @@ bool bot_ai::_canEquip(ItemTemplate const* newProto, uint8 slot, bool ignoreItem
         return false;
 
     //class requirements
-    if (_botclass < BOT_CLASS_EX_START && !(newProto->AllowableClass & (1<<(_botclass-1))))
+    if (_botclass < BOT_CLASS_EX_START && !(newProto->AllowableClass & (1 << (_botclass - 1))))
         return false;
 
     //skip race requirements
@@ -11927,338 +12440,338 @@ bool bot_ai::_canEquip(ItemTemplate const* newProto, uint8 slot, bool ignoreItem
     {
         switch (slot)
         {
-            case BOT_SLOT_MAINHAND:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_BM:
-                        if (newProto->SubClass != ITEM_SUBCLASS_WEAPON_POLEARM &&
-                            newProto->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 &&
-                            newProto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2)
-                            return false;
-                        break;
-                    case BOT_CLASS_ARCHMAGE:
-                    case BOT_CLASS_NECROMANCER:
-                        if (newProto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF)
-                            return false;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case BOT_SLOT_OFFHAND:
-                if (newProto->SubClass == ITEM_SUBCLASS_WEAPON_POLEARM || newProto->SubClass == ITEM_SUBCLASS_WEAPON_STAFF)
+        case BOT_SLOT_MAINHAND:
+            switch (_botclass)
+            {
+            case BOT_CLASS_BM:
+                if (newProto->SubClass != ITEM_SUBCLASS_WEAPON_POLEARM &&
+                    newProto->SubClass != ITEM_SUBCLASS_WEAPON_AXE2 &&
+                    newProto->SubClass != ITEM_SUBCLASS_WEAPON_SWORD2)
                     return false;
-                switch (_botclass)
-                {
-                    case BOT_CLASS_DEATH_KNIGHT:
-                    case BOT_CLASS_ROGUE:
-                        break;
-                    case BOT_CLASS_WARRIOR:
-                    case BOT_CLASS_HUNTER:
-                        if (me->GetLevel() < 20)
-                            return false;
-                        break;
-                    case BOT_CLASS_SHAMAN:
-                        if (me->GetLevel() < 40 || _spec != BOT_SPEC_SHAMAN_ENHANCEMENT)
-                            return false;
-                        break;
-                    case BOT_CLASS_SPHYNX:
-                        break;
-                    case BOT_CLASS_DARK_RANGER:
-                        break;
-                    case BOT_CLASS_SEA_WITCH:
-                        break;
-                    default:
-                        return false;
-                }
                 break;
-            case BOT_SLOT_RANGED:
-                if (!_canUseRanged())
+            case BOT_CLASS_ARCHMAGE:
+            case BOT_CLASS_NECROMANCER:
+                if (newProto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF)
                     return false;
                 break;
             default:
+                break;
+            }
+            break;
+        case BOT_SLOT_OFFHAND:
+            if (newProto->SubClass == ITEM_SUBCLASS_WEAPON_POLEARM || newProto->SubClass == ITEM_SUBCLASS_WEAPON_STAFF)
                 return false;
+            switch (_botclass)
+            {
+            case BOT_CLASS_DEATH_KNIGHT:
+            case BOT_CLASS_ROGUE:
+                break;
+            case BOT_CLASS_WARRIOR:
+            case BOT_CLASS_HUNTER:
+                if (me->GetLevel() < 20)
+                    return false;
+                break;
+            case BOT_CLASS_SHAMAN:
+                if (me->GetLevel() < 40 || _spec != BOT_SPEC_SHAMAN_ENHANCEMENT)
+                    return false;
+                break;
+            case BOT_CLASS_SPHYNX:
+                break;
+            case BOT_CLASS_DARK_RANGER:
+                break;
+            case BOT_CLASS_SEA_WITCH:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_SLOT_RANGED:
+            if (!_canUseRanged())
+                return false;
+            break;
+        default:
+            return false;
         }
 
         switch (newProto->InventoryType)
         {
-            case INVTYPE_WEAPONMAINHAND:
+        case INVTYPE_WEAPONMAINHAND:
+            if (slot != BOT_SLOT_MAINHAND)
+                return false;
+            break;
+        case INVTYPE_WEAPONOFFHAND:
+            if (slot != BOT_SLOT_OFFHAND)
+                return false;
+            break;
+        case INVTYPE_2HWEAPON:
+            switch (_botclass)
+            {
+            case BOT_CLASS_WARRIOR:
+                switch (slot)
+                {
+                case BOT_SLOT_OFFHAND:
+                    if (me->GetLevel() < 60)
+                        return false;
+                    break;
+                case BOT_SLOT_RANGED:
+                    return false;
+                default:
+                    break;
+                }
+                break;
+            case BOT_CLASS_SPHYNX:
+                break;
+            default:
                 if (slot != BOT_SLOT_MAINHAND)
                     return false;
                 break;
-            case INVTYPE_WEAPONOFFHAND:
-                if (slot != BOT_SLOT_OFFHAND)
-                    return false;
-                break;
-            case INVTYPE_2HWEAPON:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_WARRIOR:
-                        switch (slot)
-                        {
-                            case BOT_SLOT_OFFHAND:
-                                if (me->GetLevel() < 60)
-                                    return false;
-                                break;
-                            case BOT_SLOT_RANGED:
-                                return false;
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_CLASS_SPHYNX:
-                        break;
-                    default:
-                        if (slot != BOT_SLOT_MAINHAND)
-                            return false;
-                        break;
-                }
-                break;
-            case INVTYPE_WEAPON:
+            }
+            break;
+        case INVTYPE_WEAPON:
+            if (slot != BOT_SLOT_MAINHAND && slot != BOT_SLOT_OFFHAND)
+                return false;
+            break;
+        case INVTYPE_THROWN:
+        case INVTYPE_RANGED:
+            if (slot != BOT_SLOT_RANGED)
+                return false;
+            break;
+        case INVTYPE_RANGEDRIGHT:
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
                 if (slot != BOT_SLOT_MAINHAND && slot != BOT_SLOT_OFFHAND)
                     return false;
                 break;
-            case INVTYPE_THROWN:
-            case INVTYPE_RANGED:
+            default:
                 if (slot != BOT_SLOT_RANGED)
                     return false;
                 break;
-            case INVTYPE_RANGEDRIGHT:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        if (slot != BOT_SLOT_MAINHAND && slot != BOT_SLOT_OFFHAND)
-                            return false;
-                        break;
-                    default:
-                        if (slot != BOT_SLOT_RANGED)
-                            return false;
-                        break;
-                }
-                break;
-            default:
-                return false;
+            }
+            break;
+        default:
+            return false;
         }
 
         switch (_botclass)
         {
-            case BOT_CLASS_WARRIOR:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_AXE:
-                    case ITEM_SUBCLASS_WEAPON_AXE2:
-                    case ITEM_SUBCLASS_WEAPON_MACE:
-                    case ITEM_SUBCLASS_WEAPON_MACE2:
-                    case ITEM_SUBCLASS_WEAPON_SWORD:
-                    case ITEM_SUBCLASS_WEAPON_SWORD2:
-                    case ITEM_SUBCLASS_WEAPON_POLEARM:
-                    case ITEM_SUBCLASS_WEAPON_STAFF:
-                    case ITEM_SUBCLASS_WEAPON_FIST:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                    case ITEM_SUBCLASS_WEAPON_BOW:
-                    case ITEM_SUBCLASS_WEAPON_CROSSBOW:
-                    case ITEM_SUBCLASS_WEAPON_GUN:
-                    case ITEM_SUBCLASS_WEAPON_THROWN:
-                    //case ITEM_SUBCLASS_WEAPON_WAND:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_PALADIN:
-            case BOT_CLASS_DEATH_KNIGHT:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_AXE:
-                    case ITEM_SUBCLASS_WEAPON_AXE2:
-                    case ITEM_SUBCLASS_WEAPON_MACE:
-                    case ITEM_SUBCLASS_WEAPON_MACE2:
-                    case ITEM_SUBCLASS_WEAPON_SWORD:
-                    case ITEM_SUBCLASS_WEAPON_SWORD2:
-                    case ITEM_SUBCLASS_WEAPON_POLEARM:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_HUNTER:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_AXE:
-                    case ITEM_SUBCLASS_WEAPON_AXE2:
-                    //case ITEM_SUBCLASS_WEAPON_MACE:
-                    //case ITEM_SUBCLASS_WEAPON_MACE2:
-                    case ITEM_SUBCLASS_WEAPON_SWORD:
-                    case ITEM_SUBCLASS_WEAPON_SWORD2:
-                    case ITEM_SUBCLASS_WEAPON_POLEARM:
-                    case ITEM_SUBCLASS_WEAPON_STAFF:
-                    case ITEM_SUBCLASS_WEAPON_FIST:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                    case ITEM_SUBCLASS_WEAPON_BOW:
-                    case ITEM_SUBCLASS_WEAPON_CROSSBOW:
-                    case ITEM_SUBCLASS_WEAPON_GUN:
-                    //case ITEM_SUBCLASS_WEAPON_THROWN: //hunters can use thrown but bots can't, also pointless
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_ROGUE:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_AXE:
-                    case ITEM_SUBCLASS_WEAPON_MACE:
-                    case ITEM_SUBCLASS_WEAPON_SWORD:
-                    case ITEM_SUBCLASS_WEAPON_FIST:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                    case ITEM_SUBCLASS_WEAPON_BOW:
-                    case ITEM_SUBCLASS_WEAPON_CROSSBOW:
-                    case ITEM_SUBCLASS_WEAPON_GUN:
-                    case ITEM_SUBCLASS_WEAPON_THROWN:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_PRIEST:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_MACE:
-                    case ITEM_SUBCLASS_WEAPON_STAFF:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                    case ITEM_SUBCLASS_WEAPON_WAND:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_MAGE:
-            case BOT_CLASS_WARLOCK:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_SWORD:
-                    case ITEM_SUBCLASS_WEAPON_STAFF:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                    case ITEM_SUBCLASS_WEAPON_WAND:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_DRUID:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_MACE:
-                    case ITEM_SUBCLASS_WEAPON_MACE2:
-                    case ITEM_SUBCLASS_WEAPON_POLEARM:
-                    case ITEM_SUBCLASS_WEAPON_STAFF:
-                    case ITEM_SUBCLASS_WEAPON_FIST:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_SHAMAN:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_AXE:
-                    case ITEM_SUBCLASS_WEAPON_AXE2:
-                    case ITEM_SUBCLASS_WEAPON_MACE:
-                    case ITEM_SUBCLASS_WEAPON_MACE2:
-                    case ITEM_SUBCLASS_WEAPON_STAFF:
-                    case ITEM_SUBCLASS_WEAPON_FIST:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_BM:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_AXE2:
-                    case ITEM_SUBCLASS_WEAPON_SWORD2:
-                    case ITEM_SUBCLASS_WEAPON_POLEARM:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_SPHYNX:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_WAND:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_ARCHMAGE:
-            case BOT_CLASS_NECROMANCER:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_STAFF:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_DREADLORD:
-            case BOT_CLASS_CRYPT_LORD:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_AXE:
-                    case ITEM_SUBCLASS_WEAPON_AXE2:
-                    case ITEM_SUBCLASS_WEAPON_MACE:
-                    case ITEM_SUBCLASS_WEAPON_MACE2:
-                    case ITEM_SUBCLASS_WEAPON_SWORD:
-                    case ITEM_SUBCLASS_WEAPON_SWORD2:
-                    case ITEM_SUBCLASS_WEAPON_POLEARM:
-                    case ITEM_SUBCLASS_WEAPON_STAFF:
-                    case ITEM_SUBCLASS_WEAPON_FIST:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_SPELLBREAKER:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_AXE:
-                    case ITEM_SUBCLASS_WEAPON_MACE:
-                    case ITEM_SUBCLASS_WEAPON_SWORD:
-                    case ITEM_SUBCLASS_WEAPON_FIST:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_DARK_RANGER:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_SWORD:
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                    case ITEM_SUBCLASS_WEAPON_BOW:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case BOT_CLASS_SEA_WITCH:
-                switch (newProto->SubClass)
-                {
-                    case ITEM_SUBCLASS_WEAPON_DAGGER:
-                    case ITEM_SUBCLASS_WEAPON_BOW:
-                        break;
-                    default:
-                        return false;
-                }
+        case BOT_CLASS_WARRIOR:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_AXE:
+            case ITEM_SUBCLASS_WEAPON_AXE2:
+            case ITEM_SUBCLASS_WEAPON_MACE:
+            case ITEM_SUBCLASS_WEAPON_MACE2:
+            case ITEM_SUBCLASS_WEAPON_SWORD:
+            case ITEM_SUBCLASS_WEAPON_SWORD2:
+            case ITEM_SUBCLASS_WEAPON_POLEARM:
+            case ITEM_SUBCLASS_WEAPON_STAFF:
+            case ITEM_SUBCLASS_WEAPON_FIST:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+            case ITEM_SUBCLASS_WEAPON_BOW:
+            case ITEM_SUBCLASS_WEAPON_CROSSBOW:
+            case ITEM_SUBCLASS_WEAPON_GUN:
+            case ITEM_SUBCLASS_WEAPON_THROWN:
+                //case ITEM_SUBCLASS_WEAPON_WAND:
                 break;
             default:
                 return false;
+            }
+            break;
+        case BOT_CLASS_PALADIN:
+        case BOT_CLASS_DEATH_KNIGHT:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_AXE:
+            case ITEM_SUBCLASS_WEAPON_AXE2:
+            case ITEM_SUBCLASS_WEAPON_MACE:
+            case ITEM_SUBCLASS_WEAPON_MACE2:
+            case ITEM_SUBCLASS_WEAPON_SWORD:
+            case ITEM_SUBCLASS_WEAPON_SWORD2:
+            case ITEM_SUBCLASS_WEAPON_POLEARM:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_HUNTER:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_AXE:
+            case ITEM_SUBCLASS_WEAPON_AXE2:
+            //case ITEM_SUBCLASS_WEAPON_MACE:
+            //case ITEM_SUBCLASS_WEAPON_MACE2:
+            case ITEM_SUBCLASS_WEAPON_SWORD:
+            case ITEM_SUBCLASS_WEAPON_SWORD2:
+            case ITEM_SUBCLASS_WEAPON_POLEARM:
+            case ITEM_SUBCLASS_WEAPON_STAFF:
+            case ITEM_SUBCLASS_WEAPON_FIST:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+            case ITEM_SUBCLASS_WEAPON_BOW:
+            case ITEM_SUBCLASS_WEAPON_CROSSBOW:
+            case ITEM_SUBCLASS_WEAPON_GUN:
+                //case ITEM_SUBCLASS_WEAPON_THROWN: //hunters can use thrown but bots can't, also pointless
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_ROGUE:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_AXE:
+            case ITEM_SUBCLASS_WEAPON_MACE:
+            case ITEM_SUBCLASS_WEAPON_SWORD:
+            case ITEM_SUBCLASS_WEAPON_FIST:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+            case ITEM_SUBCLASS_WEAPON_BOW:
+            case ITEM_SUBCLASS_WEAPON_CROSSBOW:
+            case ITEM_SUBCLASS_WEAPON_GUN:
+            case ITEM_SUBCLASS_WEAPON_THROWN:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_PRIEST:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_MACE:
+            case ITEM_SUBCLASS_WEAPON_STAFF:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+            case ITEM_SUBCLASS_WEAPON_WAND:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_MAGE:
+        case BOT_CLASS_WARLOCK:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_SWORD:
+            case ITEM_SUBCLASS_WEAPON_STAFF:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+            case ITEM_SUBCLASS_WEAPON_WAND:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_DRUID:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_MACE:
+            case ITEM_SUBCLASS_WEAPON_MACE2:
+            case ITEM_SUBCLASS_WEAPON_POLEARM:
+            case ITEM_SUBCLASS_WEAPON_STAFF:
+            case ITEM_SUBCLASS_WEAPON_FIST:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_SHAMAN:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_AXE:
+            case ITEM_SUBCLASS_WEAPON_AXE2:
+            case ITEM_SUBCLASS_WEAPON_MACE:
+            case ITEM_SUBCLASS_WEAPON_MACE2:
+            case ITEM_SUBCLASS_WEAPON_STAFF:
+            case ITEM_SUBCLASS_WEAPON_FIST:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_BM:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_AXE2:
+            case ITEM_SUBCLASS_WEAPON_SWORD2:
+            case ITEM_SUBCLASS_WEAPON_POLEARM:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_SPHYNX:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_WAND:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_ARCHMAGE:
+        case BOT_CLASS_NECROMANCER:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_STAFF:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_DREADLORD:
+        case BOT_CLASS_CRYPT_LORD:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_AXE:
+            case ITEM_SUBCLASS_WEAPON_AXE2:
+            case ITEM_SUBCLASS_WEAPON_MACE:
+            case ITEM_SUBCLASS_WEAPON_MACE2:
+            case ITEM_SUBCLASS_WEAPON_SWORD:
+            case ITEM_SUBCLASS_WEAPON_SWORD2:
+            case ITEM_SUBCLASS_WEAPON_POLEARM:
+            case ITEM_SUBCLASS_WEAPON_STAFF:
+            case ITEM_SUBCLASS_WEAPON_FIST:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_SPELLBREAKER:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_AXE:
+            case ITEM_SUBCLASS_WEAPON_MACE:
+            case ITEM_SUBCLASS_WEAPON_SWORD:
+            case ITEM_SUBCLASS_WEAPON_FIST:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_DARK_RANGER:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_SWORD:
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+            case ITEM_SUBCLASS_WEAPON_BOW:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case BOT_CLASS_SEA_WITCH:
+            switch (newProto->SubClass)
+            {
+            case ITEM_SUBCLASS_WEAPON_DAGGER:
+            case ITEM_SUBCLASS_WEAPON_BOW:
+                break;
+            default:
+                return false;
+            }
+            break;
+        default:
+            return false;
         }
 
         return true;
@@ -12267,251 +12780,251 @@ bool bot_ai::_canEquip(ItemTemplate const* newProto, uint8 slot, bool ignoreItem
     {
         switch (newProto->InventoryType)
         {
-            case INVTYPE_HEAD:
-                if (slot != BOT_SLOT_HEAD)
-                    return false;
-                break;
-            case INVTYPE_SHOULDERS:
-                if (slot != BOT_SLOT_SHOULDERS)
-                    return false;
-                break;
-            case INVTYPE_BODY:
-                if (slot != BOT_SLOT_BODY)
-                    return false;
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        return false;
-                    default:
-                        break;
-                }
-                break;
-            case INVTYPE_CHEST:
-            case INVTYPE_ROBE:
-                if (slot != BOT_SLOT_CHEST)
-                    return false;
-                break;
-            case INVTYPE_WAIST:
-                if (slot != BOT_SLOT_WAIST)
-                    return false;
-                break;
-            case INVTYPE_LEGS:
-                if (slot != BOT_SLOT_LEGS)
-                    return false;
-                break;
-            case INVTYPE_FEET:
-                if (slot != BOT_SLOT_FEET)
-                    return false;
-                break;
-            case INVTYPE_WRISTS:
-                if (slot != BOT_SLOT_WRIST)
-                    return false;
-                break;
-            case INVTYPE_HANDS:
-                if (slot != BOT_SLOT_HANDS)
-                    return false;
-                break;
-            case INVTYPE_FINGER:
-                if (slot != BOT_SLOT_FINGER1 && slot != BOT_SLOT_FINGER2)
-                    return false;
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        return false;
-                    default:
-                        break;
-                }
-                break;
-            case INVTYPE_TRINKET:
-                if (slot != BOT_SLOT_TRINKET1 && slot != BOT_SLOT_TRINKET2)
-                    return false;
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        return false;
-                    default:
-                        break;
-                }
-                break;
-            case INVTYPE_NECK:
-                if (slot != BOT_SLOT_NECK)
-                    return false;
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        return false;
-                    default:
-                        break;
-                }
-                break;
-            case INVTYPE_CLOAK:
-                if (slot != BOT_SLOT_BACK)
-                    return false;
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        return false;
-                    default:
-                        break;
-                }
-                break;
-            case INVTYPE_HOLDABLE:
-            case INVTYPE_SHIELD:
-                if (slot != BOT_SLOT_OFFHAND)
-                    return false;
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        return false;
-                    default:
-                        break;
-                }
-                break;
-            case INVTYPE_RELIC:
-                if (slot != BOT_SLOT_RANGED)
-                    return false;
-                break;
-            default:
+        case INVTYPE_HEAD:
+            if (slot != BOT_SLOT_HEAD)
                 return false;
+            break;
+        case INVTYPE_SHOULDERS:
+            if (slot != BOT_SLOT_SHOULDERS)
+                return false;
+            break;
+        case INVTYPE_BODY:
+            if (slot != BOT_SLOT_BODY)
+                return false;
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
+                return false;
+            default:
+                break;
+            }
+            break;
+        case INVTYPE_CHEST:
+        case INVTYPE_ROBE:
+            if (slot != BOT_SLOT_CHEST)
+                return false;
+            break;
+        case INVTYPE_WAIST:
+            if (slot != BOT_SLOT_WAIST)
+                return false;
+            break;
+        case INVTYPE_LEGS:
+            if (slot != BOT_SLOT_LEGS)
+                return false;
+            break;
+        case INVTYPE_FEET:
+            if (slot != BOT_SLOT_FEET)
+                return false;
+            break;
+        case INVTYPE_WRISTS:
+            if (slot != BOT_SLOT_WRIST)
+                return false;
+            break;
+        case INVTYPE_HANDS:
+            if (slot != BOT_SLOT_HANDS)
+                return false;
+            break;
+        case INVTYPE_FINGER:
+            if (slot != BOT_SLOT_FINGER1 && slot != BOT_SLOT_FINGER2)
+                return false;
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
+                return false;
+            default:
+                break;
+            }
+            break;
+        case INVTYPE_TRINKET:
+            if (slot != BOT_SLOT_TRINKET1 && slot != BOT_SLOT_TRINKET2)
+                return false;
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
+                return false;
+            default:
+                break;
+            }
+            break;
+        case INVTYPE_NECK:
+            if (slot != BOT_SLOT_NECK)
+                return false;
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
+                return false;
+            default:
+                break;
+            }
+            break;
+        case INVTYPE_CLOAK:
+            if (slot != BOT_SLOT_BACK)
+                return false;
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
+                return false;
+            default:
+                break;
+            }
+            break;
+        case INVTYPE_HOLDABLE:
+        case INVTYPE_SHIELD:
+            if (slot != BOT_SLOT_OFFHAND)
+                return false;
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
+                return false;
+            default:
+                break;
+            }
+            break;
+        case INVTYPE_RELIC:
+            if (slot != BOT_SLOT_RANGED)
+                return false;
+            break;
+        default:
+            return false;
         }
 
         switch (newProto->SubClass)
         {
-            case ITEM_SUBCLASS_ARMOR_SHIELD:
-                if (slot != BOT_SLOT_OFFHAND)
-                    return false;
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPELLBREAKER:
-                        break;
-                    case BOT_CLASS_WARRIOR:
-                    case BOT_CLASS_PALADIN:
-                    case BOT_CLASS_SHAMAN:
-                        break;
-                    default:
-                        return false;
-                }
+        case ITEM_SUBCLASS_ARMOR_SHIELD:
+            if (slot != BOT_SLOT_OFFHAND)
+                return false;
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPELLBREAKER:
                 break;
-            case ITEM_SUBCLASS_ARMOR_PLATE:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_BM:
-                    case BOT_CLASS_SPHYNX:
-                    case BOT_CLASS_DREADLORD:
-                    case BOT_CLASS_SPELLBREAKER:
-                    case BOT_CLASS_CRYPT_LORD:
-                        break;
-                    case BOT_CLASS_WARRIOR:
-                    case BOT_CLASS_PALADIN:
-                    case BOT_CLASS_DEATH_KNIGHT:
-                        if (me->GetLevel() >= 40 || newProto->Quality == ITEM_QUALITY_HEIRLOOM)
-                            break;
-                        return false;
-                    default:
-                        return false;
-                }
-                break;
-            case ITEM_SUBCLASS_ARMOR_MAIL:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_BM:
-                    case BOT_CLASS_SPHYNX:
-                    case BOT_CLASS_SPELLBREAKER:
-                    case BOT_CLASS_CRYPT_LORD:
-                        break;
-                    case BOT_CLASS_WARRIOR:
-                    case BOT_CLASS_PALADIN:
-                    case BOT_CLASS_DEATH_KNIGHT:
-                        break;
-                    case BOT_CLASS_SHAMAN:
-                    case BOT_CLASS_HUNTER:
-                        if (me->GetLevel() >= 40 || newProto->Quality == ITEM_QUALITY_HEIRLOOM)
-                            break;
-                        return false;
-                    default:
-                        return false;
-                }
-                break;
-            case ITEM_SUBCLASS_ARMOR_LEATHER:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_DARK_RANGER:
-                        break;
-                    case BOT_CLASS_WARRIOR:
-                    case BOT_CLASS_PALADIN:
-                    case BOT_CLASS_DEATH_KNIGHT:
-                    case BOT_CLASS_BM:
-                    case BOT_CLASS_SHAMAN:
-                    case BOT_CLASS_HUNTER:
-                    case BOT_CLASS_ROGUE:
-                    case BOT_CLASS_DRUID:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case ITEM_SUBCLASS_ARMOR_CLOTH:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        return false;
-                    case BOT_CLASS_DREADLORD:
-                    case BOT_CLASS_SPELLBREAKER:
-                    case BOT_CLASS_CRYPT_LORD:
-                        if (newProto->InventoryType != INVTYPE_CLOAK)
-                            return false;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case ITEM_SUBCLASS_ARMOR_MISC:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SPHYNX:
-                        return false;
-                    default:
-                        break;
-                }
-                break;
-            case ITEM_SUBCLASS_ARMOR_LIBRAM:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_PALADIN:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case ITEM_SUBCLASS_ARMOR_IDOL:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_DRUID:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case ITEM_SUBCLASS_ARMOR_TOTEM:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_SHAMAN:
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            case ITEM_SUBCLASS_ARMOR_SIGIL:
-                switch (_botclass)
-                {
-                    case BOT_CLASS_DEATH_KNIGHT:
-                        break;
-                    default:
-                        return false;
-                }
+            case BOT_CLASS_WARRIOR:
+            case BOT_CLASS_PALADIN:
+            case BOT_CLASS_SHAMAN:
                 break;
             default:
                 return false;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_PLATE:
+            switch (_botclass)
+            {
+            case BOT_CLASS_BM:
+            case BOT_CLASS_SPHYNX:
+            case BOT_CLASS_DREADLORD:
+            case BOT_CLASS_SPELLBREAKER:
+            case BOT_CLASS_CRYPT_LORD:
+                break;
+            case BOT_CLASS_WARRIOR:
+            case BOT_CLASS_PALADIN:
+            case BOT_CLASS_DEATH_KNIGHT:
+                if (me->GetLevel() >= 40 || newProto->Quality == ITEM_QUALITY_HEIRLOOM)
+                    break;
+                return false;
+            default:
+                return false;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_MAIL:
+            switch (_botclass)
+            {
+            case BOT_CLASS_BM:
+            case BOT_CLASS_SPHYNX:
+            case BOT_CLASS_SPELLBREAKER:
+            case BOT_CLASS_CRYPT_LORD:
+                break;
+            case BOT_CLASS_WARRIOR:
+            case BOT_CLASS_PALADIN:
+            case BOT_CLASS_DEATH_KNIGHT:
+                break;
+            case BOT_CLASS_SHAMAN:
+            case BOT_CLASS_HUNTER:
+                if (me->GetLevel() >= 40 || newProto->Quality == ITEM_QUALITY_HEIRLOOM)
+                    break;
+                return false;
+            default:
+                return false;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_LEATHER:
+            switch (_botclass)
+            {
+            case BOT_CLASS_DARK_RANGER:
+                break;
+            case BOT_CLASS_WARRIOR:
+            case BOT_CLASS_PALADIN:
+            case BOT_CLASS_DEATH_KNIGHT:
+            case BOT_CLASS_BM:
+            case BOT_CLASS_SHAMAN:
+            case BOT_CLASS_HUNTER:
+            case BOT_CLASS_ROGUE:
+            case BOT_CLASS_DRUID:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_CLOTH:
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
+                return false;
+            case BOT_CLASS_DREADLORD:
+            case BOT_CLASS_SPELLBREAKER:
+            case BOT_CLASS_CRYPT_LORD:
+                if (newProto->InventoryType != INVTYPE_CLOAK)
+                    return false;
+                break;
+            default:
+                break;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_MISC:
+            switch (_botclass)
+            {
+            case BOT_CLASS_SPHYNX:
+                return false;
+            default:
+                break;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_LIBRAM:
+            switch (_botclass)
+            {
+            case BOT_CLASS_PALADIN:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_IDOL:
+            switch (_botclass)
+            {
+            case BOT_CLASS_DRUID:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_TOTEM:
+            switch (_botclass)
+            {
+            case BOT_CLASS_SHAMAN:
+                break;
+            default:
+                return false;
+            }
+            break;
+        case ITEM_SUBCLASS_ARMOR_SIGIL:
+            switch (_botclass)
+            {
+            case BOT_CLASS_DEATH_KNIGHT:
+                break;
+            default:
+                return false;
+            }
+            break;
+        default:
+            return false;
         }
 
         return true;
@@ -12621,8 +13134,8 @@ bool bot_ai::_equip(uint8 slot, Item* newItem, ObjectGuid receiver)
     if (newItem->GetState() == ITEM_REMOVED)
     {
         LOG_ERROR("entities.player",
-            "minion_ai::_equip(): player {} ({}) is trying to make bot {} (id: {}) equip item: {} (id: {}, {}) which has state ITEM_REMOVED!",
-            master->GetName().c_str(), master->GetGUID().ToString().c_str(), me->GetName().c_str(), me->GetEntry(), proto->Name1.c_str(), proto->ItemId, newItem->GetGUID().ToString().c_str());
+                  "minion_ai::_equip(): player {} ({}) is trying to make bot {} (id: {}) equip item: {} (id: {}, {}) which has state ITEM_REMOVED!",
+                  master->GetName().c_str(), master->GetGUID().ToString().c_str(), me->GetName().c_str(), me->GetEntry(), proto->Name1.c_str(), proto->ItemId, newItem->GetGUID().ToString().c_str());
         return false;
     }
 
@@ -12655,8 +13168,8 @@ bool bot_ai::_equip(uint8 slot, Item* newItem, ObjectGuid receiver)
             //BotWhisper(msg.str().c_str());
 
             LOG_ERROR("entities.player",
-                "minion_ai::_equip(): player {} ({}) is trying to make bot {} (id: {}) equip item: {} (id: {}, {}) but either does not have this item or does not own it",
-                master->GetName().c_str(), master->GetGUID().ToString().c_str(), me->GetName().c_str(), me->GetEntry(), proto->Name1.c_str(), proto->ItemId, newItem->GetGUID().ToString().c_str());
+                      "minion_ai::_equip(): player {} ({}) is trying to make bot {} (id: {}) equip item: {} (id: {}, {}) but either does not have this item or does not own it",
+                      master->GetName().c_str(), master->GetGUID().ToString().c_str(), me->GetName().c_str(), me->GetEntry(), proto->Name1.c_str(), proto->ItemId, newItem->GetGUID().ToString().c_str());
             return false;
         }
 
@@ -12669,7 +13182,6 @@ bool bot_ai::_equip(uint8 slot, Item* newItem, ObjectGuid receiver)
     {
         if (CanChangeEquip(slot))
         {
-
             /*player_npcbot*/
             NpcBotTransmogData const* transmogData = NewSelectNpcBotTransmogs();
             // NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
@@ -12685,8 +13197,11 @@ bool bot_ai::_equip(uint8 slot, Item* newItem, ObjectGuid receiver)
         }
 
         uint32 delay =
-            /*einfo->ItemEntry[slot] != newItemId || */RespectEquipsAttackTime() || slot == BOT_SLOT_OFFHAND ? proto->Delay :
-            slot == BOT_SLOT_RANGED ? me->GetCreatureTemplate()->RangeAttackTime : me->GetCreatureTemplate()->BaseAttackTime;
+            /*einfo->ItemEntry[slot] != newItemId || */RespectEquipsAttackTime() || slot == BOT_SLOT_OFFHAND ?
+                                                           proto->Delay :
+                                                           slot == BOT_SLOT_RANGED ?
+                                                           me->GetCreatureTemplate()->RangeAttackTime :
+                                                           me->GetCreatureTemplate()->BaseAttackTime;
         //attack time will be updated in SetStats() -> OnMeleeDamageUpdate()
         if (!me->IsInFeralForm())
             me->SetAttackTime(WeaponAttackType(slot), delay); //set attack speed
@@ -12754,18 +13269,18 @@ void bot_ai::_updateEquips(uint8 slot, Item* item)
 {
     _equips[slot] = item;
     /*player_npcbot*/
-    NewUpdateNpcBotData( NPCBOT_UPDATE_EQUIPS, _equips);
+    NewUpdateNpcBotData(NPCBOT_UPDATE_EQUIPS, _equips);
     // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_EQUIPS, _equips);
     /*player_npcbot end*/
-
 }
+
 //Called from gossip menu only (applies only to weapons)
 bool bot_ai::_resetEquipment(uint8 slot, ObjectGuid receiver)
 {
     if (IsWanderer())
     {
         LOG_ERROR("scripts", "bot_ai::_resetEquipment() is called for wanderer bot {} ({}), slot {}!",
-            me->GetName().c_str(), me->GetEntry(), uint32(slot));
+                  me->GetName().c_str(), me->GetEntry(), uint32(slot));
         return false;
     }
 
@@ -12787,8 +13302,8 @@ bool bot_ai::_resetEquipment(uint8 slot, ObjectGuid receiver)
         {
             if (proto->Class == ITEM_CLASS_WEAPON &&
                 (proto->SubClass == ITEM_SUBCLASS_WEAPON_AXE2 || proto->SubClass == ITEM_SUBCLASS_WEAPON_MACE2 ||
-                proto->SubClass == ITEM_SUBCLASS_WEAPON_SWORD2 || proto->SubClass == ITEM_SUBCLASS_WEAPON_POLEARM ||
-                proto->SubClass == ITEM_SUBCLASS_WEAPON_STAFF || proto->SubClass == ITEM_SUBCLASS_WEAPON_SPEAR))
+                    proto->SubClass == ITEM_SUBCLASS_WEAPON_SWORD2 || proto->SubClass == ITEM_SUBCLASS_WEAPON_POLEARM ||
+                    proto->SubClass == ITEM_SUBCLASS_WEAPON_STAFF || proto->SubClass == ITEM_SUBCLASS_WEAPON_SPEAR))
             {
                 if (!_unequip(BOT_SLOT_OFFHAND, receiver))
                     return false;
@@ -12803,7 +13318,7 @@ bool bot_ai::_resetEquipment(uint8 slot, ObjectGuid receiver)
     if (!_equip(slot, stItem, receiver))
     {
         LOG_ERROR("entities.player", "minion_ai::_resetEquipment(): player {} ({}) failed to reset equipment for bot {} (id: {}) in slot {}",
-            master->GetName().c_str(), master->GetGUID().ToString().c_str(), me->GetName().c_str(), me->GetEntry(), slot);
+                  master->GetName().c_str(), master->GetGUID().ToString().c_str(), me->GetName().c_str(), me->GetEntry(), slot);
         return false;
     }
     return true;
@@ -12833,7 +13348,7 @@ void bot_ai::ApplyItemBonuses(uint8 slot)
     for (uint8 i = 0; i != MAX_ITEM_PROTO_STATS; ++i)
     {
         uint32 statType = 0;
-        int32  val      = 0;
+        int32 val = 0;
         if (ssd && ssv)
         {
             if (ssd->StatMod[i] < 0)
@@ -12900,7 +13415,7 @@ void bot_ai::ApplyItemBonuses(uint8 slot)
             feral_bonus += proto->getFeralBonus(dpsMod);
             if (feral_bonus)
                 _stats[slot][BOT_STAT_MOD_FERAL_ATTACK_POWER] += feral_bonus;
-                //ApplyFeralAPBonus(feral_bonus, apply);
+            //ApplyFeralAPBonus(feral_bonus, apply);
         }
     }
 
@@ -12960,57 +13475,57 @@ void bot_ai::ApplyItemEnchantment(Item* item, EnchantmentSlot eslot, uint8 slot)
 
         switch (enchant_display_type)
         {
-            case ITEM_ENCHANTMENT_TYPE_DAMAGE:
-                _stats[slot][BOT_STAT_MOD_DAMAGE_MIN] += enchant_amount;
-                _stats[slot][BOT_STAT_MOD_DAMAGE_MAX] += enchant_amount;
-                break;
-            case ITEM_ENCHANTMENT_TYPE_EQUIP_SPELL:
-                if (enchant_spell_id)
-                {
-                    int32 basepoints = 0;
-                    // Random Property Exist - try found basepoints for spell (basepoints depends from item suffix factor)
-                    if (item->GetItemRandomPropertyId())
-                    {
-                        ItemRandomSuffixEntry const* item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
-                        if (item_rand)
-                        {
-                            // Search enchant_amount
-                            for (uint8 k = 0; k != MAX_ITEM_ENCHANTMENT_EFFECTS; ++k)
-                            {
-                                if (item_rand->Enchantment[k] == enchant_id)
-                                {
-                                    basepoints = int32((item_rand->AllocationPct[k] * item->GetItemSuffixFactor()) / 10000);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    // Cast custom spell vs all equal basepoints got from enchant_amount
-                    if (basepoints)
-                        me->CastCustomSpell(me, enchant_spell_id, &basepoints, &basepoints, &basepoints, false, item);
-                    else
-                        me->CastSpell(me, enchant_spell_id, false, item);
-                }
-                break;
-            case ITEM_ENCHANTMENT_TYPE_RESISTANCE:
-                if (!enchant_amount)
+        case ITEM_ENCHANTMENT_TYPE_DAMAGE:
+            _stats[slot][BOT_STAT_MOD_DAMAGE_MIN] += enchant_amount;
+            _stats[slot][BOT_STAT_MOD_DAMAGE_MAX] += enchant_amount;
+            break;
+        case ITEM_ENCHANTMENT_TYPE_EQUIP_SPELL:
+            if (enchant_spell_id)
+            {
+                int32 basepoints = 0;
+                // Random Property Exist - try found basepoints for spell (basepoints depends from item suffix factor)
+                if (item->GetItemRandomPropertyId())
                 {
                     ItemRandomSuffixEntry const* item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
                     if (item_rand)
                     {
-                        for (uint8 k = 0; k < MAX_ITEM_ENCHANTMENT_EFFECTS; ++k)
+                        // Search enchant_amount
+                        for (uint8 k = 0; k != MAX_ITEM_ENCHANTMENT_EFFECTS; ++k)
                         {
                             if (item_rand->Enchantment[k] == enchant_id)
                             {
-                                enchant_amount = uint32((item_rand->AllocationPct[k] * item->GetItemSuffixFactor()) / 10000);
+                                basepoints = int32((item_rand->AllocationPct[k] * item->GetItemSuffixFactor()) / 10000);
                                 break;
                             }
                         }
                     }
                 }
-                _stats[slot][BOT_STAT_MOD_RESISTANCE_START + enchant_spell_id] += enchant_amount;
-                break;
-            case ITEM_ENCHANTMENT_TYPE_STAT:
+                // Cast custom spell vs all equal basepoints got from enchant_amount
+                if (basepoints)
+                    me->CastCustomSpell(me, enchant_spell_id, &basepoints, &basepoints, &basepoints, false, item);
+                else
+                    me->CastSpell(me, enchant_spell_id, false, item);
+            }
+            break;
+        case ITEM_ENCHANTMENT_TYPE_RESISTANCE:
+            if (!enchant_amount)
+            {
+                ItemRandomSuffixEntry const* item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
+                if (item_rand)
+                {
+                    for (uint8 k = 0; k < MAX_ITEM_ENCHANTMENT_EFFECTS; ++k)
+                    {
+                        if (item_rand->Enchantment[k] == enchant_id)
+                        {
+                            enchant_amount = uint32((item_rand->AllocationPct[k] * item->GetItemSuffixFactor()) / 10000);
+                            break;
+                        }
+                    }
+                }
+            }
+            _stats[slot][BOT_STAT_MOD_RESISTANCE_START + enchant_spell_id] += enchant_amount;
+            break;
+        case ITEM_ENCHANTMENT_TYPE_STAT:
             {
                 if (!enchant_amount)
                 {
@@ -13030,60 +13545,60 @@ void bot_ai::ApplyItemEnchantment(Item* item, EnchantmentSlot eslot, uint8 slot)
 
                 switch (enchant_spell_id)
                 {
-                    case ITEM_MOD_MANA:
-                    case ITEM_MOD_HEALTH:
-                    case ITEM_MOD_AGILITY:
-                    case ITEM_MOD_STRENGTH:
-                    case ITEM_MOD_INTELLECT:
-                    case ITEM_MOD_SPIRIT:
-                    case ITEM_MOD_STAMINA:
-                    case ITEM_MOD_DEFENSE_SKILL_RATING:
-                    case ITEM_MOD_DODGE_RATING:
-                    case ITEM_MOD_PARRY_RATING:
-                    case ITEM_MOD_BLOCK_RATING:
-                    case ITEM_MOD_HIT_MELEE_RATING:
-                    case ITEM_MOD_HIT_RANGED_RATING:
-                    case ITEM_MOD_HIT_SPELL_RATING:
-                    case ITEM_MOD_CRIT_MELEE_RATING:
-                    case ITEM_MOD_CRIT_RANGED_RATING:
-                    case ITEM_MOD_CRIT_SPELL_RATING:
-                    //case ITEM_MOD_HIT_TAKEN_MELEE_RATING:
-                    //case ITEM_MOD_HIT_TAKEN_RANGED_RATING:
-                    //case ITEM_MOD_HIT_TAKEN_SPELL_RATING:
-                    //case ITEM_MOD_CRIT_TAKEN_MELEE_RATING:
-                    //case ITEM_MOD_CRIT_TAKEN_RANGED_RATING:
-                    //case ITEM_MOD_CRIT_TAKEN_SPELL_RATING:
-                    case ITEM_MOD_HASTE_MELEE_RATING:
-                    case ITEM_MOD_HASTE_RANGED_RATING:
-                    case ITEM_MOD_HASTE_SPELL_RATING:
-                    case ITEM_MOD_HIT_RATING:
-                    case ITEM_MOD_CRIT_RATING:
-                    case ITEM_MOD_HASTE_RATING:
-                    case ITEM_MOD_RESILIENCE_RATING:
-                    case ITEM_MOD_EXPERTISE_RATING:
-                    case ITEM_MOD_ATTACK_POWER:
-                    case ITEM_MOD_RANGED_ATTACK_POWER:
-                    case ITEM_MOD_MANA_REGENERATION:
-                    case ITEM_MOD_ARMOR_PENETRATION_RATING:
-                    case ITEM_MOD_SPELL_POWER:
-                    case ITEM_MOD_HEALTH_REGEN:
-                    case ITEM_MOD_SPELL_PENETRATION:
-                    case ITEM_MOD_BLOCK_VALUE:
-                    case ITEM_MOD_SPELL_HEALING_DONE:   // deprecated
-                    case ITEM_MOD_SPELL_DAMAGE_DONE:    // deprecated
-                        _stats[slot][enchant_spell_id] += enchant_amount;
-                        break;
-                    default:
-                        break;
+                case ITEM_MOD_MANA:
+                case ITEM_MOD_HEALTH:
+                case ITEM_MOD_AGILITY:
+                case ITEM_MOD_STRENGTH:
+                case ITEM_MOD_INTELLECT:
+                case ITEM_MOD_SPIRIT:
+                case ITEM_MOD_STAMINA:
+                case ITEM_MOD_DEFENSE_SKILL_RATING:
+                case ITEM_MOD_DODGE_RATING:
+                case ITEM_MOD_PARRY_RATING:
+                case ITEM_MOD_BLOCK_RATING:
+                case ITEM_MOD_HIT_MELEE_RATING:
+                case ITEM_MOD_HIT_RANGED_RATING:
+                case ITEM_MOD_HIT_SPELL_RATING:
+                case ITEM_MOD_CRIT_MELEE_RATING:
+                case ITEM_MOD_CRIT_RANGED_RATING:
+                case ITEM_MOD_CRIT_SPELL_RATING:
+                //case ITEM_MOD_HIT_TAKEN_MELEE_RATING:
+                //case ITEM_MOD_HIT_TAKEN_RANGED_RATING:
+                //case ITEM_MOD_HIT_TAKEN_SPELL_RATING:
+                //case ITEM_MOD_CRIT_TAKEN_MELEE_RATING:
+                //case ITEM_MOD_CRIT_TAKEN_RANGED_RATING:
+                //case ITEM_MOD_CRIT_TAKEN_SPELL_RATING:
+                case ITEM_MOD_HASTE_MELEE_RATING:
+                case ITEM_MOD_HASTE_RANGED_RATING:
+                case ITEM_MOD_HASTE_SPELL_RATING:
+                case ITEM_MOD_HIT_RATING:
+                case ITEM_MOD_CRIT_RATING:
+                case ITEM_MOD_HASTE_RATING:
+                case ITEM_MOD_RESILIENCE_RATING:
+                case ITEM_MOD_EXPERTISE_RATING:
+                case ITEM_MOD_ATTACK_POWER:
+                case ITEM_MOD_RANGED_ATTACK_POWER:
+                case ITEM_MOD_MANA_REGENERATION:
+                case ITEM_MOD_ARMOR_PENETRATION_RATING:
+                case ITEM_MOD_SPELL_POWER:
+                case ITEM_MOD_HEALTH_REGEN:
+                case ITEM_MOD_SPELL_PENETRATION:
+                case ITEM_MOD_BLOCK_VALUE:
+                case ITEM_MOD_SPELL_HEALING_DONE: // deprecated
+                case ITEM_MOD_SPELL_DAMAGE_DONE: // deprecated
+                    _stats[slot][enchant_spell_id] += enchant_amount;
+                    break;
+                default:
+                    break;
                 }
                 break;
             }
-            case ITEM_ENCHANTMENT_TYPE_TOTEM:           // Shaman Rockbiter Weapon
-            case ITEM_ENCHANTMENT_TYPE_USE_SPELL:
-            case ITEM_ENCHANTMENT_TYPE_PRISMATIC_SOCKET:
-                break;
-            default:
-                break;
+        case ITEM_ENCHANTMENT_TYPE_TOTEM: // Shaman Rockbiter Weapon
+        case ITEM_ENCHANTMENT_TYPE_USE_SPELL:
+        case ITEM_ENCHANTMENT_TYPE_PRISMATIC_SOCKET:
+            break;
+        default:
+            break;
         }
     }
 }
@@ -13120,25 +13635,25 @@ void bot_ai::RemoveItemEnchantment(Item const* item, EnchantmentSlot eslot)
 
         switch (enchant_display_type)
         {
-            case ITEM_ENCHANTMENT_TYPE_DAMAGE:
-                //Already removed in RemoveItemBonuses()
-                break;
-            case ITEM_ENCHANTMENT_TYPE_EQUIP_SPELL:
-                if (enchant_spell_id)
-                    me->RemoveAurasDueToItemSpell(enchant_spell_id, item->GetGUID());
-                break;
-            case ITEM_ENCHANTMENT_TYPE_RESISTANCE:
-                //Already removed in RemoveItemBonuses()
-                break;
-            case ITEM_ENCHANTMENT_TYPE_STAT:
-                //Already removed in RemoveItemBonuses()
-                break;
-            case ITEM_ENCHANTMENT_TYPE_TOTEM:           // Shaman Rockbiter Weapon
-            case ITEM_ENCHANTMENT_TYPE_USE_SPELL:
-            case ITEM_ENCHANTMENT_TYPE_PRISMATIC_SOCKET:
-                break;
-            default:
-                break;
+        case ITEM_ENCHANTMENT_TYPE_DAMAGE:
+            //Already removed in RemoveItemBonuses()
+            break;
+        case ITEM_ENCHANTMENT_TYPE_EQUIP_SPELL:
+            if (enchant_spell_id)
+                me->RemoveAurasDueToItemSpell(enchant_spell_id, item->GetGUID());
+            break;
+        case ITEM_ENCHANTMENT_TYPE_RESISTANCE:
+            //Already removed in RemoveItemBonuses()
+            break;
+        case ITEM_ENCHANTMENT_TYPE_STAT:
+            //Already removed in RemoveItemBonuses()
+            break;
+        case ITEM_ENCHANTMENT_TYPE_TOTEM: // Shaman Rockbiter Weapon
+        case ITEM_ENCHANTMENT_TYPE_USE_SPELL:
+        case ITEM_ENCHANTMENT_TYPE_PRISMATIC_SOCKET:
+            break;
+        default:
+            break;
         }
     }
 }
@@ -13158,7 +13673,7 @@ void bot_ai::RemoveItemClassEnchants()
         RemoveItemEnchantment(weap, EnchantmentSlot(eslot));
 
         for (uint8 i = 0; i != MAX_SPELL_ITEM_ENCHANTMENT_EFFECTS; ++i)
-            weap->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + eslot*MAX_ENCHANTMENT_OFFSET + i, 0);
+            weap->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + eslot * MAX_ENCHANTMENT_OFFSET + i, 0);
     }
 }
 
@@ -13199,7 +13714,7 @@ void bot_ai::ApplyItemEquipSpells(Item* item, bool apply)
             //me->CastSpell(me, spellInfo->Id, args);
             me->CastSpell(me, spellInfo, false, item);
         else
-            me->RemoveAurasDueToItemSpell(spellInfo->Id, item->GetGUID());  // un-apply all spells, not only at-equipped
+            me->RemoveAurasDueToItemSpell(spellInfo->Id, item->GetGUID()); // un-apply all spells, not only at-equipped
     }
 }
 
@@ -13228,7 +13743,7 @@ void bot_ai::ApplyItemEquipEnchantmentSpells(Item* item)
 
             switch (enchant_display_type)
             {
-                case ITEM_ENCHANTMENT_TYPE_EQUIP_SPELL:
+            case ITEM_ENCHANTMENT_TYPE_EQUIP_SPELL:
                 {
                     if (!enchant_spell_id)
                         break;
@@ -13257,8 +13772,8 @@ void bot_ai::ApplyItemEquipEnchantmentSpells(Item* item)
                         me->CastSpell(me, enchant_spell_id, false, item);
                     break;
                 }
-                default:
-                    break;
+            default:
+                break;
             }
         }
     }
@@ -13306,7 +13821,7 @@ void bot_ai::ApplyItemSetBonuses(Item* item, bool apply)
                 me->CastSpell(me, spellInfo, false, item);
             }
             else
-                me->RemoveAurasDueToSpell(spellInfo->Id);           // un-apply spell (item set case)
+                me->RemoveAurasDueToSpell(spellInfo->Id); // un-apply spell (item set case)
         }
         return;
     }
@@ -13363,10 +13878,9 @@ void bot_ai::ApplyItemSetBonuses(Item* item, bool apply)
                 //CastSpellExtraArgs args(item);
                 //me->CastSpell(me, spellInfo->Id, args);
                 me->CastSpell(me, spellInfo, false, item);
-
             }
             else
-                me->RemoveAurasDueToSpell(spellInfo->Id);           // un-apply spell (item set case)
+                me->RemoveAurasDueToSpell(spellInfo->Id); // un-apply spell (item set case)
         }
     }
 }
@@ -13384,6 +13898,7 @@ void bot_ai::ApplyItemsSpells()
 
     ApplyItemSetBonuses(nullptr, true); //item set bonuses
 }
+
 //stats bonuses from equipment
 inline float bot_ai::_getBotStat(uint8 slot, BotStatMods stat) const
 {
@@ -13401,224 +13916,224 @@ float bot_ai::_getTotalBotStat(BotStatMods stat) const
 
     switch (stat)
     {
-        case BOT_STAT_MOD_STRENGTH:
-            fval += me->GetTotalStatValue(STAT_STRENGTH);
-            switch (_botclass)
-            {
-                case BOT_CLASS_WARRIOR:
-                    //Vitality, Strength of Arms
-                    if (lvl >= 45 && GetSpec() == BOT_SPEC_WARRIOR_PROTECTION)
-                        fval *= 1.06f;
-                    if (lvl >= 40 && GetSpec() == BOT_SPEC_WARRIOR_ARMS)
-                        fval *= 1.04f;
-                    //Improved Berserker Stance part 1 (all stances)
-                    if (lvl >= 45 && GetSpec() == BOT_SPEC_WARRIOR_FURY/* && GetBotStance() == WARRIOR_BERSERKER_STANCE*/)
-                        fval *= 1.2f;
-                    break;
-                case BOT_CLASS_PALADIN:
-                    //Divine Strength
-                    if (lvl >= 10)
-                        fval *= 1.15f;
-                    break;
-                case BOT_CLASS_DEATH_KNIGHT:
-                    //Ravenous Dead part 1
-                    //Endless Winter part 1
-                    //Veteran of the Third War part 1
-                    //Abomination's might part 2
-                    if (lvl >= 56)
-                        fval *= 1.03f;
-                    if (lvl >= 58)
-                        fval *= 1.04f;
-                    if (lvl >= 59 && GetSpec() == BOT_SPEC_DK_BLOOD)
-                        fval *= 1.06f;
-                    if (lvl >= 60 && GetSpec() == BOT_SPEC_DK_BLOOD)
-                        fval *= 1.02f;
-                    //Frost Presence passive / Improved Frost Presence
-                    if (lvl >= 61 && GetBotStance() == DEATH_KNIGHT_FROST_PRESENCE && GetSpec() == BOT_SPEC_DK_FROST)
-                        fval *= 1.08f;
-                    break;
-                case BOT_CLASS_DRUID:
-                    //Survival of the Fittest, Improved Mark of the Wild
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
-                        fval *= 1.08f;
-                    else if (lvl >= 10)
-                        fval *= 1.02f;
-                    break;
-                default:
-                    break;
-            }
+    case BOT_STAT_MOD_STRENGTH:
+        fval += me->GetTotalStatValue(STAT_STRENGTH);
+        switch (_botclass)
+        {
+        case BOT_CLASS_WARRIOR:
+            //Vitality, Strength of Arms
+            if (lvl >= 45 && GetSpec() == BOT_SPEC_WARRIOR_PROTECTION)
+                fval *= 1.06f;
+            if (lvl >= 40 && GetSpec() == BOT_SPEC_WARRIOR_ARMS)
+                fval *= 1.04f;
+        //Improved Berserker Stance part 1 (all stances)
+            if (lvl >= 45 && GetSpec() == BOT_SPEC_WARRIOR_FURY/* && GetBotStance() == WARRIOR_BERSERKER_STANCE*/)
+                fval *= 1.2f;
             break;
-        case BOT_STAT_MOD_AGILITY:
-            fval += me->GetTotalStatValue(STAT_AGILITY);
-            switch (_botclass)
-            {
-                case BOT_CLASS_HUNTER:
-                    //Combat Experience, Lightning Reflexes
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_HUNTER_MARKSMANSHIP)
-                        fval *= 1.04f;
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_HUNTER_SURVIVAL)
-                        fval *= 1.15f;
-                    //Hunting Party
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_HUNTER_SURVIVAL)
-                        fval *= 1.03f;
-                    break;
-                case BOT_CLASS_ROGUE:
-                    //Sinister Calling
-                    if (lvl >= 45 && GetSpec() == BOT_SPEC_ROGUE_SUBTLETY)
-                        fval *= 1.15f;
-                    break;
-                case BOT_CLASS_DRUID:
-                    //Survival of the Fittest, Improved Mark of the Wild
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
-                        fval *= 1.08f;
-                    else if (lvl >= 10)
-                        fval *= 1.02f;
-                    break;
-                default:
-                    break;
-            }
+        case BOT_CLASS_PALADIN:
+            //Divine Strength
+            if (lvl >= 10)
+                fval *= 1.15f;
             break;
-        case BOT_STAT_MOD_STAMINA:
-            fval += me->GetTotalStatValue(STAT_STAMINA);
-            switch (_botclass)
-            {
-                case BOT_CLASS_WARRIOR:
-                    //Vitality, Strength of Arms
-                    if (lvl >= 45 && GetSpec() == BOT_SPEC_WARRIOR_PROTECTION)
-                        fval *= 1.09f;
-                    if (lvl >= 40 && GetSpec() == BOT_SPEC_WARRIOR_ARMS)
-                        fval *= 1.04f;
-                    break;
-                case BOT_CLASS_PALADIN:
-                    //Combat Expertise, Sacred Duty
-                    if (lvl >= 45 && GetSpec() == BOT_SPEC_PALADIN_PROTECTION)
-                        fval *= 1.06f;
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_PALADIN_PROTECTION)
-                        fval *= 1.04f;
-                    break;
-                case BOT_CLASS_HUNTER:
-                    //Survivalist
-                    if (lvl >= 20)
-                        fval *= 1.1f;
-                    break;
-                case BOT_CLASS_ROGUE:
-                    //Lightning Reflexes part 2
-                    if (lvl >= 25 && GetSpec() == BOT_SPEC_ROGUE_COMBAT)
-                        fval *= 1.04f;
-                    break;
-                case BOT_CLASS_PRIEST:
-                    //Improved Power Word: Fortitude
-                    if (lvl >= 15)
-                        fval *= 1.04f;
-                    break;
-                case BOT_CLASS_DEATH_KNIGHT:
-                    //Veteran of the Third War part 2
-                    if (lvl >= 59 && GetSpec() == BOT_SPEC_DK_BLOOD)
-                        fval *= 1.03f;
-                    break;
-                case BOT_CLASS_WARLOCK:
-                    //Demonic Embrace: 10% stam bonus
-                    if (lvl >= 10)
-                        fval *= 1.1f;
-                    break;
-                case BOT_CLASS_DRUID:
-                    if (GetBotStance() == DRUID_BEAR_FORM)
-                    {
-                        //Bear form: stamina bonus base 25%
-                        //Heart of the Wild: 10% stam bonus for bear
-                        fval *= 1.25f;
-                        if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
-                            fval *= 1.1f;
-                    }
-                    //Survival of the Fittest, Improved Mark of the Wild
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
-                        fval *= 1.06f;
-                    if (lvl >= 10)
-                        fval *= 1.02f;
-                    break;
-                default:
-                    break;
-            }
+        case BOT_CLASS_DEATH_KNIGHT:
+            //Ravenous Dead part 1
+            //Endless Winter part 1
+            //Veteran of the Third War part 1
+            //Abomination's might part 2
+            if (lvl >= 56)
+                fval *= 1.03f;
+            if (lvl >= 58)
+                fval *= 1.04f;
+            if (lvl >= 59 && GetSpec() == BOT_SPEC_DK_BLOOD)
+                fval *= 1.06f;
+            if (lvl >= 60 && GetSpec() == BOT_SPEC_DK_BLOOD)
+                fval *= 1.02f;
+        //Frost Presence passive / Improved Frost Presence
+            if (lvl >= 61 && GetBotStance() == DEATH_KNIGHT_FROST_PRESENCE && GetSpec() == BOT_SPEC_DK_FROST)
+                fval *= 1.08f;
             break;
-        case BOT_STAT_MOD_INTELLECT:
-            fval += me->GetTotalStatValue(STAT_INTELLECT);
-            switch (_botclass)
-            {
-                case BOT_CLASS_PALADIN:
-                    //Divine Intellect
-                    if (lvl >= 15)
-                        fval *= 1.1f;
-                    break;
-                case BOT_CLASS_HUNTER:
-                    //Combat Experience
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_HUNTER_MARKSMANSHIP)
-                        fval *= 1.04f;
-                    break;
-                case BOT_CLASS_MAGE:
-                    //Arcane Mind
-                    if (lvl >= 30 && GetSpec() == BOT_SPEC_MAGE_ARCANE)
-                        fval *= 1.15f;
-                    break;
-                case BOT_CLASS_PRIEST:
-                    //Mental Strength
-                    if (lvl >= 30 && GetSpec() == BOT_SPEC_PRIEST_DISCIPLINE)
-                        fval *= 1.15f;
-                    break;
-                case BOT_CLASS_SHAMAN:
-                    //Ancestral Knowledge
-                    if (lvl >= 10)
-                        fval *= 1.1f;
-                    break;
-                case BOT_CLASS_DRUID:
-                    //Survival of the Fittest, Improved Mark of the Wild
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
-                        fval *= 1.08f;
-                    else if (lvl >= 10)
-                        fval *= 1.02f;
-                    //Furor (Moonkin Form)
-                    if (GetBotStance() == DRUID_MOONKIN_FORM)
-                        fval *= 1.1f;
-                    //Heart of the Wild: ferals only (tanks included)
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
-                        fval *= 1.2f;
-                    break;
-                default:
-                    break;
-            }
-            break;
-        case BOT_STAT_MOD_SPIRIT:
-            fval += me->GetTotalStatValue(STAT_SPIRIT);
-            switch (_botclass)
-            {
-                case BOT_CLASS_PRIEST:
-                    //Spirit of Redemption part 1
-                    if (lvl >= 30 && GetSpec() == BOT_SPEC_PRIEST_HOLY)
-                        fval *= 1.05f;
-                    //Enlightenment part 1
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_PRIEST_DISCIPLINE)
-                        fval *= 1.06f;
-                    break;
-                case BOT_CLASS_MAGE:
-                    //Student of the Mind
-                    if (lvl >= 20)
-                        fval *= 1.1f;
-                    break;
-                case BOT_CLASS_DRUID:
-                    //Survival of the Fittest, Improved Mark of the Wild
-                    if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
-                        fval *= 1.08f;
-                    else if (lvl >= 10)
-                        fval *= 1.02f;
-                    //Living Spirit
-                    if (lvl >= 40 && GetSpec() == BOT_SPEC_DRUID_RESTORATION)
-                        fval *= 1.15f;
-                    break;
-                default:
-                    break;
-            }
+        case BOT_CLASS_DRUID:
+            //Survival of the Fittest, Improved Mark of the Wild
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
+                fval *= 1.08f;
+            else if (lvl >= 10)
+                fval *= 1.02f;
             break;
         default:
             break;
+        }
+        break;
+    case BOT_STAT_MOD_AGILITY:
+        fval += me->GetTotalStatValue(STAT_AGILITY);
+        switch (_botclass)
+        {
+        case BOT_CLASS_HUNTER:
+            //Combat Experience, Lightning Reflexes
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_HUNTER_MARKSMANSHIP)
+                fval *= 1.04f;
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_HUNTER_SURVIVAL)
+                fval *= 1.15f;
+        //Hunting Party
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_HUNTER_SURVIVAL)
+                fval *= 1.03f;
+            break;
+        case BOT_CLASS_ROGUE:
+            //Sinister Calling
+            if (lvl >= 45 && GetSpec() == BOT_SPEC_ROGUE_SUBTLETY)
+                fval *= 1.15f;
+            break;
+        case BOT_CLASS_DRUID:
+            //Survival of the Fittest, Improved Mark of the Wild
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
+                fval *= 1.08f;
+            else if (lvl >= 10)
+                fval *= 1.02f;
+            break;
+        default:
+            break;
+        }
+        break;
+    case BOT_STAT_MOD_STAMINA:
+        fval += me->GetTotalStatValue(STAT_STAMINA);
+        switch (_botclass)
+        {
+        case BOT_CLASS_WARRIOR:
+            //Vitality, Strength of Arms
+            if (lvl >= 45 && GetSpec() == BOT_SPEC_WARRIOR_PROTECTION)
+                fval *= 1.09f;
+            if (lvl >= 40 && GetSpec() == BOT_SPEC_WARRIOR_ARMS)
+                fval *= 1.04f;
+            break;
+        case BOT_CLASS_PALADIN:
+            //Combat Expertise, Sacred Duty
+            if (lvl >= 45 && GetSpec() == BOT_SPEC_PALADIN_PROTECTION)
+                fval *= 1.06f;
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_PALADIN_PROTECTION)
+                fval *= 1.04f;
+            break;
+        case BOT_CLASS_HUNTER:
+            //Survivalist
+            if (lvl >= 20)
+                fval *= 1.1f;
+            break;
+        case BOT_CLASS_ROGUE:
+            //Lightning Reflexes part 2
+            if (lvl >= 25 && GetSpec() == BOT_SPEC_ROGUE_COMBAT)
+                fval *= 1.04f;
+            break;
+        case BOT_CLASS_PRIEST:
+            //Improved Power Word: Fortitude
+            if (lvl >= 15)
+                fval *= 1.04f;
+            break;
+        case BOT_CLASS_DEATH_KNIGHT:
+            //Veteran of the Third War part 2
+            if (lvl >= 59 && GetSpec() == BOT_SPEC_DK_BLOOD)
+                fval *= 1.03f;
+            break;
+        case BOT_CLASS_WARLOCK:
+            //Demonic Embrace: 10% stam bonus
+            if (lvl >= 10)
+                fval *= 1.1f;
+            break;
+        case BOT_CLASS_DRUID:
+            if (GetBotStance() == DRUID_BEAR_FORM)
+            {
+                //Bear form: stamina bonus base 25%
+                //Heart of the Wild: 10% stam bonus for bear
+                fval *= 1.25f;
+                if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
+                    fval *= 1.1f;
+            }
+        //Survival of the Fittest, Improved Mark of the Wild
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
+                fval *= 1.06f;
+            if (lvl >= 10)
+                fval *= 1.02f;
+            break;
+        default:
+            break;
+        }
+        break;
+    case BOT_STAT_MOD_INTELLECT:
+        fval += me->GetTotalStatValue(STAT_INTELLECT);
+        switch (_botclass)
+        {
+        case BOT_CLASS_PALADIN:
+            //Divine Intellect
+            if (lvl >= 15)
+                fval *= 1.1f;
+            break;
+        case BOT_CLASS_HUNTER:
+            //Combat Experience
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_HUNTER_MARKSMANSHIP)
+                fval *= 1.04f;
+            break;
+        case BOT_CLASS_MAGE:
+            //Arcane Mind
+            if (lvl >= 30 && GetSpec() == BOT_SPEC_MAGE_ARCANE)
+                fval *= 1.15f;
+            break;
+        case BOT_CLASS_PRIEST:
+            //Mental Strength
+            if (lvl >= 30 && GetSpec() == BOT_SPEC_PRIEST_DISCIPLINE)
+                fval *= 1.15f;
+            break;
+        case BOT_CLASS_SHAMAN:
+            //Ancestral Knowledge
+            if (lvl >= 10)
+                fval *= 1.1f;
+            break;
+        case BOT_CLASS_DRUID:
+            //Survival of the Fittest, Improved Mark of the Wild
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
+                fval *= 1.08f;
+            else if (lvl >= 10)
+                fval *= 1.02f;
+        //Furor (Moonkin Form)
+            if (GetBotStance() == DRUID_MOONKIN_FORM)
+                fval *= 1.1f;
+        //Heart of the Wild: ferals only (tanks included)
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
+                fval *= 1.2f;
+            break;
+        default:
+            break;
+        }
+        break;
+    case BOT_STAT_MOD_SPIRIT:
+        fval += me->GetTotalStatValue(STAT_SPIRIT);
+        switch (_botclass)
+        {
+        case BOT_CLASS_PRIEST:
+            //Spirit of Redemption part 1
+            if (lvl >= 30 && GetSpec() == BOT_SPEC_PRIEST_HOLY)
+                fval *= 1.05f;
+        //Enlightenment part 1
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_PRIEST_DISCIPLINE)
+                fval *= 1.06f;
+            break;
+        case BOT_CLASS_MAGE:
+            //Student of the Mind
+            if (lvl >= 20)
+                fval *= 1.1f;
+            break;
+        case BOT_CLASS_DRUID:
+            //Survival of the Fittest, Improved Mark of the Wild
+            if (lvl >= 35 && GetSpec() == BOT_SPEC_DRUID_FERAL)
+                fval *= 1.08f;
+            else if (lvl >= 10)
+                fval *= 1.02f;
+        //Living Spirit
+            if (lvl >= 40 && GetSpec() == BOT_SPEC_DRUID_RESTORATION)
+                fval *= 1.15f;
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
     }
 
     return fval;
@@ -13626,8 +14141,8 @@ float bot_ai::_getTotalBotStat(BotStatMods stat) const
 
 inline float bot_ai::_getRatingMultiplier(CombatRating cr) const
 {
-    GtCombatRatingsEntry const* Rating = sGtCombatRatingsStore.LookupEntry(cr*GT_MAX_LEVEL + (me->GetLevel()-1));
-    GtOCTClassCombatRatingScalarEntry const* classRating = sGtOCTClassCombatRatingScalarStore.LookupEntry((GetPlayerClass()-1)*GT_MAX_RATING + cr + 1);
+    GtCombatRatingsEntry const* Rating = sGtCombatRatingsStore.LookupEntry(cr * GT_MAX_LEVEL + (me->GetLevel() - 1));
+    GtOCTClassCombatRatingScalarEntry const* classRating = sGtOCTClassCombatRatingScalarStore.LookupEntry((GetPlayerClass() - 1) * GT_MAX_RATING + cr + 1);
     if (!Rating || !classRating)
         return 1.0f;
 
@@ -13649,94 +14164,98 @@ float bot_ai::_getStatScore(uint8 stat) const
 
     switch (stat)
     {
-        case BOT_STAT_MOD_MANA:
-            return 0.1f * manaMod;
-        case BOT_STAT_MOD_HEALTH:
-            return 0.1f;
-        case BOT_STAT_MOD_AGILITY:
-            return _botclass == BOT_CLASS_ROGUE ? 1.2f * dpsMod * meleeMod : (_botclass == BOT_CLASS_HUNTER ? 1.0f : 0.5f) * dpsMod;
-        case BOT_STAT_MOD_STRENGTH:
-            return (IsMeleeClass(_botclass) ? 1.0f : 0.5f) * dpsMod * meleeMod;
-        case BOT_STAT_MOD_INTELLECT:
-            return 1.0f * castMod;
-        case BOT_STAT_MOD_SPIRIT:
-            return 1.0f * spiritMod;
-        case BOT_STAT_MOD_STAMINA:
-            return IsTank() ? 2.0f : 1.0f;
-        case BOT_STAT_MOD_DEFENSE_SKILL_RATING:
-            return 2.0f * tankMod;
-        case BOT_STAT_MOD_DODGE_RATING:
-        case BOT_STAT_MOD_PARRY_RATING:
-            return 2.0f * tankMod;
-        case BOT_STAT_MOD_BLOCK_RATING:
-            return CanBlock() ? 2.0f : 0.0f * tankMod;
-        case BOT_STAT_MOD_BLOCK_VALUE:
-            return CanBlock() ? 0.67f : 0.0f * tankMod;
-        case BOT_STAT_MOD_HIT_TAKEN_RATING:
-        case BOT_STAT_MOD_CRIT_TAKEN_RATING:
-            return 1.0f * tankMod;
-        case BOT_STAT_MOD_HIT_TAKEN_MELEE_RATING:
-        case BOT_STAT_MOD_HIT_TAKEN_RANGED_RATING:
-        case BOT_STAT_MOD_HIT_TAKEN_SPELL_RATING:
-        case BOT_STAT_MOD_CRIT_TAKEN_MELEE_RATING:
-        case BOT_STAT_MOD_CRIT_TAKEN_RANGED_RATING:
-        case BOT_STAT_MOD_CRIT_TAKEN_SPELL_RATING:
-            return 0.4f * tankMod;
-        case BOT_STAT_MOD_ARMOR:
-            return 0.05f * tankMod;
-        case BOT_STAT_MOD_HIT_MELEE_RATING:
-        case BOT_STAT_MOD_HIT_RANGED_RATING:
-        case BOT_STAT_MOD_HIT_SPELL_RATING:
-            return 1.0f * dpsMod;
-        case BOT_STAT_MOD_CRIT_MELEE_RATING:
-        case BOT_STAT_MOD_CRIT_RANGED_RATING:
-        case BOT_STAT_MOD_CRIT_SPELL_RATING:
-        case BOT_STAT_MOD_HASTE_MELEE_RATING:
-        case BOT_STAT_MOD_HASTE_RANGED_RATING:
-        case BOT_STAT_MOD_HASTE_SPELL_RATING:
-        case BOT_STAT_MOD_HIT_RATING:
-        case BOT_STAT_MOD_CRIT_RATING:
-        case BOT_STAT_MOD_HASTE_RATING:
-            return HasRole(BOT_ROLE_DPS|BOT_ROLE_HEAL) ? 1.0f : 0.0f;
-        case BOT_STAT_MOD_EXPERTISE_RATING:
-            return 2.0f * dpsMod * meleeMod;
-        case BOT_STAT_MOD_ATTACK_POWER:
-            return ((IsMeleeClass(_botclass) || _botclass == BOT_CLASS_HUNTER) ? 0.43f : 0.1f) * dpsMod;
-        case BOT_STAT_MOD_RANGED_ATTACK_POWER:
-            switch (_botclass)
-            {
-                case BOT_CLASS_HUNTER: case BOT_CLASS_DARK_RANGER: case BOT_CLASS_SEA_WITCH:    return 0.43f * dpsMod;
-                case BOT_CLASS_PRIEST: case BOT_CLASS_MAGE: case BOT_CLASS_WARLOCK:             return 0.15f * dpsMod;
-                default:                                                                        return 0.0f;
-            }
-        case BOT_STAT_MOD_FERAL_ATTACK_POWER:
-            return GetSpec() == BOT_SPEC_DRUID_FERAL ? 0.43f : 0.0f;
-        case BOT_STAT_MOD_SPELL_HEALING_DONE:
-            return 1.25f * healMod;
-        case BOT_STAT_MOD_SPELL_DAMAGE_DONE:
-            return 1.25f * dpsMod * castMod;
-        case BOT_STAT_MOD_MANA_REGENERATION:
-            return _botclass == BOT_CLASS_SPHYNX ? 0.0f : 1.2f * manaMod;
-        case BOT_STAT_MOD_ARMOR_PENETRATION_RATING:
-            return 2.0f * dpsMod * meleeMod;
-        case BOT_STAT_MOD_SPELL_POWER:
-            return 1.25f * castMod;
-        case BOT_STAT_MOD_HEALTH_REGEN:
-            return 0.33f * tankMod;
-        case BOT_STAT_MOD_SPELL_PENETRATION:
-            return 1.2f * castMod * dpsMod;
-        case BOT_STAT_MOD_DAMAGE_MIN:
-        case BOT_STAT_MOD_DAMAGE_MAX:
-            return ((IsMeleeClass(_botclass) || _botclass == BOT_CLASS_HUNTER) ? 0.33f : 0.0f) * dpsMod;
-        case BOT_STAT_MOD_RESIST_HOLY:
-        case BOT_STAT_MOD_RESIST_FIRE:
-        case BOT_STAT_MOD_RESIST_NATURE:
-        case BOT_STAT_MOD_RESIST_FROST:
-        case BOT_STAT_MOD_RESIST_SHADOW:
-        case BOT_STAT_MOD_RESIST_ARCANE:
-            return IsTank() ? 1.25f : 0.25f;
-        default:
-            return 0.0f;
+    case BOT_STAT_MOD_MANA:
+        return 0.1f * manaMod;
+    case BOT_STAT_MOD_HEALTH:
+        return 0.1f;
+    case BOT_STAT_MOD_AGILITY:
+        return _botclass == BOT_CLASS_ROGUE ? 1.2f * dpsMod * meleeMod : (_botclass == BOT_CLASS_HUNTER ? 1.0f : 0.5f) * dpsMod;
+    case BOT_STAT_MOD_STRENGTH:
+        return (IsMeleeClass(_botclass) ? 1.0f : 0.5f) * dpsMod * meleeMod;
+    case BOT_STAT_MOD_INTELLECT:
+        return 1.0f * castMod;
+    case BOT_STAT_MOD_SPIRIT:
+        return 1.0f * spiritMod;
+    case BOT_STAT_MOD_STAMINA:
+        return IsTank() ? 2.0f : 1.0f;
+    case BOT_STAT_MOD_DEFENSE_SKILL_RATING:
+        return 2.0f * tankMod;
+    case BOT_STAT_MOD_DODGE_RATING:
+    case BOT_STAT_MOD_PARRY_RATING:
+        return 2.0f * tankMod;
+    case BOT_STAT_MOD_BLOCK_RATING:
+        return CanBlock() ? 2.0f : 0.0f * tankMod;
+    case BOT_STAT_MOD_BLOCK_VALUE:
+        return CanBlock() ? 0.67f : 0.0f * tankMod;
+    case BOT_STAT_MOD_HIT_TAKEN_RATING:
+    case BOT_STAT_MOD_CRIT_TAKEN_RATING:
+        return 1.0f * tankMod;
+    case BOT_STAT_MOD_HIT_TAKEN_MELEE_RATING:
+    case BOT_STAT_MOD_HIT_TAKEN_RANGED_RATING:
+    case BOT_STAT_MOD_HIT_TAKEN_SPELL_RATING:
+    case BOT_STAT_MOD_CRIT_TAKEN_MELEE_RATING:
+    case BOT_STAT_MOD_CRIT_TAKEN_RANGED_RATING:
+    case BOT_STAT_MOD_CRIT_TAKEN_SPELL_RATING:
+        return 0.4f * tankMod;
+    case BOT_STAT_MOD_ARMOR:
+        return 0.05f * tankMod;
+    case BOT_STAT_MOD_HIT_MELEE_RATING:
+    case BOT_STAT_MOD_HIT_RANGED_RATING:
+    case BOT_STAT_MOD_HIT_SPELL_RATING:
+        return 1.0f * dpsMod;
+    case BOT_STAT_MOD_CRIT_MELEE_RATING:
+    case BOT_STAT_MOD_CRIT_RANGED_RATING:
+    case BOT_STAT_MOD_CRIT_SPELL_RATING:
+    case BOT_STAT_MOD_HASTE_MELEE_RATING:
+    case BOT_STAT_MOD_HASTE_RANGED_RATING:
+    case BOT_STAT_MOD_HASTE_SPELL_RATING:
+    case BOT_STAT_MOD_HIT_RATING:
+    case BOT_STAT_MOD_CRIT_RATING:
+    case BOT_STAT_MOD_HASTE_RATING:
+        return HasRole(BOT_ROLE_DPS | BOT_ROLE_HEAL) ? 1.0f : 0.0f;
+    case BOT_STAT_MOD_EXPERTISE_RATING:
+        return 2.0f * dpsMod * meleeMod;
+    case BOT_STAT_MOD_ATTACK_POWER:
+        return ((IsMeleeClass(_botclass) || _botclass == BOT_CLASS_HUNTER) ? 0.43f : 0.1f) * dpsMod;
+    case BOT_STAT_MOD_RANGED_ATTACK_POWER:
+        switch (_botclass)
+        {
+        case BOT_CLASS_HUNTER:
+        case BOT_CLASS_DARK_RANGER:
+        case BOT_CLASS_SEA_WITCH: return 0.43f * dpsMod;
+        case BOT_CLASS_PRIEST:
+        case BOT_CLASS_MAGE:
+        case BOT_CLASS_WARLOCK: return 0.15f * dpsMod;
+        default: return 0.0f;
+        }
+    case BOT_STAT_MOD_FERAL_ATTACK_POWER:
+        return GetSpec() == BOT_SPEC_DRUID_FERAL ? 0.43f : 0.0f;
+    case BOT_STAT_MOD_SPELL_HEALING_DONE:
+        return 1.25f * healMod;
+    case BOT_STAT_MOD_SPELL_DAMAGE_DONE:
+        return 1.25f * dpsMod * castMod;
+    case BOT_STAT_MOD_MANA_REGENERATION:
+        return _botclass == BOT_CLASS_SPHYNX ? 0.0f : 1.2f * manaMod;
+    case BOT_STAT_MOD_ARMOR_PENETRATION_RATING:
+        return 2.0f * dpsMod * meleeMod;
+    case BOT_STAT_MOD_SPELL_POWER:
+        return 1.25f * castMod;
+    case BOT_STAT_MOD_HEALTH_REGEN:
+        return 0.33f * tankMod;
+    case BOT_STAT_MOD_SPELL_PENETRATION:
+        return 1.2f * castMod * dpsMod;
+    case BOT_STAT_MOD_DAMAGE_MIN:
+    case BOT_STAT_MOD_DAMAGE_MAX:
+        return ((IsMeleeClass(_botclass) || _botclass == BOT_CLASS_HUNTER) ? 0.33f : 0.0f) * dpsMod;
+    case BOT_STAT_MOD_RESIST_HOLY:
+    case BOT_STAT_MOD_RESIST_FIRE:
+    case BOT_STAT_MOD_RESIST_NATURE:
+    case BOT_STAT_MOD_RESIST_FROST:
+    case BOT_STAT_MOD_RESIST_SHADOW:
+    case BOT_STAT_MOD_RESIST_ARCANE:
+        return IsTank() ? 1.25f : 0.25f;
+    default:
+        return 0.0f;
     }
 }
 
@@ -13763,7 +14282,7 @@ float bot_ai::_getItemGearStatScore(ItemTemplate const* iproto, uint8 forslot, I
     for (uint8 i = 0; i != MAX_ITEM_PROTO_STATS; ++i)
     {
         uint32 statType = 0;
-        int32  val      = 0;
+        int32 val = 0;
         if (ssd && ssv)
         {
             if (ssd->StatMod[i] < 0)
@@ -13856,29 +14375,29 @@ float bot_ai::_getItemGearStatScore(ItemTemplate const* iproto, uint8 forslot, I
 
             switch (enchant_display_type)
             {
-                case ITEM_ENCHANTMENT_TYPE_DAMAGE:
-                    istats[BOT_STAT_MOD_DAMAGE_MIN] += enchant_amount;
-                    istats[BOT_STAT_MOD_DAMAGE_MAX] += enchant_amount;
-                    break;
-                case ITEM_ENCHANTMENT_TYPE_RESISTANCE:
-                    if (!enchant_amount)
+            case ITEM_ENCHANTMENT_TYPE_DAMAGE:
+                istats[BOT_STAT_MOD_DAMAGE_MIN] += enchant_amount;
+                istats[BOT_STAT_MOD_DAMAGE_MAX] += enchant_amount;
+                break;
+            case ITEM_ENCHANTMENT_TYPE_RESISTANCE:
+                if (!enchant_amount)
+                {
+                    ItemRandomSuffixEntry const* item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
+                    if (item_rand)
                     {
-                        ItemRandomSuffixEntry const* item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
-                        if (item_rand)
+                        for (uint8 k = 0; k < MAX_ITEM_ENCHANTMENT_EFFECTS; ++k)
                         {
-                            for (uint8 k = 0; k < MAX_ITEM_ENCHANTMENT_EFFECTS; ++k)
+                            if (item_rand->Enchantment[k] == enchant_id)
                             {
-                                if (item_rand->Enchantment[k] == enchant_id)
-                                {
-                                    enchant_amount = uint32((item_rand->AllocationPct[k] * item->GetItemSuffixFactor()) / 10000);
-                                    break;
-                                }
+                                enchant_amount = uint32((item_rand->AllocationPct[k] * item->GetItemSuffixFactor()) / 10000);
+                                break;
                             }
                         }
                     }
-                    istats[BOT_STAT_MOD_RESISTANCE_START + enchant_spell_id] += enchant_amount;
-                    break;
-                case ITEM_ENCHANTMENT_TYPE_STAT:
+                }
+                istats[BOT_STAT_MOD_RESISTANCE_START + enchant_spell_id] += enchant_amount;
+                break;
+            case ITEM_ENCHANTMENT_TYPE_STAT:
                 {
                     if (!enchant_amount)
                     {
@@ -13898,43 +14417,43 @@ float bot_ai::_getItemGearStatScore(ItemTemplate const* iproto, uint8 forslot, I
 
                     switch (enchant_spell_id)
                     {
-                        case ITEM_MOD_MANA:
-                        case ITEM_MOD_HEALTH:
-                        case ITEM_MOD_AGILITY:
-                        case ITEM_MOD_STRENGTH:
-                        case ITEM_MOD_INTELLECT:
-                        case ITEM_MOD_SPIRIT:
-                        case ITEM_MOD_STAMINA:
-                        case ITEM_MOD_DEFENSE_SKILL_RATING:
-                        case ITEM_MOD_DODGE_RATING:
-                        case ITEM_MOD_PARRY_RATING:
-                        case ITEM_MOD_BLOCK_RATING:
-                        case ITEM_MOD_HIT_MELEE_RATING:
-                        case ITEM_MOD_HIT_RANGED_RATING:
-                        case ITEM_MOD_HIT_SPELL_RATING:
-                        case ITEM_MOD_CRIT_MELEE_RATING:
-                        case ITEM_MOD_CRIT_RANGED_RATING:
-                        case ITEM_MOD_CRIT_SPELL_RATING:
-                        case ITEM_MOD_HASTE_MELEE_RATING:
-                        case ITEM_MOD_HASTE_RANGED_RATING:
-                        case ITEM_MOD_HASTE_SPELL_RATING:
-                        case ITEM_MOD_HIT_RATING:
-                        case ITEM_MOD_CRIT_RATING:
-                        case ITEM_MOD_HASTE_RATING:
-                        case ITEM_MOD_RESILIENCE_RATING:
-                        case ITEM_MOD_EXPERTISE_RATING:
-                        case ITEM_MOD_ATTACK_POWER:
-                        case ITEM_MOD_RANGED_ATTACK_POWER:
-                        case ITEM_MOD_MANA_REGENERATION:
-                        case ITEM_MOD_ARMOR_PENETRATION_RATING:
-                        case ITEM_MOD_SPELL_POWER:
-                        case ITEM_MOD_HEALTH_REGEN:
-                        case ITEM_MOD_SPELL_PENETRATION:
-                        case ITEM_MOD_BLOCK_VALUE:
-                            istats[enchant_spell_id] += enchant_amount;
-                            break;
-                        default:
-                            break;
+                    case ITEM_MOD_MANA:
+                    case ITEM_MOD_HEALTH:
+                    case ITEM_MOD_AGILITY:
+                    case ITEM_MOD_STRENGTH:
+                    case ITEM_MOD_INTELLECT:
+                    case ITEM_MOD_SPIRIT:
+                    case ITEM_MOD_STAMINA:
+                    case ITEM_MOD_DEFENSE_SKILL_RATING:
+                    case ITEM_MOD_DODGE_RATING:
+                    case ITEM_MOD_PARRY_RATING:
+                    case ITEM_MOD_BLOCK_RATING:
+                    case ITEM_MOD_HIT_MELEE_RATING:
+                    case ITEM_MOD_HIT_RANGED_RATING:
+                    case ITEM_MOD_HIT_SPELL_RATING:
+                    case ITEM_MOD_CRIT_MELEE_RATING:
+                    case ITEM_MOD_CRIT_RANGED_RATING:
+                    case ITEM_MOD_CRIT_SPELL_RATING:
+                    case ITEM_MOD_HASTE_MELEE_RATING:
+                    case ITEM_MOD_HASTE_RANGED_RATING:
+                    case ITEM_MOD_HASTE_SPELL_RATING:
+                    case ITEM_MOD_HIT_RATING:
+                    case ITEM_MOD_CRIT_RATING:
+                    case ITEM_MOD_HASTE_RATING:
+                    case ITEM_MOD_RESILIENCE_RATING:
+                    case ITEM_MOD_EXPERTISE_RATING:
+                    case ITEM_MOD_ATTACK_POWER:
+                    case ITEM_MOD_RANGED_ATTACK_POWER:
+                    case ITEM_MOD_MANA_REGENERATION:
+                    case ITEM_MOD_ARMOR_PENETRATION_RATING:
+                    case ITEM_MOD_SPELL_POWER:
+                    case ITEM_MOD_HEALTH_REGEN:
+                    case ITEM_MOD_SPELL_PENETRATION:
+                    case ITEM_MOD_BLOCK_VALUE:
+                        istats[enchant_spell_id] += enchant_amount;
+                        break;
+                    default:
+                        break;
                     }
                     break;
                 }
@@ -13971,12 +14490,12 @@ void bot_ai::_saveStats()
     stats.spirit = GetTotalBotStat(BOT_STAT_MOD_SPIRIT);
     stats.armor = me->GetArmor();
     stats.defense = me->GetDefenseSkillValue();
-    stats.resHoly = me->GetResistance(SPELL_SCHOOL_HOLY) + resistbonus[SPELL_SCHOOL_HOLY-1];
-    stats.resFire = me->GetResistance(SPELL_SCHOOL_FIRE) + resistbonus[SPELL_SCHOOL_FIRE-1];
-    stats.resNature = me->GetResistance(SPELL_SCHOOL_NATURE) + resistbonus[SPELL_SCHOOL_NATURE-1];
-    stats.resFrost = me->GetResistance(SPELL_SCHOOL_FROST) + resistbonus[SPELL_SCHOOL_FROST-1];
-    stats.resShadow = me->GetResistance(SPELL_SCHOOL_SHADOW) + resistbonus[SPELL_SCHOOL_SHADOW-1];
-    stats.resArcane = me->GetResistance(SPELL_SCHOOL_ARCANE) + resistbonus[SPELL_SCHOOL_ARCANE-1];
+    stats.resHoly = me->GetResistance(SPELL_SCHOOL_HOLY) + resistbonus[SPELL_SCHOOL_HOLY - 1];
+    stats.resFire = me->GetResistance(SPELL_SCHOOL_FIRE) + resistbonus[SPELL_SCHOOL_FIRE - 1];
+    stats.resNature = me->GetResistance(SPELL_SCHOOL_NATURE) + resistbonus[SPELL_SCHOOL_NATURE - 1];
+    stats.resFrost = me->GetResistance(SPELL_SCHOOL_FROST) + resistbonus[SPELL_SCHOOL_FROST - 1];
+    stats.resShadow = me->GetResistance(SPELL_SCHOOL_SHADOW) + resistbonus[SPELL_SCHOOL_SHADOW - 1];
+    stats.resArcane = me->GetResistance(SPELL_SCHOOL_ARCANE) + resistbonus[SPELL_SCHOOL_ARCANE - 1];
     stats.blockPct = me->GetUnitBlockChance();
     stats.dodgePct = me->GetUnitDodgeChance();
     stats.parryPct = me->GetUnitParryChance();
@@ -14084,8 +14603,8 @@ uint32 bot_ai::GetEquipDisplayId(uint8 slot) const
                 }
                 else
                 {
-                LOG_ERROR("scripts", "bot_ai::GetEquipDisplayId(): ivalid item Id {} for bot {} {} slot {}",
-                        item_id, me->GetEntry(), me->GetName().c_str(), uint32(slot));
+                    LOG_ERROR("scripts", "bot_ai::GetEquipDisplayId(): ivalid item Id {} for bot {} {} slot {}",
+                              item_id, me->GetEntry(), me->GetName().c_str(), uint32(slot));
                 }
             }
             else
@@ -14148,10 +14667,12 @@ float bot_ai::GetAverageItemLevel() const
 
     return !count ? 0.f : (sum / float(count));
 }
+
 std::pair<float, float> bot_ai::GetBotGearScores() const
 {
     return CalculateBotGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), _equips);
 }
+
 /////////
 //ROLES//
 /////////
@@ -14164,23 +14685,23 @@ uint32 bot_ai::GetRoleString(uint32 role)
 {
     switch (role)
     {
-        case BOT_ROLE_TANK:                 return BOT_TEXT_TANK;
-        case BOT_ROLE_TANK_OFF:             return BOT_TEXT_TANK_OFF;
-        case BOT_ROLE_DPS:                  return BOT_TEXT_DPS;
-        case BOT_ROLE_HEAL:                 return BOT_TEXT_HEAL;
-        case BOT_ROLE_RANGED:               return BOT_TEXT_RANGED;
-        case BOT_ROLE_GATHERING_MINING:     return BOT_TEXT_MINER;
-        case BOT_ROLE_GATHERING_HERBALISM:  return BOT_TEXT_HERBALIST;
-        case BOT_ROLE_GATHERING_SKINNING:   return BOT_TEXT_SKINNER;
-        case BOT_ROLE_GATHERING_ENGINEERING:return BOT_TEXT_ENGINEER;
-        case BOT_ROLE_AUTOLOOT:             return BOT_TEXT_LOOTING;
-        case BOT_ROLE_AUTOLOOT_POOR:        return BOT_TEXT_POOR;
-        case BOT_ROLE_AUTOLOOT_COMMON:      return BOT_TEXT_COMMON;
-        case BOT_ROLE_AUTOLOOT_UNCOMMON:    return BOT_TEXT_UNCOMMON;
-        case BOT_ROLE_AUTOLOOT_RARE:        return BOT_TEXT_RARE;
-        case BOT_ROLE_AUTOLOOT_EPIC:        return BOT_TEXT_EPIC;
-        case BOT_ROLE_AUTOLOOT_LEGENDARY:   return BOT_TEXT_LEGENDARY;
-        default:                            return BOT_TEXT_UNKNOWN;
+    case BOT_ROLE_TANK: return BOT_TEXT_TANK;
+    case BOT_ROLE_TANK_OFF: return BOT_TEXT_TANK_OFF;
+    case BOT_ROLE_DPS: return BOT_TEXT_DPS;
+    case BOT_ROLE_HEAL: return BOT_TEXT_HEAL;
+    case BOT_ROLE_RANGED: return BOT_TEXT_RANGED;
+    case BOT_ROLE_GATHERING_MINING: return BOT_TEXT_MINER;
+    case BOT_ROLE_GATHERING_HERBALISM: return BOT_TEXT_HERBALIST;
+    case BOT_ROLE_GATHERING_SKINNING: return BOT_TEXT_SKINNER;
+    case BOT_ROLE_GATHERING_ENGINEERING: return BOT_TEXT_ENGINEER;
+    case BOT_ROLE_AUTOLOOT: return BOT_TEXT_LOOTING;
+    case BOT_ROLE_AUTOLOOT_POOR: return BOT_TEXT_POOR;
+    case BOT_ROLE_AUTOLOOT_COMMON: return BOT_TEXT_COMMON;
+    case BOT_ROLE_AUTOLOOT_UNCOMMON: return BOT_TEXT_UNCOMMON;
+    case BOT_ROLE_AUTOLOOT_RARE: return BOT_TEXT_RARE;
+    case BOT_ROLE_AUTOLOOT_EPIC: return BOT_TEXT_EPIC;
+    case BOT_ROLE_AUTOLOOT_LEGENDARY: return BOT_TEXT_LEGENDARY;
+    default: return BOT_TEXT_UNKNOWN;
     }
 }
 
@@ -14207,14 +14728,14 @@ void bot_ai::ToggleRole(uint32 role, bool force)
 
         _roleMask |= role;
 
-        if(role == BOT_ROLE_TANK || role == BOT_ROLE_TANK_OFF)
+        if (role == BOT_ROLE_TANK || role == BOT_ROLE_TANK_OFF)
         {
-             _roleMask |= BOT_ROLE_DPS;
+            _roleMask |= BOT_ROLE_DPS;
         }
     }
 
     /*player_npcbot*/
-    NewUpdateNpcBotData( NPCBOT_UPDATE_ROLES, &_roleMask);
+    NewUpdateNpcBotData(NPCBOT_UPDATE_ROLES, &_roleMask);
     // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_ROLES, &_roleMask);
     /*player_npcbot end*/
 
@@ -14233,12 +14754,12 @@ uint32 bot_ai::DefaultRolesForClass(uint8 m_class, uint8 spec)
     {
         switch (spec)
         {
-            case BOT_SPEC_SHAMAN_ENHANCEMENT:
-            case BOT_SPEC_DRUID_FERAL:
-                break;
-            default:
-                roleMask |= BOT_ROLE_RANGED;
-                break;
+        case BOT_SPEC_SHAMAN_ENHANCEMENT:
+        case BOT_SPEC_DRUID_FERAL:
+            break;
+        default:
+            roleMask |= BOT_ROLE_RANGED;
+            break;
         }
     }
 
@@ -14298,6 +14819,7 @@ bool bot_ai::CCed(Unit const* target, bool root)
 {
     return target ? target->HasUnitState(UNIT_STATE_CONFUSED | UNIT_STATE_STUNNED | UNIT_STATE_FLEEING | UNIT_STATE_DISTRACTED | UNIT_STATE_CONFUSED_MOVE | UNIT_STATE_FLEEING_MOVE) || (root && (target->HasUnitState(UNIT_STATE_ROOT) || target->isFrozen() || target->isInRoots())) : true;
 }
+
 //AI initialization common
 //Called at ai reset, level change (spawned = true)
 void bot_ai::DefaultInit()
@@ -14361,74 +14883,74 @@ void bot_ai::ApplyRacials()
     uint8 myrace = me->GetRace();
     switch (myrace)
     {
-        case RACE_HUMAN:
-            RefreshAura(20598); //Human Spirit
-            RefreshAura(20864); //Mace Specialization
-            RefreshAura(20597); //Sword Specialization
-            //RefreshAura(58985); //Perception pointless
-            if (firstspawn)
-                InitSpellMap(RACIAL_EVERY_MAN_FOR_HIMSELF, true, false);
-            break;
-        case RACE_ORC:
-            RefreshAura(20573); //Hardiness
-            RefreshAura(20574); //Axe Specialization
-            //Blood Fury
-            if (firstspawn)
-                InitSpellMap(RaceSpellForClass(myrace, _botclass), true, false);
-            break;
-        case RACE_DWARF:
-            RefreshAura(20595); //Gun Specialization
-            RefreshAura(59224); //Mace Specialization
-            RefreshAura(20596); //Frost Resistance
-            if (firstspawn)
-                InitSpellMap(RACIAL_STONEFORM, true, false);
-            break;
-        case RACE_NIGHTELF:
-            RefreshAura(20583); //Nature Resistance
-            RefreshAura(20582); //Quickness
-            InitSpellMap(RACIAL_SHADOWMELD, true, false);
-            break;
-        case RACE_UNDEAD_PLAYER:
-            RefreshAura(20579); //Shadow Resistance
-            if (firstspawn)
-                InitSpellMap(RACIAL_WILL_OF_THE_FORSAKEN, true, false);
-            //cannibalize is skipped
-            break;
-        case RACE_TAUREN:
-            RefreshAura(20550); //Endurance
-            RefreshAura(20551); //Nature Resistance
-            if (firstspawn)
-                InitSpellMap(RACIAL_WARSTOMP, true, false);
-            break;
-        case RACE_GNOME:
-            RefreshAura(20592); //Arcane Resistance
-            RefreshAura(20591); //Expansive Mind
-            if (firstspawn)
-                InitSpellMap(RACIAL_ESCAPE_ARTIST, true, false);
-            break;
-        case RACE_TROLL:
-            RefreshAura(20557); //Beast Slaying
-            RefreshAura(20558); //Thrown Specialization
-            RefreshAura(26290); //Bow Specialization
-            RefreshAura(58943); //Da Voodoo Shuffle
-            RefreshAura(20555); //Regeneration
-            if (firstspawn)
-                InitSpellMap(RACIAL_BERSERKING, true, false);
-            break;
-        case RACE_BLOODELF:
-            RefreshAura(822); //Magic Resistance
-            if (firstspawn)
-                InitSpellMap(RaceSpellForClass(myrace, _botclass), true, false);
-            break;
-        case RACE_DRAENEI:
-            RefreshAura(6562, uint8(!IAmFree())); //Heroic Presence (28878 is not present)
-            RefreshAura(20579); //Shadow Resistance (universal since creatures do not lose cast time on damage anyways)
-            if (firstspawn)
-                InitSpellMap(RaceSpellForClass(myrace, _botclass), true, false);
-            break;
-        default:
-            //TC_LOG_ERROR("entities.player", "bot_ai::ApplyRacePassives(): unknown race %u for bot %s (%u)", uint32(me->GetRace()), me->GetName().c_str(), me->GetEntry());
-            return;
+    case RACE_HUMAN:
+        RefreshAura(20598); //Human Spirit
+        RefreshAura(20864); //Mace Specialization
+        RefreshAura(20597); //Sword Specialization
+    //RefreshAura(58985); //Perception pointless
+        if (firstspawn)
+            InitSpellMap(RACIAL_EVERY_MAN_FOR_HIMSELF, true, false);
+        break;
+    case RACE_ORC:
+        RefreshAura(20573); //Hardiness
+        RefreshAura(20574); //Axe Specialization
+    //Blood Fury
+        if (firstspawn)
+            InitSpellMap(RaceSpellForClass(myrace, _botclass), true, false);
+        break;
+    case RACE_DWARF:
+        RefreshAura(20595); //Gun Specialization
+        RefreshAura(59224); //Mace Specialization
+        RefreshAura(20596); //Frost Resistance
+        if (firstspawn)
+            InitSpellMap(RACIAL_STONEFORM, true, false);
+        break;
+    case RACE_NIGHTELF:
+        RefreshAura(20583); //Nature Resistance
+        RefreshAura(20582); //Quickness
+        InitSpellMap(RACIAL_SHADOWMELD, true, false);
+        break;
+    case RACE_UNDEAD_PLAYER:
+        RefreshAura(20579); //Shadow Resistance
+        if (firstspawn)
+            InitSpellMap(RACIAL_WILL_OF_THE_FORSAKEN, true, false);
+    //cannibalize is skipped
+        break;
+    case RACE_TAUREN:
+        RefreshAura(20550); //Endurance
+        RefreshAura(20551); //Nature Resistance
+        if (firstspawn)
+            InitSpellMap(RACIAL_WARSTOMP, true, false);
+        break;
+    case RACE_GNOME:
+        RefreshAura(20592); //Arcane Resistance
+        RefreshAura(20591); //Expansive Mind
+        if (firstspawn)
+            InitSpellMap(RACIAL_ESCAPE_ARTIST, true, false);
+        break;
+    case RACE_TROLL:
+        RefreshAura(20557); //Beast Slaying
+        RefreshAura(20558); //Thrown Specialization
+        RefreshAura(26290); //Bow Specialization
+        RefreshAura(58943); //Da Voodoo Shuffle
+        RefreshAura(20555); //Regeneration
+        if (firstspawn)
+            InitSpellMap(RACIAL_BERSERKING, true, false);
+        break;
+    case RACE_BLOODELF:
+        RefreshAura(822); //Magic Resistance
+        if (firstspawn)
+            InitSpellMap(RaceSpellForClass(myrace, _botclass), true, false);
+        break;
+    case RACE_DRAENEI:
+        RefreshAura(6562, uint8(!IAmFree())); //Heroic Presence (28878 is not present)
+        RefreshAura(20579); //Shadow Resistance (universal since creatures do not lose cast time on damage anyways)
+        if (firstspawn)
+            InitSpellMap(RaceSpellForClass(myrace, _botclass), true, false);
+        break;
+    default:
+        //TC_LOG_ERROR("entities.player", "bot_ai::ApplyRacePassives(): unknown race %u for bot %s (%u)", uint32(me->GetRace()), me->GetName().c_str(), me->GetEntry());
+        return;
     }
 }
 
@@ -14517,7 +15039,7 @@ void bot_ai::InitSpec()
     if (spec < BOT_SPEC_BEGIN || spec > BOT_SPEC_END)
     {
         LOG_ERROR("entities.unit", "bot_ai::InitSpec(): spec ({}) is out of range for bot {}! Falling to default (1)...",
-            uint32(spec), me->GetEntry());
+                  uint32(spec), me->GetEntry());
 
         spec = BOT_SPEC_DEFAULT;
     }
@@ -14534,7 +15056,7 @@ void bot_ai::SetSpec(uint8 spec, bool activate)
     if (activate)
     {
         /*player_npcbot*/
-        NewUpdateNpcBotData( NPCBOT_UPDATE_SPEC, &spec);
+        NewUpdateNpcBotData(NPCBOT_UPDATE_SPEC, &spec);
         // BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_SPEC, &spec);
         /*player_npcbot end*/
 
@@ -14568,52 +15090,52 @@ uint8 bot_ai::SelectSpecForClass(uint8 m_class)
     specs.reserve(3);
     switch (m_class)
     {
-        case BOT_CLASS_WARRIOR: //any
-            specs.push_back(BOT_SPEC_WARRIOR_ARMS);
-            specs.push_back(BOT_SPEC_WARRIOR_FURY);
-            specs.push_back(BOT_SPEC_WARRIOR_PROTECTION);
-            break;
-        case BOT_CLASS_PALADIN: //retri
-            specs.push_back(BOT_SPEC_PALADIN_RETRIBUTION);
-            break;
-        case BOT_CLASS_HUNTER: //any
-            specs.push_back(BOT_SPEC_HUNTER_BEASTMASTERY);
-            specs.push_back(BOT_SPEC_HUNTER_MARKSMANSHIP);
-            specs.push_back(BOT_SPEC_HUNTER_SURVIVAL);
-            break;
-        case BOT_CLASS_ROGUE: //any
-            specs.push_back(BOT_SPEC_ROGUE_ASSASINATION);
-            specs.push_back(BOT_SPEC_ROGUE_COMBAT);
-            specs.push_back(BOT_SPEC_ROGUE_SUBTLETY);
-            break;
-        case BOT_CLASS_PRIEST: //discipline, shadow
-            specs.push_back(BOT_SPEC_PRIEST_DISCIPLINE);
-            specs.push_back(BOT_SPEC_PRIEST_SHADOW);
-            break;
-        case BOT_CLASS_DEATH_KNIGHT: //any
-            specs.push_back(BOT_SPEC_DK_BLOOD);
-            specs.push_back(BOT_SPEC_DK_FROST);
-            specs.push_back(BOT_SPEC_DK_UNHOLY);
-            break;
-        case BOT_CLASS_SHAMAN: //elem, enh
-            specs.push_back(BOT_SPEC_SHAMAN_ELEMENTAL);
-            specs.push_back(BOT_SPEC_SHAMAN_ENHANCEMENT);
-            break;
-        case BOT_CLASS_MAGE: //fire, frost
-            specs.push_back(BOT_SPEC_MAGE_FIRE);
-            specs.push_back(BOT_SPEC_MAGE_FROST);
-            break;
-        case BOT_CLASS_WARLOCK: //affli, destr
-            specs.push_back(BOT_SPEC_WARLOCK_AFFLICTION);
-            specs.push_back(BOT_SPEC_WARLOCK_DESTRUCTION);
-            break;
-        case BOT_CLASS_DRUID: //balance, feral
-            specs.push_back(BOT_SPEC_DRUID_BALANCE);
-            specs.push_back(BOT_SPEC_DRUID_FERAL);
-            break;
-        default:
-            specs.push_back(BOT_SPEC_DEFAULT);
-            break;
+    case BOT_CLASS_WARRIOR: //any
+        specs.push_back(BOT_SPEC_WARRIOR_ARMS);
+        specs.push_back(BOT_SPEC_WARRIOR_FURY);
+        specs.push_back(BOT_SPEC_WARRIOR_PROTECTION);
+        break;
+    case BOT_CLASS_PALADIN: //retri
+        specs.push_back(BOT_SPEC_PALADIN_RETRIBUTION);
+        break;
+    case BOT_CLASS_HUNTER: //any
+        specs.push_back(BOT_SPEC_HUNTER_BEASTMASTERY);
+        specs.push_back(BOT_SPEC_HUNTER_MARKSMANSHIP);
+        specs.push_back(BOT_SPEC_HUNTER_SURVIVAL);
+        break;
+    case BOT_CLASS_ROGUE: //any
+        specs.push_back(BOT_SPEC_ROGUE_ASSASINATION);
+        specs.push_back(BOT_SPEC_ROGUE_COMBAT);
+        specs.push_back(BOT_SPEC_ROGUE_SUBTLETY);
+        break;
+    case BOT_CLASS_PRIEST: //discipline, shadow
+        specs.push_back(BOT_SPEC_PRIEST_DISCIPLINE);
+        specs.push_back(BOT_SPEC_PRIEST_SHADOW);
+        break;
+    case BOT_CLASS_DEATH_KNIGHT: //any
+        specs.push_back(BOT_SPEC_DK_BLOOD);
+        specs.push_back(BOT_SPEC_DK_FROST);
+        specs.push_back(BOT_SPEC_DK_UNHOLY);
+        break;
+    case BOT_CLASS_SHAMAN: //elem, enh
+        specs.push_back(BOT_SPEC_SHAMAN_ELEMENTAL);
+        specs.push_back(BOT_SPEC_SHAMAN_ENHANCEMENT);
+        break;
+    case BOT_CLASS_MAGE: //fire, frost
+        specs.push_back(BOT_SPEC_MAGE_FIRE);
+        specs.push_back(BOT_SPEC_MAGE_FROST);
+        break;
+    case BOT_CLASS_WARLOCK: //affli, destr
+        specs.push_back(BOT_SPEC_WARLOCK_AFFLICTION);
+        specs.push_back(BOT_SPEC_WARLOCK_DESTRUCTION);
+        break;
+    case BOT_CLASS_DRUID: //balance, feral
+        specs.push_back(BOT_SPEC_DRUID_BALANCE);
+        specs.push_back(BOT_SPEC_DRUID_FERAL);
+        break;
+    default:
+        specs.push_back(BOT_SPEC_DEFAULT);
+        break;
     }
 
     return specs.size() == 1 ? specs.front() : Acore::Containers::SelectRandomContainerElement(specs);
@@ -14623,37 +15145,37 @@ uint32 bot_ai::TextForSpec(uint8 spec)
 {
     switch (spec)
     {
-        case BOT_SPEC_WARRIOR_ARMS:         return BOT_TEXT_SPEC_ARMS;
-        case BOT_SPEC_WARRIOR_FURY:         return BOT_TEXT_SPEC_FURY;
-        case BOT_SPEC_WARRIOR_PROTECTION:   return BOT_TEXT_SPEC_PROTECTION;
-        case BOT_SPEC_PALADIN_HOLY:         return BOT_TEXT_SPEC_HOLY;
-        case BOT_SPEC_PALADIN_PROTECTION:   return BOT_TEXT_SPEC_PROTECTION;
-        case BOT_SPEC_PALADIN_RETRIBUTION:  return BOT_TEXT_SPEC_RETRIBUTION;
-        case BOT_SPEC_HUNTER_BEASTMASTERY:  return BOT_TEXT_SPEC_BEASTMASTERY;
-        case BOT_SPEC_HUNTER_MARKSMANSHIP:  return BOT_TEXT_SPEC_MARKSMANSHIP;
-        case BOT_SPEC_HUNTER_SURVIVAL:      return BOT_TEXT_SPEC_SURVIVAL;
-        case BOT_SPEC_ROGUE_ASSASINATION:   return BOT_TEXT_SPEC_ASSASINATION;
-        case BOT_SPEC_ROGUE_COMBAT:         return BOT_TEXT_SPEC_COMBAT;
-        case BOT_SPEC_ROGUE_SUBTLETY:       return BOT_TEXT_SPEC_SUBTLETY;
-        case BOT_SPEC_PRIEST_DISCIPLINE:    return BOT_TEXT_SPEC_DISCIPLINE;
-        case BOT_SPEC_PRIEST_HOLY:          return BOT_TEXT_SPEC_HOLY;
-        case BOT_SPEC_PRIEST_SHADOW:        return BOT_TEXT_SPEC_SHADOW;
-        case BOT_SPEC_DK_BLOOD:             return BOT_TEXT_SPEC_BLOOD;
-        case BOT_SPEC_DK_FROST:             return BOT_TEXT_SPEC_FROST;
-        case BOT_SPEC_DK_UNHOLY:            return BOT_TEXT_SPEC_UNHOLY;
-        case BOT_SPEC_SHAMAN_ELEMENTAL:     return BOT_TEXT_SPEC_ELEMENTAL;
-        case BOT_SPEC_SHAMAN_ENHANCEMENT:   return BOT_TEXT_SPEC_ENHANCEMENT;
-        case BOT_SPEC_SHAMAN_RESTORATION:   return BOT_TEXT_SPEC_RESTORATION;
-        case BOT_SPEC_MAGE_ARCANE:          return BOT_TEXT_SPEC_ARCANE;
-        case BOT_SPEC_MAGE_FIRE:            return BOT_TEXT_SPEC_FIRE;
-        case BOT_SPEC_MAGE_FROST:           return BOT_TEXT_SPEC_FROST;
-        case BOT_SPEC_WARLOCK_AFFLICTION:   return BOT_TEXT_SPEC_AFFLICTION;
-        case BOT_SPEC_WARLOCK_DEMONOLOGY:   return BOT_TEXT_SPEC_DEMONOLOGY;
-        case BOT_SPEC_WARLOCK_DESTRUCTION:  return BOT_TEXT_SPEC_DESTRUCTION;
-        case BOT_SPEC_DRUID_BALANCE:        return BOT_TEXT_SPEC_BALANCE;
-        case BOT_SPEC_DRUID_FERAL:          return BOT_TEXT_SPEC_FERAL;
-        case BOT_SPEC_DRUID_RESTORATION:    return BOT_TEXT_SPEC_RESTORATION;
-        case BOT_SPEC_DEFAULT: default:     return BOT_TEXT_SPEC_UNKNOWN;
+    case BOT_SPEC_WARRIOR_ARMS: return BOT_TEXT_SPEC_ARMS;
+    case BOT_SPEC_WARRIOR_FURY: return BOT_TEXT_SPEC_FURY;
+    case BOT_SPEC_WARRIOR_PROTECTION: return BOT_TEXT_SPEC_PROTECTION;
+    case BOT_SPEC_PALADIN_HOLY: return BOT_TEXT_SPEC_HOLY;
+    case BOT_SPEC_PALADIN_PROTECTION: return BOT_TEXT_SPEC_PROTECTION;
+    case BOT_SPEC_PALADIN_RETRIBUTION: return BOT_TEXT_SPEC_RETRIBUTION;
+    case BOT_SPEC_HUNTER_BEASTMASTERY: return BOT_TEXT_SPEC_BEASTMASTERY;
+    case BOT_SPEC_HUNTER_MARKSMANSHIP: return BOT_TEXT_SPEC_MARKSMANSHIP;
+    case BOT_SPEC_HUNTER_SURVIVAL: return BOT_TEXT_SPEC_SURVIVAL;
+    case BOT_SPEC_ROGUE_ASSASINATION: return BOT_TEXT_SPEC_ASSASINATION;
+    case BOT_SPEC_ROGUE_COMBAT: return BOT_TEXT_SPEC_COMBAT;
+    case BOT_SPEC_ROGUE_SUBTLETY: return BOT_TEXT_SPEC_SUBTLETY;
+    case BOT_SPEC_PRIEST_DISCIPLINE: return BOT_TEXT_SPEC_DISCIPLINE;
+    case BOT_SPEC_PRIEST_HOLY: return BOT_TEXT_SPEC_HOLY;
+    case BOT_SPEC_PRIEST_SHADOW: return BOT_TEXT_SPEC_SHADOW;
+    case BOT_SPEC_DK_BLOOD: return BOT_TEXT_SPEC_BLOOD;
+    case BOT_SPEC_DK_FROST: return BOT_TEXT_SPEC_FROST;
+    case BOT_SPEC_DK_UNHOLY: return BOT_TEXT_SPEC_UNHOLY;
+    case BOT_SPEC_SHAMAN_ELEMENTAL: return BOT_TEXT_SPEC_ELEMENTAL;
+    case BOT_SPEC_SHAMAN_ENHANCEMENT: return BOT_TEXT_SPEC_ENHANCEMENT;
+    case BOT_SPEC_SHAMAN_RESTORATION: return BOT_TEXT_SPEC_RESTORATION;
+    case BOT_SPEC_MAGE_ARCANE: return BOT_TEXT_SPEC_ARCANE;
+    case BOT_SPEC_MAGE_FIRE: return BOT_TEXT_SPEC_FIRE;
+    case BOT_SPEC_MAGE_FROST: return BOT_TEXT_SPEC_FROST;
+    case BOT_SPEC_WARLOCK_AFFLICTION: return BOT_TEXT_SPEC_AFFLICTION;
+    case BOT_SPEC_WARLOCK_DEMONOLOGY: return BOT_TEXT_SPEC_DEMONOLOGY;
+    case BOT_SPEC_WARLOCK_DESTRUCTION: return BOT_TEXT_SPEC_DESTRUCTION;
+    case BOT_SPEC_DRUID_BALANCE: return BOT_TEXT_SPEC_BALANCE;
+    case BOT_SPEC_DRUID_FERAL: return BOT_TEXT_SPEC_FERAL;
+    case BOT_SPEC_DRUID_RESTORATION: return BOT_TEXT_SPEC_RESTORATION;
+    case BOT_SPEC_DEFAULT: default: return BOT_TEXT_SPEC_UNKNOWN;
     }
 }
 
@@ -14661,128 +15183,128 @@ bool bot_ai::IsValidSpecForClass(uint8 m_class, uint8 spec)
 {
     switch (m_class)
     {
-        case BOT_CLASS_WARRIOR:
-            switch (spec)
-            {
-                case BOT_SPEC_WARRIOR_ARMS:
-                case BOT_SPEC_WARRIOR_FURY:
-                case BOT_SPEC_WARRIOR_PROTECTION:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_PALADIN:
-            switch (spec)
-            {
-                case BOT_SPEC_PALADIN_HOLY:
-                case BOT_SPEC_PALADIN_PROTECTION:
-                case BOT_SPEC_PALADIN_RETRIBUTION:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_HUNTER:
-            switch (spec)
-            {
-                case BOT_SPEC_HUNTER_BEASTMASTERY:
-                case BOT_SPEC_HUNTER_MARKSMANSHIP:
-                case BOT_SPEC_HUNTER_SURVIVAL:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_ROGUE:
-            switch (spec)
-            {
-                case BOT_SPEC_ROGUE_ASSASINATION:
-                case BOT_SPEC_ROGUE_COMBAT:
-                case BOT_SPEC_ROGUE_SUBTLETY:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_PRIEST:
-            switch (spec)
-            {
-                case BOT_SPEC_PRIEST_DISCIPLINE:
-                case BOT_SPEC_PRIEST_HOLY:
-                case BOT_SPEC_PRIEST_SHADOW:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_DEATH_KNIGHT:
-            switch (spec)
-            {
-                case BOT_SPEC_DK_BLOOD:
-                case BOT_SPEC_DK_FROST:
-                case BOT_SPEC_DK_UNHOLY:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_SHAMAN:
-            switch (spec)
-            {
-                case BOT_SPEC_SHAMAN_ELEMENTAL:
-                case BOT_SPEC_SHAMAN_ENHANCEMENT:
-                case BOT_SPEC_SHAMAN_RESTORATION:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_MAGE:
-            switch (spec)
-            {
-                case BOT_SPEC_MAGE_ARCANE:
-                case BOT_SPEC_MAGE_FIRE:
-                case BOT_SPEC_MAGE_FROST:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_WARLOCK:
-            switch (spec)
-            {
-                case BOT_SPEC_WARLOCK_AFFLICTION:
-                case BOT_SPEC_WARLOCK_DEMONOLOGY:
-                case BOT_SPEC_WARLOCK_DESTRUCTION:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_DRUID:
-            switch (spec)
-            {
-                case BOT_SPEC_DRUID_BALANCE:
-                case BOT_SPEC_DRUID_FERAL:
-                case BOT_SPEC_DRUID_RESTORATION:
-                    return true;
-                default:
-                    break;
-            }
-            break;
-        case BOT_CLASS_BM:
-        case BOT_CLASS_SPHYNX:
-        case BOT_CLASS_ARCHMAGE:
-        case BOT_CLASS_DREADLORD:
-        case BOT_CLASS_SPELLBREAKER:
-        case BOT_CLASS_DARK_RANGER:
-        case BOT_CLASS_NECROMANCER:
-        case BOT_CLASS_SEA_WITCH:
-        case BOT_CLASS_CRYPT_LORD:
-            return spec == BOT_SPEC_DEFAULT;
+    case BOT_CLASS_WARRIOR:
+        switch (spec)
+        {
+        case BOT_SPEC_WARRIOR_ARMS:
+        case BOT_SPEC_WARRIOR_FURY:
+        case BOT_SPEC_WARRIOR_PROTECTION:
+            return true;
         default:
             break;
+        }
+        break;
+    case BOT_CLASS_PALADIN:
+        switch (spec)
+        {
+        case BOT_SPEC_PALADIN_HOLY:
+        case BOT_SPEC_PALADIN_PROTECTION:
+        case BOT_SPEC_PALADIN_RETRIBUTION:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_HUNTER:
+        switch (spec)
+        {
+        case BOT_SPEC_HUNTER_BEASTMASTERY:
+        case BOT_SPEC_HUNTER_MARKSMANSHIP:
+        case BOT_SPEC_HUNTER_SURVIVAL:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_ROGUE:
+        switch (spec)
+        {
+        case BOT_SPEC_ROGUE_ASSASINATION:
+        case BOT_SPEC_ROGUE_COMBAT:
+        case BOT_SPEC_ROGUE_SUBTLETY:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_PRIEST:
+        switch (spec)
+        {
+        case BOT_SPEC_PRIEST_DISCIPLINE:
+        case BOT_SPEC_PRIEST_HOLY:
+        case BOT_SPEC_PRIEST_SHADOW:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_DEATH_KNIGHT:
+        switch (spec)
+        {
+        case BOT_SPEC_DK_BLOOD:
+        case BOT_SPEC_DK_FROST:
+        case BOT_SPEC_DK_UNHOLY:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_SHAMAN:
+        switch (spec)
+        {
+        case BOT_SPEC_SHAMAN_ELEMENTAL:
+        case BOT_SPEC_SHAMAN_ENHANCEMENT:
+        case BOT_SPEC_SHAMAN_RESTORATION:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_MAGE:
+        switch (spec)
+        {
+        case BOT_SPEC_MAGE_ARCANE:
+        case BOT_SPEC_MAGE_FIRE:
+        case BOT_SPEC_MAGE_FROST:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_WARLOCK:
+        switch (spec)
+        {
+        case BOT_SPEC_WARLOCK_AFFLICTION:
+        case BOT_SPEC_WARLOCK_DEMONOLOGY:
+        case BOT_SPEC_WARLOCK_DESTRUCTION:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_DRUID:
+        switch (spec)
+        {
+        case BOT_SPEC_DRUID_BALANCE:
+        case BOT_SPEC_DRUID_FERAL:
+        case BOT_SPEC_DRUID_RESTORATION:
+            return true;
+        default:
+            break;
+        }
+        break;
+    case BOT_CLASS_BM:
+    case BOT_CLASS_SPHYNX:
+    case BOT_CLASS_ARCHMAGE:
+    case BOT_CLASS_DREADLORD:
+    case BOT_CLASS_SPELLBREAKER:
+    case BOT_CLASS_DARK_RANGER:
+    case BOT_CLASS_NECROMANCER:
+    case BOT_CLASS_SEA_WITCH:
+    case BOT_CLASS_CRYPT_LORD:
+        return spec == BOT_SPEC_DEFAULT;
+    default:
+        break;
     }
     return false;
 }
@@ -14811,7 +15333,8 @@ void bot_ai::InitEquips()
             if ((i == BOT_SLOT_TRINKET1 || i == BOT_SLOT_TRINKET2 || i == BOT_SLOT_HEAD) && lvl < 30)
                 continue;
 
-            Item* item = BotDataMgr::GenerateWanderingBotItem(i, _botclass, lvl, [this, lslot = i](ItemTemplate const* proto) {
+            Item* item = BotDataMgr::GenerateWanderingBotItem(i, _botclass, lvl, [this, lslot = i](ItemTemplate const* proto)
+            {
                 if (!_canEquip(proto, lslot, true))
                     return false;
 
@@ -14824,225 +15347,244 @@ void bot_ai::InitEquips()
 
                     switch (lslot)
                     {
-                        case BOT_SLOT_HEAD:
-                        case BOT_SLOT_SHOULDERS:
-                        case BOT_SLOT_CHEST:
-                        case BOT_SLOT_WAIST:
-                        case BOT_SLOT_LEGS:
-                        case BOT_SLOT_FEET:
-                        case BOT_SLOT_WRIST:
-                        case BOT_SLOT_HANDS:
-                            if (!std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                return stat.ItemStatType == ITEM_MOD_RESILIENCE_RATING && stat.ItemStatValue > 0;
-                            }))
-                                return false;
-                            break;
-                        default:
-                            break;
+                    case BOT_SLOT_HEAD:
+                    case BOT_SLOT_SHOULDERS:
+                    case BOT_SLOT_CHEST:
+                    case BOT_SLOT_WAIST:
+                    case BOT_SLOT_LEGS:
+                    case BOT_SLOT_FEET:
+                    case BOT_SLOT_WRIST:
+                    case BOT_SLOT_HANDS:
+                        if (!std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_RESILIENCE_RATING && stat.ItemStatValue > 0;
+                        }))
+                            return false;
+                        break;
+                    default:
+                        break;
                     }
                 }
 
                 switch (GetSpec())
                 {
-                    case BOT_SPEC_WARRIOR_ARMS:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND:
-                                return proto->InventoryType == INVTYPE_2HWEAPON;
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_WARRIOR_FURY:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND:
-                                return (me->GetLevel() < 60) ? (proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONMAINHAND) :
-                                    (proto->InventoryType == INVTYPE_2HWEAPON);
-                            case BOT_SLOT_OFFHAND:
-                                return (me->GetLevel() < 60) ? (proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONOFFHAND) :
-                                    (proto->InventoryType == INVTYPE_2HWEAPON);
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_WARRIOR_PROTECTION:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND:
-                                return proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONMAINHAND;
-                            case BOT_SLOT_OFFHAND:
-                                return proto->InventoryType == INVTYPE_SHIELD;
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_PALADIN_PROTECTION:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND:
-                                if (!(proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONMAINHAND))
-                                    return false;
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return !std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
-                                });
-                            case BOT_SLOT_OFFHAND:
-                                if (!(proto->InventoryType == INVTYPE_SHIELD))
-                                    return false;
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return !std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
-                                });
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_PALADIN_HOLY:
-                    case BOT_SPEC_SHAMAN_ELEMENTAL:
-                    case BOT_SPEC_SHAMAN_RESTORATION:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND:
-                                if (!(proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONMAINHAND))
-                                    return false;
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
-                                });
-                            case BOT_SLOT_OFFHAND:
-                                if (!(proto->InventoryType == INVTYPE_SHIELD))
-                                    return false;
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
-                                });
-                            default:
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
-                                });
-                        }
-                        break;
-                    case BOT_SPEC_PALADIN_RETRIBUTION:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND:
-                                return proto->InventoryType == INVTYPE_2HWEAPON;
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_HUNTER_BEASTMASTERY:
-                    case BOT_SPEC_HUNTER_MARKSMANSHIP:
-                    case BOT_SPEC_HUNTER_SURVIVAL:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_TRINKET1: case BOT_SLOT_TRINKET2:
-                                break;
-                            default:
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_AGILITY && stat.ItemStatValue > 0;
-                                });
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_ROGUE_ASSASINATION:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND: case BOT_SLOT_OFFHAND:
-                                return proto->SubClass == ITEM_SUBCLASS_WEAPON_DAGGER;
-                            case BOT_SLOT_RANGED:
-                                return me->GetLevel() < 64 || proto->SubClass == ITEM_SUBCLASS_WEAPON_THROWN;
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_ROGUE_COMBAT:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND: case BOT_SLOT_OFFHAND:
-                                return proto->SubClass == ITEM_SUBCLASS_WEAPON_SWORD || proto->SubClass == ITEM_SUBCLASS_WEAPON_AXE;
-                            case BOT_SLOT_RANGED:
-                                return me->GetLevel() < 64 || proto->SubClass == ITEM_SUBCLASS_WEAPON_THROWN;
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_ROGUE_SUBTLETY:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND: case BOT_SLOT_OFFHAND:
-                                return proto->SubClass == ITEM_SUBCLASS_WEAPON_MACE;
-                            case BOT_SLOT_RANGED:
-                                return me->GetLevel() < 64 || proto->SubClass == ITEM_SUBCLASS_WEAPON_THROWN;
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_DK_FROST:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_MAINHAND:
-                                return me->GetLevel() < 61 || proto->InventoryType == INVTYPE_2HWEAPON;
-                            default:
-                                break;
-                        }
-                        break;
-                    case BOT_SPEC_SHAMAN_ENHANCEMENT:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_OFFHAND:
-                                return proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONOFFHAND;
-                            case BOT_SLOT_TRINKET1: case BOT_SLOT_TRINKET2:
-                                break;
-                            default:
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_AGILITY && stat.ItemStatValue > 0;
-                                });
-                        }
-                        break;
-                    case BOT_SPEC_DRUID_FERAL:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_TRINKET1: case BOT_SLOT_TRINKET2:
-                                break;
-                            case BOT_SLOT_MAINHAND:
-                                if (proto->InventoryType != INVTYPE_2HWEAPON)
-                                    return false;
-                            [[fallthrough]];
-                            default:
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_AGILITY && stat.ItemStatValue > 0;
-                                });
-                        }
-                        break;
-                    case BOT_SPEC_DRUID_BALANCE:
-                        switch (lslot)
-                        {
-                            case BOT_SLOT_TRINKET1: case BOT_SLOT_TRINKET2:
-                                break;
-                            default:
-                                if (me->GetLevel() < 70)
-                                    break;
-                                return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat) {
-                                    return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
-                                });
-                        }
-                        break;
+                case BOT_SPEC_WARRIOR_ARMS:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                        return proto->InventoryType == INVTYPE_2HWEAPON;
                     default:
                         break;
+                    }
+                    break;
+                case BOT_SPEC_WARRIOR_FURY:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                        return (me->GetLevel() < 60) ?
+                                   (proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONMAINHAND) :
+                                   (proto->InventoryType == INVTYPE_2HWEAPON);
+                    case BOT_SLOT_OFFHAND:
+                        return (me->GetLevel() < 60) ?
+                                   (proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONOFFHAND) :
+                                   (proto->InventoryType == INVTYPE_2HWEAPON);
+                    default:
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_WARRIOR_PROTECTION:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                        return proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONMAINHAND;
+                    case BOT_SLOT_OFFHAND:
+                        return proto->InventoryType == INVTYPE_SHIELD;
+                    default:
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_PALADIN_PROTECTION:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                        if (!(proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONMAINHAND))
+                            return false;
+                        if (me->GetLevel() < 70)
+                            break;
+                        return !std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
+                        });
+                    case BOT_SLOT_OFFHAND:
+                        if (!(proto->InventoryType == INVTYPE_SHIELD))
+                            return false;
+                        if (me->GetLevel() < 70)
+                            break;
+                        return !std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
+                        });
+                    default:
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_PALADIN_HOLY:
+                case BOT_SPEC_SHAMAN_ELEMENTAL:
+                case BOT_SPEC_SHAMAN_RESTORATION:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                        if (!(proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONMAINHAND))
+                            return false;
+                        if (me->GetLevel() < 70)
+                            break;
+                        return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
+                        });
+                    case BOT_SLOT_OFFHAND:
+                        if (!(proto->InventoryType == INVTYPE_SHIELD))
+                            return false;
+                        if (me->GetLevel() < 70)
+                            break;
+                        return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
+                        });
+                    default:
+                        if (me->GetLevel() < 70)
+                            break;
+                        return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
+                        });
+                    }
+                    break;
+                case BOT_SPEC_PALADIN_RETRIBUTION:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                        return proto->InventoryType == INVTYPE_2HWEAPON;
+                    default:
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_HUNTER_BEASTMASTERY:
+                case BOT_SPEC_HUNTER_MARKSMANSHIP:
+                case BOT_SPEC_HUNTER_SURVIVAL:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_TRINKET1:
+                    case BOT_SLOT_TRINKET2:
+                        break;
+                    default:
+                        if (me->GetLevel() < 70)
+                            break;
+                        return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_AGILITY && stat.ItemStatValue > 0;
+                        });
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_ROGUE_ASSASINATION:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                    case BOT_SLOT_OFFHAND:
+                        return proto->SubClass == ITEM_SUBCLASS_WEAPON_DAGGER;
+                    case BOT_SLOT_RANGED:
+                        return me->GetLevel() < 64 || proto->SubClass == ITEM_SUBCLASS_WEAPON_THROWN;
+                    default:
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_ROGUE_COMBAT:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                    case BOT_SLOT_OFFHAND:
+                        return proto->SubClass == ITEM_SUBCLASS_WEAPON_SWORD || proto->SubClass == ITEM_SUBCLASS_WEAPON_AXE;
+                    case BOT_SLOT_RANGED:
+                        return me->GetLevel() < 64 || proto->SubClass == ITEM_SUBCLASS_WEAPON_THROWN;
+                    default:
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_ROGUE_SUBTLETY:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                    case BOT_SLOT_OFFHAND:
+                        return proto->SubClass == ITEM_SUBCLASS_WEAPON_MACE;
+                    case BOT_SLOT_RANGED:
+                        return me->GetLevel() < 64 || proto->SubClass == ITEM_SUBCLASS_WEAPON_THROWN;
+                    default:
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_DK_FROST:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_MAINHAND:
+                        return me->GetLevel() < 61 || proto->InventoryType == INVTYPE_2HWEAPON;
+                    default:
+                        break;
+                    }
+                    break;
+                case BOT_SPEC_SHAMAN_ENHANCEMENT:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_OFFHAND:
+                        return proto->InventoryType == INVTYPE_WEAPON || proto->InventoryType == INVTYPE_WEAPONOFFHAND;
+                    case BOT_SLOT_TRINKET1:
+                    case BOT_SLOT_TRINKET2:
+                        break;
+                    default:
+                        if (me->GetLevel() < 70)
+                            break;
+                        return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_AGILITY && stat.ItemStatValue > 0;
+                        });
+                    }
+                    break;
+                case BOT_SPEC_DRUID_FERAL:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_TRINKET1:
+                    case BOT_SLOT_TRINKET2:
+                        break;
+                    case BOT_SLOT_MAINHAND:
+                        if (proto->InventoryType != INVTYPE_2HWEAPON)
+                            return false;
+                        [[fallthrough]];
+                    default:
+                        if (me->GetLevel() < 70)
+                            break;
+                        return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_AGILITY && stat.ItemStatValue > 0;
+                        });
+                    }
+                    break;
+                case BOT_SPEC_DRUID_BALANCE:
+                    switch (lslot)
+                    {
+                    case BOT_SLOT_TRINKET1:
+                    case BOT_SLOT_TRINKET2:
+                        break;
+                    default:
+                        if (me->GetLevel() < 70)
+                            break;
+                        return std::any_of(std::cbegin(proto->ItemStat), std::cend(proto->ItemStat), [](_ItemStat const& stat)
+                        {
+                            return stat.ItemStatType == ITEM_MOD_INTELLECT && stat.ItemStatValue > 0;
+                        });
+                    }
+                    break;
+                default:
+                    break;
                 }
 
                 return true;
@@ -15053,7 +15595,7 @@ void bot_ai::InitEquips()
                 if (i <= BOT_SLOT_RANGED && einfo->ItemEntry[i] != 0)
                 {
                     LOG_WARN("npcbots", "Wanderer bot {} id {} level {} can't generate req gear in slot {}, generating standard item!",
-                        me->GetName().c_str(), me->GetEntry(), uint32(me->GetLevel()), uint32(i));
+                             me->GetName().c_str(), me->GetEntry(), uint32(me->GetLevel()), uint32(i));
 
                     item = Item::CreateItem(einfo->ItemEntry[i], 1);
                     ASSERT(item, "Failed to init standard Item for wandering bot!");
@@ -15063,7 +15605,9 @@ void bot_ai::InitEquips()
             else
             {
                 _equips[i] = item;
-                if (GetSpec() != BOT_SPEC_DEFAULT && BotDataMgr::GenerateWanderingBotItemEnchants(item, i, GetSpec())) {}
+                if (GetSpec() != BOT_SPEC_DEFAULT && BotDataMgr::GenerateWanderingBotItemEnchants(item, i, GetSpec()))
+                {
+                }
 
                 gss << " [" << uint32(i) << "] " << _equips[i]->GetTemplate()->Name1 << " (" << _equips[i]->GetEntry() << ')';
             }
@@ -15120,8 +15664,8 @@ void bot_ai::InitEquips()
                 //ItemTemplate const* proto = item->GetTemplate();
                 //TC_LOG_ERROR("entities.player", "minion_ai::InitEquips(): bot %s (id: %u): found item: for slot %u: %s (id: %u, guidLow: %u)",
                 //    me->GetName().c_str(), me->GetEntry(), i, proto->Name1.c_str(), itemId, itemGuidLow);
-
-            } while (iiresult->NextRow());
+            }
+            while (iiresult->NextRow());
         }
     }
 
@@ -15131,7 +15675,7 @@ void bot_ai::InitEquips()
         if (CanChangeEquip(i) && _equips[i])
         {
             /*player_npcbot*/
-            NpcBotTransmogData const* transmogData =NewSelectNpcBotTransmogs();
+            NpcBotTransmogData const* transmogData = NewSelectNpcBotTransmogs();
             // old NpcBotTransmogData const* transmogData = BotDataMgr::SelectNpcBotTransmogs(me->GetEntry());
             /*player_npcbot end*/
 
@@ -15304,21 +15848,30 @@ bool bot_ai::IAmFree() const
 }
 
 //UTILITIES
-void bot_ai::_AddItemTemplateLink(Player const* forPlayer, ItemTemplate const* item, std::ostringstream &str) const
+void bot_ai::_AddItemTemplateLink(Player const* forPlayer, ItemTemplate const* item, std::ostringstream& str) const
 {
     //color
     str << "|c";
     switch (item->Quality)
     {
-        case ITEM_QUALITY_POOR:     str << "ff9d9d9d"; break;  //GREY
-        case ITEM_QUALITY_NORMAL:   str << "ffffffff"; break;  //WHITE
-        case ITEM_QUALITY_UNCOMMON: str << "ff1eff00"; break;  //GREEN
-        case ITEM_QUALITY_RARE:     str << "ff0070dd"; break;  //BLUE
-        case ITEM_QUALITY_EPIC:     str << "ffa335ee"; break;  //PURPLE
-        case ITEM_QUALITY_LEGENDARY:str << "ffff8000"; break;  //ORANGE
-        case ITEM_QUALITY_ARTIFACT: str << "ffe6cc80"; break;  //LIGHT YELLOW
-        case ITEM_QUALITY_HEIRLOOM: str << "ffe6cc80"; break;  //LIGHT YELLOW
-        default:                    str << "ff000000"; break;  //UNK BLACK
+    case ITEM_QUALITY_POOR: str << "ff9d9d9d";
+        break; //GREY
+    case ITEM_QUALITY_NORMAL: str << "ffffffff";
+        break; //WHITE
+    case ITEM_QUALITY_UNCOMMON: str << "ff1eff00";
+        break; //GREEN
+    case ITEM_QUALITY_RARE: str << "ff0070dd";
+        break; //BLUE
+    case ITEM_QUALITY_EPIC: str << "ffa335ee";
+        break; //PURPLE
+    case ITEM_QUALITY_LEGENDARY: str << "ffff8000";
+        break; //ORANGE
+    case ITEM_QUALITY_ARTIFACT: str << "ffe6cc80";
+        break; //LIGHT YELLOW
+    case ITEM_QUALITY_HEIRLOOM: str << "ffe6cc80";
+        break; //LIGHT YELLOW
+    default: str << "ff000000";
+        break; //UNK BLACK
     }
     str << "|Hitem:" << uint32(item->ItemId) << ':';
 
@@ -15332,13 +15885,14 @@ void bot_ai::_AddItemTemplateLink(Player const* forPlayer, ItemTemplate const* i
 
     //max in stack
     if (item->BuyCount > 1)
-        str<< "|cff009900x" << item->BuyCount << ".|r";
+        str << "|cff009900x" << item->BuyCount << ".|r";
     else
         str << "|cff009900.|r";
 }
+
 // |TInterface\\Icons\\INV_<iconName>:<iconSize>|t|color|Hitem:item_id:perm_ench_id:gem1:gem2:gem3:0:random_property:suffix_factor:reporter_level|h[name]|h|r
 // |TInterface\\Icons\\INV_Misc_Staff_01:16|t|cffa335ee|Hitem:812:0:0:0:0:0:0:0:70|h[Glowing Brightwood Staff]|h|r
-void bot_ai::_AddItemLink(Player const* forPlayer, Item const* item, std::ostringstream &str, bool addIcon) const
+void bot_ai::_AddItemLink(Player const* forPlayer, Item const* item, std::ostringstream& str, bool addIcon) const
 {
     ItemTemplate const* proto = item->GetTemplate();
     //ItemRandomSuffixEntry const* item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
@@ -15359,15 +15913,24 @@ void bot_ai::_AddItemLink(Player const* forPlayer, Item const* item, std::ostrin
     str << "|c";
     switch (proto->Quality)
     {
-        case ITEM_QUALITY_POOR:     str << "ff9d9d9d"; break;  //GREY
-        case ITEM_QUALITY_NORMAL:   str << "ffffffff"; break;  //WHITE
-        case ITEM_QUALITY_UNCOMMON: str << "ff1eff00"; break;  //GREEN
-        case ITEM_QUALITY_RARE:     str << "ff0070dd"; break;  //BLUE
-        case ITEM_QUALITY_EPIC:     str << "ffa335ee"; break;  //PURPLE
-        case ITEM_QUALITY_LEGENDARY:str << "ffff8000"; break;  //ORANGE
-        case ITEM_QUALITY_ARTIFACT: str << "ffe6cc80"; break;  //LIGHT YELLOW
-        case ITEM_QUALITY_HEIRLOOM: str << "ffe6cc80"; break;  //LIGHT YELLOW
-        default:                    str << "ff000000"; break;  //UNK BLACK
+    case ITEM_QUALITY_POOR: str << "ff9d9d9d";
+        break; //GREY
+    case ITEM_QUALITY_NORMAL: str << "ffffffff";
+        break; //WHITE
+    case ITEM_QUALITY_UNCOMMON: str << "ff1eff00";
+        break; //GREEN
+    case ITEM_QUALITY_RARE: str << "ff0070dd";
+        break; //BLUE
+    case ITEM_QUALITY_EPIC: str << "ffa335ee";
+        break; //PURPLE
+    case ITEM_QUALITY_LEGENDARY: str << "ffff8000";
+        break; //ORANGE
+    case ITEM_QUALITY_ARTIFACT: str << "ffe6cc80";
+        break; //LIGHT YELLOW
+    case ITEM_QUALITY_HEIRLOOM: str << "ffe6cc80";
+        break; //LIGHT YELLOW
+    default: str << "ff000000";
+        break; //UNK BLACK
     }
     str << "|Hitem:" << proto->ItemId << ':';
 
@@ -15380,9 +15943,12 @@ void bot_ai::_AddItemLink(Player const* forPlayer, Item const* item, std::ostrin
 
         switch (slot - SOCK_ENCHANTMENT_SLOT)
         {
-            case 0: g1 = eId;   break;
-            case 1: g2 = eId;   break;
-            case 2: g3 = eId;   break;
+        case 0: g1 = eId;
+            break;
+        case 1: g2 = eId;
+            break;
+        case 2: g3 = eId;
+            break;
         }
     }
     str << g1 << ':' << g2 << ':' << g3 << ':';
@@ -15401,7 +15967,7 @@ void bot_ai::_AddItemLink(Player const* forPlayer, Item const* item, std::ostrin
     str << "|h[" << name;
     if (suffix.length() > 0)
         str << ' ' << suffix;
-    str <<"]|h|r";
+    str << "]|h|r";
 
     //quantity
     if (item->GetCount() > 1)
@@ -15409,21 +15975,24 @@ void bot_ai::_AddItemLink(Player const* forPlayer, Item const* item, std::ostrin
 
     //TC_LOG_ERROR("entities.player", "bot_ai::_AddItemLink(): %s", str.str().c_str());
 }
+
 //Unused
-void bot_ai::_AddQuestLink(Player const* forPlayer, Quest const* quest, std::ostringstream &str) const
+void bot_ai::_AddQuestLink(Player const* forPlayer, Quest const* quest, std::ostringstream& str) const
 {
     std::string questTitle = quest->GetTitle();
     _LocalizeQuest(forPlayer, questTitle, quest->GetQuestId());
     str << "|cFFEFFD00|Hquest:" << quest->GetQuestId() << ':' << quest->GetQuestLevel() << "|h[" << questTitle << "]|h|r";
 }
+
 //Unsused
-void bot_ai::_AddWeaponSkillLink(Player const* forPlayer, SpellInfo const* spellInfo, std::ostringstream &str, uint32 skillid) const
+void bot_ai::_AddWeaponSkillLink(Player const* forPlayer, SpellInfo const* spellInfo, std::ostringstream& str, uint32 skillid) const
 {
     uint32 loc = forPlayer->GetSession()->GetSessionDbcLocale();
     str << "|cff00ffff|Hspell:" << spellInfo->Id << "|h[" << spellInfo->SpellName[loc] << " : " << master->GetSkillValue(skillid) << " /" << master->GetMaxSkillValue(skillid) << "]|h|r";
 }
+
 //|cff71d5ff|Hspell:21563|h[Command]|h|r
-void bot_ai::_AddSpellLink(Player const* forPlayer, SpellInfo const* spellInfo, std::ostringstream &str, bool color/* = true*/) const
+void bot_ai::_AddSpellLink(Player const* forPlayer, SpellInfo const* spellInfo, std::ostringstream& str, bool color/* = true*/) const
 {
     uint32 loc = forPlayer->GetSession()->GetSessionDbcLocale();
     str << "|c";
@@ -15432,14 +16001,22 @@ void bot_ai::_AddSpellLink(Player const* forPlayer, SpellInfo const* spellInfo, 
     {
         switch (GetFirstSchoolInMask(spellInfo->GetSchoolMask()))
         {
-            case SPELL_SCHOOL_NORMAL:       str << "ffffff00"; break; //YELLOW
-            case SPELL_SCHOOL_HOLY:         str << "ffffe680"; break; //LIGHT YELLOW
-            case SPELL_SCHOOL_FIRE:         str << "ffff8000"; break; //ORANGE
-            case SPELL_SCHOOL_NATURE:       str << "ff4dff4d"; break; //GREEN
-            case SPELL_SCHOOL_FROST:        str << "ff80ffff"; break; //LIGHT BLUE
-            case SPELL_SCHOOL_SHADOW:       str << "ff8080ff"; break; //DARK BLUE
-            case SPELL_SCHOOL_ARCANE:       str << "ffff80ff"; break; //LIGHT PURPLE
-            default:                        str << "ffffffff"; break; //UNK WHITE
+        case SPELL_SCHOOL_NORMAL: str << "ffffff00";
+            break; //YELLOW
+        case SPELL_SCHOOL_HOLY: str << "ffffe680";
+            break; //LIGHT YELLOW
+        case SPELL_SCHOOL_FIRE: str << "ffff8000";
+            break; //ORANGE
+        case SPELL_SCHOOL_NATURE: str << "ff4dff4d";
+            break; //GREEN
+        case SPELL_SCHOOL_FROST: str << "ff80ffff";
+            break; //LIGHT BLUE
+        case SPELL_SCHOOL_SHADOW: str << "ff8080ff";
+            break; //DARK BLUE
+        case SPELL_SCHOOL_ARCANE: str << "ffff80ff";
+            break; //LIGHT PURPLE
+        default: str << "ffffffff";
+            break; //UNK WHITE
         }
     }
     else
@@ -15447,8 +16024,9 @@ void bot_ai::_AddSpellLink(Player const* forPlayer, SpellInfo const* spellInfo, 
 
     str << "|Hspell:" << spellInfo->Id << "|h[" << spellInfo->SpellName[loc] << "]|h|r";
 }
+
 //Unused
-void bot_ai::_AddProfessionLink(Player const* forPlayer, SpellInfo const* spellInfo, std::ostringstream &str, uint32 skillId) const
+void bot_ai::_AddProfessionLink(Player const* forPlayer, SpellInfo const* spellInfo, std::ostringstream& str, uint32 skillId) const
 {
     ASSERT(master->HasSkill(skillId));
     // |cffffd000|Htrade:4037:1:150:1:6AAAAAAAAAAAAAAAAAAAAAAOAADAAAAAAAAAAAAAAAAIAAAAAAAAA|h[Engineering]|h|r
@@ -15457,12 +16035,13 @@ void bot_ai::_AddProfessionLink(Player const* forPlayer, SpellInfo const* spellI
     if (skillInfo)
     {
         uint32 curValue = master->GetPureSkillValue(skillId);
-        uint32 maxValue  = master->GetPureMaxSkillValue(skillId);
+        uint32 maxValue = master->GetPureMaxSkillValue(skillId);
         str << "|cffffd000|Htrade:" << spellInfo->Id << ':' << curValue << ':' << maxValue << ':' << master->GetGUID().GetCounter() << ":6AAAAAAAAAAAAAAAAAAAAAAOAADAAAAAAAAAAAAAAAAIAAAAAAAAA" << "|h[" << skillInfo->name[loc] << "]|h|r";
     }
 }
+
 //Localization
-void bot_ai::_LocalizeItem(Player const* forPlayer, std::string &itemName, uint32 entry) const
+void bot_ai::_LocalizeItem(Player const* forPlayer, std::string& itemName, uint32 entry) const
 {
     uint32 loc = forPlayer->GetSession()->GetSessionDbLocaleIndex();
     std::wstring wnamepart;
@@ -15479,7 +16058,7 @@ void bot_ai::_LocalizeItem(Player const* forPlayer, std::string &itemName, uint3
     }
 }
 
-void bot_ai::_LocalizeItem(Player const* forPlayer, std::string &itemName, std::string &suffix, Item const* item) const
+void bot_ai::_LocalizeItem(Player const* forPlayer, std::string& itemName, std::string& suffix, Item const* item) const
 {
     uint32 loc = forPlayer->GetSession()->GetSessionDbLocaleIndex();
     std::wstring wnamepart;
@@ -15525,7 +16104,7 @@ void bot_ai::_LocalizeItem(Player const* forPlayer, std::string &itemName, std::
     }
 }
 
-void bot_ai::_LocalizeQuest(Player const* forPlayer, std::string &questTitle, uint32 entry) const
+void bot_ai::_LocalizeQuest(Player const* forPlayer, std::string& questTitle, uint32 entry) const
 {
     uint32 loc = forPlayer->GetSession()->GetSessionDbLocaleIndex();
     std::wstring wnamepart;
@@ -15542,7 +16121,7 @@ void bot_ai::_LocalizeQuest(Player const* forPlayer, std::string &questTitle, ui
     }
 }
 
-void bot_ai::_LocalizeCreature(Player const* forPlayer, std::string &creatureName, uint32 entry) const
+void bot_ai::_LocalizeCreature(Player const* forPlayer, std::string& creatureName, uint32 entry) const
 {
     uint32 loc = forPlayer->GetSession()->GetSessionDbLocaleIndex();
     std::wstring wnamepart;
@@ -15559,7 +16138,7 @@ void bot_ai::_LocalizeCreature(Player const* forPlayer, std::string &creatureNam
     }
 }
 
-void bot_ai::_LocalizeGameObject(Player const* forPlayer, std::string &gameobjectName, uint32 entry) const
+void bot_ai::_LocalizeGameObject(Player const* forPlayer, std::string& gameobjectName, uint32 entry) const
 {
     uint32 loc = forPlayer->GetSession()->GetSessionDbLocaleIndex();
     std::wstring wnamepart;
@@ -15576,7 +16155,7 @@ void bot_ai::_LocalizeGameObject(Player const* forPlayer, std::string &gameobjec
     }
 }
 
-void bot_ai::_LocalizeSpell(Player const* forPlayer, std::string &spellName, uint32 entry) const
+void bot_ai::_LocalizeSpell(Player const* forPlayer, std::string& spellName, uint32 entry) const
 {
     uint32 loc = forPlayer->GetSession()->GetSessionDbcLocale();
     std::wstring wnamepart;
@@ -15706,19 +16285,19 @@ void bot_ai::JustEngagedWith(Unit* u)
         bool byspell = false;
         switch (_botclass)
         {
-            case BOT_CLASS_DRUID:
-                byspell = GetBotStance() == BOT_STANCE_NONE || GetBotStance() == DRUID_MOONKIN_FORM;
-                break;
-            case BOT_CLASS_PRIEST:
-            case BOT_CLASS_MAGE:
-            case BOT_CLASS_WARLOCK:
-            case BOT_CLASS_SHAMAN:
-            case BOT_CLASS_SPHYNX:
-            case BOT_CLASS_ARCHMAGE:
-                byspell = true;
-                break;
-            default:
-                break;
+        case BOT_CLASS_DRUID:
+            byspell = GetBotStance() == BOT_STANCE_NONE || GetBotStance() == DRUID_MOONKIN_FORM;
+            break;
+        case BOT_CLASS_PRIEST:
+        case BOT_CLASS_MAGE:
+        case BOT_CLASS_WARLOCK:
+        case BOT_CLASS_SHAMAN:
+        case BOT_CLASS_SPHYNX:
+        case BOT_CLASS_ARCHMAGE:
+            byspell = true;
+            break;
+        default:
+            break;
         }
 
         if (CanBotAttack(u, byspell))
@@ -15730,6 +16309,7 @@ void bot_ai::JustEngagedWith(Unit* u)
         }
     }
 }
+
 //killer may be NULL
 void bot_ai::JustDied(Unit* u)
 {
@@ -15779,14 +16359,19 @@ void bot_ai::JustDied(Unit* u)
     else if (u && (u->IsPvP() || u->IsControlledByPlayer() || u->IsNPCBotOrPet()))
     {
         LOG_DEBUG("npcbots", "{} {} id {} class {} level {} WAS KILLED BY {} {} id {} class {} level {} on their way to {}!",
-            IsWanderer() ? "Wandering bot" : "Bot", me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()),
-            (u->IsPlayer() ? "player" : u->IsNPCBot() ? u->ToCreature()->GetBotAI()->IsWanderer() ? "wandering bot" : "bot" : u->IsNPCBotPet() ? "botpet" : "creature"),
-            u->GetName().c_str(), u->GetEntry(), uint32(u->GetClass()), uint32(u->GetLevel()),
-            IsWanderer() ? _travel_node_cur->GetName().c_str() : "''");
+                  IsWanderer() ? "Wandering bot" : "Bot", me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()),
+                  (u->IsPlayer() ? "player" : u->IsNPCBot() ? u->ToCreature()->GetBotAI()->IsWanderer() ? "wandering bot" : "bot" : u->IsNPCBotPet() ? "botpet" : "creature"),
+                  u->GetName().c_str(), u->GetEntry(), uint32(u->GetClass()), uint32(u->GetLevel()),
+                  IsWanderer() ? _travel_node_cur->GetName().c_str() : "''");
     }
 
-    _reviveTimer = (IsWanderer() && !(u && u->IsControlledByPlayer())) ? REVIVE_TIMER_MEDIUM :
-        IAmFree() ? REVIVE_TIMER_DEFAULT : master->InBattleground() ? REVIVE_TIMER_SHORT / 2 : REVIVE_TIMER_SHORT;
+    _reviveTimer = (IsWanderer() && !(u && u->IsControlledByPlayer())) ?
+                       REVIVE_TIMER_MEDIUM :
+                       IAmFree() ?
+                       REVIVE_TIMER_DEFAULT :
+                       master->InBattleground() ?
+                       REVIVE_TIMER_SHORT / 2 :
+                       REVIVE_TIMER_SHORT;
     _atHome = false;
     _evadeMode = false;
     spawned = false;
@@ -15794,6 +16379,7 @@ void bot_ai::JustDied(Unit* u)
 
     ++_deathsCount;
 }
+
 //This is triggered before SetDeathState(JUST_DIED) call
 //attacker may be NULL
 void bot_ai::OnDeath([[maybe_unused]] Unit* attacker/* = nullptr*/)
@@ -15803,14 +16389,22 @@ void bot_ai::OnDeath([[maybe_unused]] Unit* attacker/* = nullptr*/)
         uint32 spell_id;
         switch (sstone->GetBase()->GetId())
         {
-            case 20707: spell_id = 3026;  break;        // rank 1
-            case 20762: spell_id = 20758; break;        // rank 2
-            case 20763: spell_id = 20759; break;        // rank 3
-            case 20764: spell_id = 20760; break;        // rank 4
-            case 20765: spell_id = 20761; break;        // rank 5
-            case 27239: spell_id = 27240; break;        // rank 6
-            case 47883: spell_id = 47882; break;        // rank 7
-            default:    spell_id = 0;     break;
+        case 20707: spell_id = 3026;
+            break; // rank 1
+        case 20762: spell_id = 20758;
+            break; // rank 2
+        case 20763: spell_id = 20759;
+            break; // rank 3
+        case 20764: spell_id = 20760;
+            break; // rank 4
+        case 20765: spell_id = 20761;
+            break; // rank 5
+        case 27239: spell_id = 27240;
+            break; // rank 6
+        case 47883: spell_id = 47882;
+            break; // rank 7
+        default: spell_id = 0;
+            break;
         }
         _selfrez_spell_id = spell_id;
     }
@@ -15829,17 +16423,17 @@ void bot_ai::KilledUnit(Unit* u)
             if (IsWanderer())
             {
                 LOG_DEBUG("npcbots", "Wandering bot {} id {} class {} level {} KILLED {} {} id {} class {} level {} on their way to {}!",
-                    me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()),
-                    (u->IsPlayer() ? "player" : u->IsNPCBot() ? u->ToCreature()->GetBotAI()->IsWanderer() ? "wandering bot" : "bot" : u->IsNPCBotPet() ? "botpet" : "creature"),
-                    u->GetName().c_str(), u->GetEntry(), uint32(u->GetClass()), uint32(u->GetLevel()),
-                    _travel_node_cur->GetName().c_str());
+                          me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()),
+                          (u->IsPlayer() ? "player" : u->IsNPCBot() ? u->ToCreature()->GetBotAI()->IsWanderer() ? "wandering bot" : "bot" : u->IsNPCBotPet() ? "botpet" : "creature"),
+                          u->GetName().c_str(), u->GetEntry(), uint32(u->GetClass()), uint32(u->GetLevel()),
+                          _travel_node_cur->GetName().c_str());
             }
             else if (u->IsNPCBot() && u->ToCreature()->GetBotAI()->IsWanderer())
             {
                 LOG_DEBUG("npcbots", "Bot {} id {} class {} level {} KILLED wandering bot {} id {} class {} level {} on their way to {}!",
-                    me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()),
-                    u->GetName().c_str(), u->GetEntry(), uint32(u->GetClass()), uint32(u->GetLevel()),
-                    IsWanderer() ? _travel_node_cur->GetName().c_str() : "''");
+                          me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()),
+                          u->GetName().c_str(), u->GetEntry(), uint32(u->GetClass()), uint32(u->GetLevel()),
+                          IsWanderer() ? _travel_node_cur->GetName().c_str() : "''");
             }
         }
     }
@@ -15850,8 +16444,9 @@ void bot_ai::KilledUnit(Unit* u)
         Battleground* bg = GetBG();
         //could be removed from BG
         if (bg && bg->GetBots().find(me->GetGUID()) != bg->GetBots().end() &&
-            (u->IsNPCBot() ? bg->GetBots().find(u->GetGUID()) != bg->GetBots().end() :
-            bg->GetPlayers().find(u->GetGUID()) != bg->GetPlayers().end()))
+            (u->IsNPCBot() ?
+                 bg->GetBots().find(u->GetGUID()) != bg->GetBots().end() :
+                 bg->GetPlayers().find(u->GetGUID()) != bg->GetPlayers().end()))
         {
             if (u->IsPlayer())
                 bg->HandleBotKillPlayer(me, u->ToPlayer());
@@ -15905,10 +16500,12 @@ void bot_ai::DamageDealt(Unit* victim, uint32& damage, DamageEffectType /*damage
     if (victim->GetTypeId() == TYPEID_PLAYER)
         ResetChase(victim);
 }
+
 void bot_ai::OnBotSpellStart(SpellInfo const* spellInfo)
 {
     OnClassSpellStart(spellInfo);
 }
+
 //This function is called after Spell::SendSpellCooldown() and Spell::DoAllEffects...() call
 void bot_ai::OnBotSpellGo(Spell const* spell, bool ok)
 {
@@ -15971,7 +16568,7 @@ void bot_ai::OnBotSpellGo(Spell const* spell, bool ok)
     {
         if (DEBUG_BOT_ORDERS)
             LOG_ERROR("entities.player", "doCast(): ordered spell {} by {} was {}!",
-                curInfo->Id, me->GetName().c_str(), ok ? "successful" : "unsuccessful");
+                  curInfo->Id, me->GetName().c_str(), ok ? "successful" : "unsuccessful");
         CompleteOrder(_orders.front());
     }
 }
@@ -16114,10 +16711,14 @@ void bot_ai::CastBotItemCombatSpell(DamageInfo const& damageInfo)
             // offhand item cannot proc from main hand hit etc
             switch (damageInfo.GetAttackType())
             {
-                case BASE_ATTACK:   slot = BOT_SLOT_MAINHAND;   break;
-                case OFF_ATTACK:    slot = BOT_SLOT_OFFHAND;    break;
-                case RANGED_ATTACK: slot = BOT_SLOT_RANGED;     break;
-                default:            slot = -1;                  break;
+            case BASE_ATTACK: slot = BOT_SLOT_MAINHAND;
+                break;
+            case OFF_ATTACK: slot = BOT_SLOT_OFFHAND;
+                break;
+            case RANGED_ATTACK: slot = BOT_SLOT_RANGED;
+                break;
+            default: slot = -1;
+                break;
             }
             if (slot != i)
                 continue;
@@ -16249,6 +16850,7 @@ void bot_ai::CastBotItemCombatSpell(DamageInfo const& damageInfo, Item* item, It
         }
     }
 }
+
 //ORDERS
 bool bot_ai::AddOrder(BotOrder&& order)
 {
@@ -16261,48 +16863,52 @@ bool bot_ai::AddOrder(BotOrder&& order)
     _orders.push(std::move(order));
     return true;
 }
+
 void bot_ai::CancelOrder(BotOrder const& order)
 {
     if (_orders.empty())
     {
         LOG_ERROR("scripts", "bot_ai::CancelOrder: {} orders are empty while trying to remove order type {}!",
-            me->GetName().c_str(), uint32(order._type));
+                  me->GetName().c_str(), uint32(order._type));
         return;
     }
     if (_orders.front()._type != order._type)
     {
         LOG_ERROR("scripts", "bot_ai::CancelOrder: {} front order (type {}) is different from cur order (type {})!",
-            me->GetName().c_str(), uint32(_orders.front()._type), uint32(order._type));
+                  me->GetName().c_str(), uint32(_orders.front()._type), uint32(order._type));
         return;
     }
 
     RemoveBotCommandState(BOT_COMMAND_ISSUED_ORDER);
     _orders.pop();
 }
+
 void bot_ai::CompleteOrder(BotOrder const& order)
 {
     if (_orders.empty())
     {
         LOG_ERROR("scripts", "bot_ai::CompleteOrder: {} orders are empty while trying to remove order type {}!",
-            me->GetName().c_str(), uint32(order._type));
+                  me->GetName().c_str(), uint32(order._type));
         return;
     }
     if (_orders.front()._type != order._type)
     {
         LOG_ERROR("scripts", "bot_ai::CompleteOrder: {} front order (type {}) is different from cur order (type {})!",
-            me->GetName().c_str(), uint32(_orders.front()._type), uint32(order._type));
+                  me->GetName().c_str(), uint32(_orders.front()._type), uint32(order._type));
         return;
     }
 
     RemoveBotCommandState(BOT_COMMAND_ISSUED_ORDER);
     _orders.pop();
 }
+
 void bot_ai::CancelAllOrders()
 {
     RemoveBotCommandState(BOT_COMMAND_ISSUED_ORDER);
     while (!_orders.empty())
         _orders.pop();
 }
+
 void bot_ai::_ProcessOrders()
 {
     if (HasBotCommandState(BOT_COMMAND_ISSUED_ORDER))
@@ -16320,7 +16926,7 @@ void bot_ai::_ProcessOrders()
     Unit* target = nullptr;
     switch (order._type)
     {
-        case BOT_ORDER_SPELLCAST:
+    case BOT_ORDER_SPELLCAST:
         {
             if (CCed(me))
                 break;
@@ -16348,7 +16954,7 @@ void bot_ai::_ProcessOrders()
 
             if (!target || !target->IsInWorld())
             {
-                LOG_ERROR("scripts", "bot_ai:_ProcessOrders: target {} not found!",  ObjectGuid(order.params.spellCastParams.targetGuid).ToString());
+                LOG_ERROR("scripts", "bot_ai:_ProcessOrders: target {} not found!", ObjectGuid(order.params.spellCastParams.targetGuid).ToString());
                 CancelOrder(order);
                 return;
             }
@@ -16359,12 +16965,13 @@ void bot_ai::_ProcessOrders()
             doCast(target, _spells[order.params.spellCastParams.baseSpell]->spellId);
             break;
         }
-        default:
-            LOG_ERROR("scripts", "bot_ai:_ProcessOrders: invalid order type {}!", uint32(order._type));
-            CancelOrder(order);
-            return;
+    default:
+        LOG_ERROR("scripts", "bot_ai:_ProcessOrders: invalid order type {}!", uint32(order._type));
+        CancelOrder(order);
+        return;
     }
 }
+
 bool bot_ai::IsLastOrder(BotOrderTypes order_type, uint32 param1) const
 {
     if (!_orders.empty())
@@ -16374,19 +16981,20 @@ bool bot_ai::IsLastOrder(BotOrderTypes order_type, uint32 param1) const
         {
             switch (order_type)
             {
-                case BOT_ORDER_SPELLCAST:
-                    if (order.params.spellCastParams.baseSpell == param1)
-                        return true;
-                    break;
-                default:
-                    LOG_ERROR("scripts", "bot_ai:IsLastOrder: invalid order type {}!", uint32(order_type));
-                    break;
+            case BOT_ORDER_SPELLCAST:
+                if (order.params.spellCastParams.baseSpell == param1)
+                    return true;
+                break;
+            default:
+                LOG_ERROR("scripts", "bot_ai:IsLastOrder: invalid order type {}!", uint32(order_type));
+                break;
             }
         }
     }
 
     return false;
 }
+
 //VEHICLES
 //helpers
 bool bot_ai::HasAuraTypeWithValueAtLeast(AuraType auratype, int32 minvalue, Unit const* unit) const
@@ -16401,6 +17009,7 @@ bool bot_ai::HasAuraTypeWithValueAtLeast(AuraType auratype, int32 minvalue, Unit
 
     return false;
 }
+
 //strats - opponent is always valid
 void bot_ai::DoSkytalonVehicleStrats(uint32 diff)
 {
@@ -16420,7 +17029,7 @@ void bot_ai::DoSkytalonVehicleStrats(uint32 diff)
     //finishers
     uint8 finishComboPoints;
     uint32 finishPower;
-    if (GetHealthPCT(drake) <= (40 + 40*drake->HasAuraType(SPELL_AURA_PERIODIC_DAMAGE)) ||
+    if (GetHealthPCT(drake) <= (40 + 40 * drake->HasAuraType(SPELL_AURA_PERIODIC_DAMAGE)) ||
         HasAuraTypeWithValueAtLeast(SPELL_AURA_PERIODIC_DAMAGE, drake->GetMaxHealth() / 16, drake))
     {
         finishComboPoints = 3;
@@ -16437,7 +17046,7 @@ void bot_ai::DoSkytalonVehicleStrats(uint32 diff)
         finishPower = 50;
     }
 
-    if (vehcomboPoints >= finishComboPoints && (Rand() < 75 + 40*(vehcomboPoints >= 5 || drakePower < finishPower)))
+    if (vehcomboPoints >= finishComboPoints && (Rand() < 75 + 40 * (vehcomboPoints >= 5 || drakePower < finishPower)))
     {
         if (drakePower >= finishPower)
         {
@@ -16458,7 +17067,8 @@ void bot_ai::DoSkytalonVehicleStrats(uint32 diff)
                 else
                 {
                     std::vector<Unit*> vec = BotMgr::GetAllGroupMembers(master);
-                    cast = std::any_of(vec.cbegin(), vec.cend(), [drake = drake](Unit const* member) {
+                    cast = std::any_of(vec.cbegin(), vec.cend(), [drake = drake](Unit const* member)
+                    {
                         return drake->GetMap() == member->FindMap() && member->GetVehicle() &&
                             member->GetVehicleBase()->GetHealthPct() < 90.0f && member->GetVehicleBase()->GetDistance(drake) < 60;
                     });
@@ -16562,7 +17172,7 @@ void bot_ai::DoSkytalonVehicleStrats(uint32 diff)
     if (!drakespell)
     {
         LOG_ERROR("scripts", "DoSkytalonVehicleStrats no spell for role mask {} cp {}, power {}, target {}",
-            GetBotRoles(), uint32(vehcomboPoints), drakePower, target->GetName().c_str());
+                  GetBotRoles(), uint32(vehcomboPoints), drakePower, target->GetName().c_str());
         return;
     }
 
@@ -16573,6 +17183,7 @@ void bot_ai::DoSkytalonVehicleStrats(uint32 diff)
     drake->SetInFront(target);
     drake->CastSpell(target, drakespell);
 }
+
 void bot_ai::DoRubyDrakeVehicleStrats(uint32 diff)
 {
     if (GC_Timer > diff)
@@ -16638,6 +17249,7 @@ void bot_ai::DoRubyDrakeVehicleStrats(uint32 diff)
     drake->SetInFront(target);
     drake->CastSpell(target, drakespell);
 }
+
 void bot_ai::DoEmeraldDrakeVehicleStrats(uint32 diff)
 {
     if (GC_Timer > diff)
@@ -16771,7 +17383,7 @@ void bot_ai::DoEmeraldDrakeVehicleStrats(uint32 diff)
             //random target
             std::list<Unit*> targets;
             Acore::AnyUnfriendlyUnitInObjectRangeCheck check(drake, drake, 60.f);
-            Acore::UnitListSearcher <Acore::AnyUnfriendlyUnitInObjectRangeCheck> searcher(drake, targets, check);
+            Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck> searcher(drake, targets, check);
             //drake->VisitNearbyObject(60.f, searcher);
             Cell::VisitAllObjects(drake, searcher, 60.f);
             targets.remove_if(BOTAI_PRED::UnitExclude(opponent));
@@ -16798,6 +17410,7 @@ void bot_ai::DoEmeraldDrakeVehicleStrats(uint32 diff)
     drake->SetInFront(target);
     drake->CastSpell(target, drakespell);
 }
+
 void bot_ai::DoAmberDrakeVehicleStrats(uint32 diff)
 {
     if (GC_Timer > diff)
@@ -16860,7 +17473,7 @@ void bot_ai::DoAmberDrakeVehicleStrats(uint32 diff)
             //random 1-shot target
             std::list<Unit*> targets;
             Acore::AnyUnfriendlyUnitInObjectRangeCheck check(drake, drake, 60.f);
-            Acore::UnitListSearcher <Acore::AnyUnfriendlyUnitInObjectRangeCheck> searcher(drake, targets, check);
+            Acore::UnitListSearcher<Acore::AnyUnfriendlyUnitInObjectRangeCheck> searcher(drake, targets, check);
             //drake->VisitNearbyObject(60.f, searcher);
             Cell::VisitAllObjects(drake, searcher, 60.f);
             targets.remove_if(BOTAI_PRED::UnitExclude(opponent));
@@ -16897,6 +17510,7 @@ void bot_ai::DoAmberDrakeVehicleStrats(uint32 diff)
     drake->SetInFront(target);
     drake->CastSpell(target, drakespell);
 }
+
 void bot_ai::DoArgentMountVehicleStrats(uint32 diff)
 {
     if (GC_Timer > diff)
@@ -16939,9 +17553,9 @@ void bot_ai::DoArgentMountVehicleStrats(uint32 diff)
     if (mount->GetDistance(opponent) > 5.f)
     {
         //Defend
-        AuraEffect const* def = opponent->GetAuraEffect(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN,SPELLFAMILY_GENERIC, 2007, EFFECT_0);
+        AuraEffect const* def = opponent->GetAuraEffect(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN, SPELLFAMILY_GENERIC, 2007, EFFECT_0);
         if (!def)
-            def = opponent->GetAuraEffect(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN,SPELLFAMILY_GENERIC, 2007, EFFECT_2);
+            def = opponent->GetAuraEffect(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN, SPELLFAMILY_GENERIC, 2007, EFFECT_2);
         if ((!def || def->GetBase()->GetStackAmount() < 2) && !mount->HasSpellCooldown(mount->m_spells[2]))
         {
             mountspell = mount->m_spells[2]; //Charge
@@ -16973,6 +17587,7 @@ void bot_ai::DoArgentMountVehicleStrats(uint32 diff)
     mount->SetInFront(target);
     mount->CastSpell(target, mountspell);
 }
+
 void bot_ai::DoDemolisherVehicleStrats(uint32 diff)
 {
     if (GC_Timer > diff)
@@ -16983,6 +17598,7 @@ void bot_ai::DoDemolisherVehicleStrats(uint32 diff)
     if (!CheckVehicleAttackTarget(curVehStrat))
         return;
 }
+
 void bot_ai::DoSiegeEngineVehicleStrats(uint32 diff)
 {
     if (GC_Timer > diff)
@@ -16993,6 +17609,7 @@ void bot_ai::DoSiegeEngineVehicleStrats(uint32 diff)
     if (!CheckVehicleAttackTarget(curVehStrat))
         return;
 }
+
 void bot_ai::DoChopperVehicleStrats(uint32 diff)
 {
     if (GC_Timer > diff)
@@ -17003,6 +17620,7 @@ void bot_ai::DoChopperVehicleStrats(uint32 diff)
     if (!CheckVehicleAttackTarget(curVehStrat))
         return;
 }
+
 void bot_ai::DoGenericVehicleStrats(uint32 diff)
 {
     if (GC_Timer > diff)
@@ -17013,6 +17631,7 @@ void bot_ai::DoGenericVehicleStrats(uint32 diff)
     if (!CheckVehicleAttackTarget(curVehStrat))
         return;
 }
+
 void bot_ai::DoVehicleStrats(BotVehicleStrats strat, uint32 diff)
 {
     if (curVehStrat != strat)
@@ -17029,38 +17648,39 @@ void bot_ai::DoVehicleStrats(BotVehicleStrats strat, uint32 diff)
 
     switch (strat)
     {
-        case BOT_VEH_STRAT_WYRMREST_SKYTALON:
-            DoSkytalonVehicleStrats(diff);
-            break;
-        case BOT_VEH_STRAT_RUBY_DRAKE:
-            DoRubyDrakeVehicleStrats(diff);
-            break;
-        case BOT_VEH_STRAT_EMERALD_DRAKE:
-            DoEmeraldDrakeVehicleStrats(diff);
-            break;
-        case BOT_VEH_STRAT_AMBER_DRAKE:
-            DoAmberDrakeVehicleStrats(diff);
-            break;
-        case BOT_VEH_STRAT_TOC5_MOUNT:
-            DoArgentMountVehicleStrats(diff);
-            break;
-        case BOT_VEH_STRAT_ULDUAR_DEMOLISHER:
-            DoDemolisherVehicleStrats(diff);
-            break;
-        case BOT_VEH_STRAT_ULDUAR_SIEGEENGINE:
-            DoSiegeEngineVehicleStrats(diff);
-            break;
-        case BOT_VEH_STRAT_ULDUAR_CHOPPER:
-            DoChopperVehicleStrats(diff);
-            break;
-        case BOT_VEH_STRAT_GENERIC:
-            DoGenericVehicleStrats(diff);
-            break;
-        default:
-            LOG_ERROR("scripts", "Unhandled vehicle strat {}", uint32(strat));
-            break;
+    case BOT_VEH_STRAT_WYRMREST_SKYTALON:
+        DoSkytalonVehicleStrats(diff);
+        break;
+    case BOT_VEH_STRAT_RUBY_DRAKE:
+        DoRubyDrakeVehicleStrats(diff);
+        break;
+    case BOT_VEH_STRAT_EMERALD_DRAKE:
+        DoEmeraldDrakeVehicleStrats(diff);
+        break;
+    case BOT_VEH_STRAT_AMBER_DRAKE:
+        DoAmberDrakeVehicleStrats(diff);
+        break;
+    case BOT_VEH_STRAT_TOC5_MOUNT:
+        DoArgentMountVehicleStrats(diff);
+        break;
+    case BOT_VEH_STRAT_ULDUAR_DEMOLISHER:
+        DoDemolisherVehicleStrats(diff);
+        break;
+    case BOT_VEH_STRAT_ULDUAR_SIEGEENGINE:
+        DoSiegeEngineVehicleStrats(diff);
+        break;
+    case BOT_VEH_STRAT_ULDUAR_CHOPPER:
+        DoChopperVehicleStrats(diff);
+        break;
+    case BOT_VEH_STRAT_GENERIC:
+        DoGenericVehicleStrats(diff);
+        break;
+    default:
+        LOG_ERROR("scripts", "Unhandled vehicle strat {}", uint32(strat));
+        break;
     }
 }
+
 void bot_ai::DoVehicleActions(uint32 diff)
 {
     if (!me->GetVehicle())
@@ -17070,58 +17690,59 @@ void bot_ai::DoVehicleActions(uint32 diff)
     BotVehicleStrats strat;
     switch (me->GetVehicleBase()->GetEntry())
     {
-        case CREATURE_NEXUS_SKYTALON_1:
-        case CREATURE_EOE_SKYTALON_N:
-        case CREATURE_EOE_SKYTALON_H:
-            strat = BOT_VEH_STRAT_WYRMREST_SKYTALON;
-            break;
-        case CREATURE_OCULUS_DRAKE_RUBY:
-            strat = BOT_VEH_STRAT_RUBY_DRAKE;
-            break;
-        case CREATURE_OCULUS_DRAKE_EMERALD:
-            strat = BOT_VEH_STRAT_EMERALD_DRAKE;
-            break;
-        case CREATURE_OCULUS_DRAKE_AMBER:
-            strat = BOT_VEH_STRAT_AMBER_DRAKE;
-            break;
-        //case CREATURE_TOC_STEED_QUELDOREI:
-        //case CREATURE_TOC_NIGHTSABER:
-        //case CREATURE_TOC_STEED_STORMWIND:
-        //case CREATURE_TOC_MECHANOSTRIDER:
-        //case CREATURE_TOC_RAM:
-        //case CREATURE_TOC_ELEKK:
-        //case CREATURE_TOC_HAWKSTRIDER_SUNREAVER:
-        //case CREATURE_TOC_RAPTOR:
-        //case CREATURE_TOC_WARHORSE:
-        //case CREATURE_TOC_WOLF:
-        //case CREATURE_TOC_HAWKSTRIDER_SILVERMOON:
-        //case CREATURE_TOC_KODO:
-        case CREATURE_TOC5_WARHORSE:
-        case CREATURE_TOC5_BATTLEWORG:
-            strat = BOT_VEH_STRAT_TOC5_MOUNT;
-            break;
-        /*
-        case CREATURE_ULDUAR_DEMOLISHER:
-            strat = BOT_VEH_STRAT_ULDUAR_DEMOLISHER;
-            break;
-        case CREATURE_ULDUAR_SIEGE_ENGINE:
-            strat = BOT_VEH_STRAT_ULDUAR_SIEGEENGINE;
-            break;
-        case CREATURE_ULDUAR_CHOPPER:
-        case CREATURE_ULDUAR_CHOPPER1:
-            strat = BOT_VEH_STRAT_ULDUAR_CHOPPER;
-            break;
-        */
-        default:
-            strat = BOT_VEH_STRAT_GENERIC;
-            if (curVehStrat != strat)
-                LOG_DEBUG("scripts", "bot_ai DoVehicleActions: {} has to use generic strat for vehicle creature {} ({})",
-                me->GetName().c_str(), me->GetVehicleBase()->GetName().c_str(), me->GetVehicleBase()->GetEntry());
-            break;
+    case CREATURE_NEXUS_SKYTALON_1:
+    case CREATURE_EOE_SKYTALON_N:
+    case CREATURE_EOE_SKYTALON_H:
+        strat = BOT_VEH_STRAT_WYRMREST_SKYTALON;
+        break;
+    case CREATURE_OCULUS_DRAKE_RUBY:
+        strat = BOT_VEH_STRAT_RUBY_DRAKE;
+        break;
+    case CREATURE_OCULUS_DRAKE_EMERALD:
+        strat = BOT_VEH_STRAT_EMERALD_DRAKE;
+        break;
+    case CREATURE_OCULUS_DRAKE_AMBER:
+        strat = BOT_VEH_STRAT_AMBER_DRAKE;
+        break;
+    //case CREATURE_TOC_STEED_QUELDOREI:
+    //case CREATURE_TOC_NIGHTSABER:
+    //case CREATURE_TOC_STEED_STORMWIND:
+    //case CREATURE_TOC_MECHANOSTRIDER:
+    //case CREATURE_TOC_RAM:
+    //case CREATURE_TOC_ELEKK:
+    //case CREATURE_TOC_HAWKSTRIDER_SUNREAVER:
+    //case CREATURE_TOC_RAPTOR:
+    //case CREATURE_TOC_WARHORSE:
+    //case CREATURE_TOC_WOLF:
+    //case CREATURE_TOC_HAWKSTRIDER_SILVERMOON:
+    //case CREATURE_TOC_KODO:
+    case CREATURE_TOC5_WARHORSE:
+    case CREATURE_TOC5_BATTLEWORG:
+        strat = BOT_VEH_STRAT_TOC5_MOUNT;
+        break;
+    /*
+    case CREATURE_ULDUAR_DEMOLISHER:
+        strat = BOT_VEH_STRAT_ULDUAR_DEMOLISHER;
+        break;
+    case CREATURE_ULDUAR_SIEGE_ENGINE:
+        strat = BOT_VEH_STRAT_ULDUAR_SIEGEENGINE;
+        break;
+    case CREATURE_ULDUAR_CHOPPER:
+    case CREATURE_ULDUAR_CHOPPER1:
+        strat = BOT_VEH_STRAT_ULDUAR_CHOPPER;
+        break;
+    */
+    default:
+        strat = BOT_VEH_STRAT_GENERIC;
+        if (curVehStrat != strat)
+            LOG_DEBUG("scripts", "bot_ai DoVehicleActions: {} has to use generic strat for vehicle creature {} ({})",
+                  me->GetName().c_str(), me->GetVehicleBase()->GetName().c_str(), me->GetVehicleBase()->GetEntry());
+        break;
     }
 
     DoVehicleStrats(strat, diff);
 }
+
 bool bot_ai::CheckVehicleAttackTarget(BotVehicleStrats strat)
 {
     opponent = _getVehicleTarget(strat);
@@ -17137,9 +17758,9 @@ bool bot_ai::CheckVehicleAttackTarget(BotVehicleStrats strat)
         {
             //if (VehicleSeatEntry const* seat = me->GetVehicle()->GetSeatForPassenger(me))
             //{
-                //if (seat->CanEnterOrExit())
-                    me->ExitVehicle();
-                    //me->BotStopMovement();
+            //if (seat->CanEnterOrExit())
+            me->ExitVehicle();
+            //me->BotStopMovement();
             //}
         }
 
@@ -17162,79 +17783,81 @@ bool bot_ai::HasVehicleRoleOverride(uint32 role) const
     {
         switch (veh->GetEntry())
         {
-            case CREATURE_NEXUS_SKYTALON_1:
-            case CREATURE_EOE_SKYTALON_N:
-            case CREATURE_EOE_SKYTALON_H:
-            case CREATURE_OCULUS_DRAKE_RUBY:
-            case CREATURE_OCULUS_DRAKE_EMERALD:
-            case CREATURE_OCULUS_DRAKE_AMBER:
-            //case CREATURE_TOC_STEED_QUELDOREI:
-            //case CREATURE_TOC_NIGHTSABER:
-            //case CREATURE_TOC_STEED_STORMWIND:
-            //case CREATURE_TOC_MECHANOSTRIDER:
-            //case CREATURE_TOC_RAM:
-            //case CREATURE_TOC_ELEKK:
-            //case CREATURE_TOC_HAWKSTRIDER_SUNREAVER:
-            //case CREATURE_TOC_RAPTOR:
-            //case CREATURE_TOC_WARHORSE:
-            //case CREATURE_TOC_WOLF:
-            //case CREATURE_TOC_HAWKSTRIDER_SILVERMOON:
-            //case CREATURE_TOC_KODO:
-            case CREATURE_TOC5_WARHORSE:
-            case CREATURE_TOC5_BATTLEWORG:
-            case CREATURE_ULDUAR_DEMOLISHER:
-                switch (role)
-                {
-                    case BOT_ROLE_RANGED:
-                        return true;
-                    default:
-                        break;
-                }
-                break;
+        case CREATURE_NEXUS_SKYTALON_1:
+        case CREATURE_EOE_SKYTALON_N:
+        case CREATURE_EOE_SKYTALON_H:
+        case CREATURE_OCULUS_DRAKE_RUBY:
+        case CREATURE_OCULUS_DRAKE_EMERALD:
+        case CREATURE_OCULUS_DRAKE_AMBER:
+        //case CREATURE_TOC_STEED_QUELDOREI:
+        //case CREATURE_TOC_NIGHTSABER:
+        //case CREATURE_TOC_STEED_STORMWIND:
+        //case CREATURE_TOC_MECHANOSTRIDER:
+        //case CREATURE_TOC_RAM:
+        //case CREATURE_TOC_ELEKK:
+        //case CREATURE_TOC_HAWKSTRIDER_SUNREAVER:
+        //case CREATURE_TOC_RAPTOR:
+        //case CREATURE_TOC_WARHORSE:
+        //case CREATURE_TOC_WOLF:
+        //case CREATURE_TOC_HAWKSTRIDER_SILVERMOON:
+        //case CREATURE_TOC_KODO:
+        case CREATURE_TOC5_WARHORSE:
+        case CREATURE_TOC5_BATTLEWORG:
+        case CREATURE_ULDUAR_DEMOLISHER:
+            switch (role)
+            {
+            case BOT_ROLE_RANGED:
+                return true;
             default:
                 break;
+            }
+            break;
+        default:
+            break;
         }
     }
 
     return false;
 }
+
 float bot_ai::GetVehicleAttackDistanceOverride() const
 {
     if (Creature const* veh = me->GetVehicleCreatureBase())
     {
         switch (veh->GetEntry())
         {
-            case CREATURE_NEXUS_SKYTALON_1:
-            case CREATURE_EOE_SKYTALON_N:
-            case CREATURE_EOE_SKYTALON_H:
-            case CREATURE_OCULUS_DRAKE_RUBY:
-            case CREATURE_OCULUS_DRAKE_EMERALD:
-            case CREATURE_OCULUS_DRAKE_AMBER:
-                return 30.f;
-            //case CREATURE_TOC_STEED_QUELDOREI:
-            //case CREATURE_TOC_NIGHTSABER:
-            //case CREATURE_TOC_STEED_STORMWIND:
-            //case CREATURE_TOC_MECHANOSTRIDER:
-            //case CREATURE_TOC_RAM:
-            //case CREATURE_TOC_ELEKK:
-            //case CREATURE_TOC_HAWKSTRIDER_SUNREAVER:
-            //case CREATURE_TOC_RAPTOR:
-            //case CREATURE_TOC_WARHORSE:
-            //case CREATURE_TOC_WOLF:
-            //case CREATURE_TOC_HAWKSTRIDER_SILVERMOON:
-            //case CREATURE_TOC_KODO:
-            case CREATURE_TOC5_WARHORSE:
-            case CREATURE_TOC5_BATTLEWORG:
-                return 15.f;
-            case CREATURE_ULDUAR_DEMOLISHER:
-                return 40.f;
-            default:
-                break;
+        case CREATURE_NEXUS_SKYTALON_1:
+        case CREATURE_EOE_SKYTALON_N:
+        case CREATURE_EOE_SKYTALON_H:
+        case CREATURE_OCULUS_DRAKE_RUBY:
+        case CREATURE_OCULUS_DRAKE_EMERALD:
+        case CREATURE_OCULUS_DRAKE_AMBER:
+            return 30.f;
+        //case CREATURE_TOC_STEED_QUELDOREI:
+        //case CREATURE_TOC_NIGHTSABER:
+        //case CREATURE_TOC_STEED_STORMWIND:
+        //case CREATURE_TOC_MECHANOSTRIDER:
+        //case CREATURE_TOC_RAM:
+        //case CREATURE_TOC_ELEKK:
+        //case CREATURE_TOC_HAWKSTRIDER_SUNREAVER:
+        //case CREATURE_TOC_RAPTOR:
+        //case CREATURE_TOC_WARHORSE:
+        //case CREATURE_TOC_WOLF:
+        //case CREATURE_TOC_HAWKSTRIDER_SILVERMOON:
+        //case CREATURE_TOC_KODO:
+        case CREATURE_TOC5_WARHORSE:
+        case CREATURE_TOC5_BATTLEWORG:
+            return 15.f;
+        case CREATURE_ULDUAR_DEMOLISHER:
+            return 40.f;
+        default:
+            break;
         }
     }
 
     return 0.0f;
 }
+
 uint8 bot_ai::LivingVehiclesCount(uint32 entry) const
 {
     if (IAmFree())
@@ -17250,6 +17873,7 @@ uint8 bot_ai::LivingVehiclesCount(uint32 entry) const
 
     return count;
 }
+
 //GLOBAL UPDATE
 void bot_ai::UpdateDeadAI(uint32 diff)
 {
@@ -17262,36 +17886,72 @@ void bot_ai::UpdateDeadAI(uint32 diff)
         me->CastSpell(me, _selfrez_spell_id);
 }
 
+/*
 bool bot_ai::CheckBotGroup()
 {
-    if(me->IsPlayerNpcBot() )
+    if(me->IsPlayerNpcBot())
     {
-        if(!_group.isValid() ||!GetBotOwner() ||!GetBotOwner()->GetGroup())
-        {
-            Map* map = me->FindMap();
-            KillEvents(true);
-            if(map && map->GetId() == 1 && me->GetAreaId() == 876 && waitDestory)
+        if (!GroupIned && !IAmFree()) {
+            if(GetBotOwner() && !HasBotCommandState(BOT_COMMAND_UNBIND))
             {
-                canUpdate = false;
-                BotMgr::CleanupsBeforeBotDelete(me);
-                map->AddObjectToRemoveList(me);
-            }
-            else
-            {
-                if(master && master->IsPlayer() && master->GetSession() && !master->GetSession()->PlayerLogout() )
-                {
-                    ChatHandler(master->GetSession()).PSendSysMessage("追随者[%s]已离开！",me->GetPlayerBotName().c_str());
-                    GetBotOwner()->GetBotMgr()->UnbindBot(me->GetGUID());
+                if (GetBotOwner()->GetBotMgr()&& GetBotOwner()->GetBotMgr()->GetBot(me->GetGUID())) {
+                    GetBotOwner()->GetBotMgr()->AddBotToGroup(me);
+                    SetBotCommandState(BOT_COMMAND_FOLLOW, true);
                 }
-                TeleportHomeStart(true);
-                waitDestory = true;
+                GroupIned = true;
             }
+            return false;
+        }
+
+        if(GroupIned && !IAmFree() && !_group.isValid())
+        {
+            GroupIned = false;
+            GetBotOwner()->GetBotMgr()->UnbindBot(me->GetGUID());
+            TeleportHomeStart(false);
+            LOG_ERROR("TeleportHomeStart","TeleportHomeStart");
+            return false;
+        }
+
+        if(IAmFree())
+        {
+            canUpdate = false;
+            // TeleportHomeStart(false);
             return true;
         }
+
+        // if(GroupIned && (!GetBotOwner() ||!GetBotOwner()->GetGroup() ||
+        //     !_group.isValid()||
+        //    ( _group.isValid() &&
+        //        !GetBotOwner()->GetGroup()->isLFGGroup() &&
+        //        !GetBotOwner()->GetGroup()->isBGGroup() &&
+        //        !GetBotOwner()->GetGroup()->isBFGroup() &&
+        //        _group->GetGUID() != GetBotOwner()->GetGroup()->GetGUID()))
+        // )
+        // {
+        //     Map* map = me->FindMap();
+        //     KillEvents(true);
+        //     if(map && map->GetId() == 1 && me->GetAreaId() == 876 && waitDestory)
+        //     {
+        //         canUpdate = false;
+        //         BotMgr::CleanupsBeforeBotDelete(me);
+        //         map->AddObjectToRemoveList(me);
+        //     }
+        //     else
+        //     {
+        //         // if(master && master->IsPlayer() && master->GetSession() && !master->GetSession()->PlayerLogout() )
+        //         // {
+        //         //     ChatHandler(master->GetSession()).PSendSysMessage("追随者[%s]已离开！",me->GetPlayerBotName().c_str());
+        //         // }
+        //         GetBotOwner()->GetBotMgr()->UnbindBot(me->GetGUID());
+        //         TeleportHomeStart(true);
+        //         waitDestory = true;
+        //     }
+        //     return true;
+        // }
     }
 
     return false;
-}
+}*/
 
 
 //opponent unsafe
@@ -17300,8 +17960,23 @@ bool bot_ai::GlobalUpdate(uint32 diff)
     if (!BotMgr::IsNpcBotModEnabled() || !BotDataMgr::AllBotsLoaded())
         return false;
 
-    if(CheckBotGroup())
-        return false;
+    if (me->IsPlayerNpcBot() && waitDestory)
+    {
+        Map* map = me->FindMap();
+        if (map && map->GetId() == 1 && me->GetAreaId() == 876)
+        {
+            // LOG_ERROR("DestoryPlayerNpcBot","DestoryPlayerNpcBot3");
+            KillEvents(true);
+            me->CombatStop();
+            canUpdate = false;
+            me->AddObjectToRemoveList();
+            return true;
+            //BotDataMgr::Player_UpdateNpcBotData(_owner->GetGUID().GetCounter(),bot->GetEntry(), NPCBOT_UPDATE_ERASE);
+        }
+    }
+
+    /*if(CheckBotGroup())
+        return false;*/
 
     if (IsWanderer())
     {
@@ -17390,7 +18065,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
                 me->SetByteValue(UNIT_FIELD_BYTES_2, 1, master->GetByteValue(UNIT_FIELD_BYTES_2, 1));
 
             //vehicle enter delayed
-            if (shouldEnterVehicle && master->IsInWorld() && me->IsAlive() &&/* !HasBotCommandState(BOT_COMMAND_MASK_UNMOVING) &&*/
+            if (shouldEnterVehicle && master->IsInWorld() && me->IsAlive() && /* !HasBotCommandState(BOT_COMMAND_MASK_UNMOVING) &&*/
                 !me->GetVehicle() && master->GetVehicle() && !CCed(me, true) && !IsCasting())
             {
                 shouldEnterVehicle = false;
@@ -17416,7 +18091,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
     {
         if (IAmFree())
             LOG_ERROR("scripts", "bot_ai::GlobalUpdate is called for free bot not in world: {} ({}) class {} level {}",
-                me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()));
+                  me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()));
         return false;
     }
 
@@ -17442,7 +18117,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
     //    return false;
 
     //Check current cast state: interrupt casts that became pointless
-    if (me->HasUnitState(UNIT_STATE_CASTING) && !HasBotCommandState(BOT_COMMAND_ISSUED_ORDER) && urand(1,100) <= 75)
+    if (me->HasUnitState(UNIT_STATE_CASTING) && !HasBotCommandState(BOT_COMMAND_ISSUED_ORDER) && urand(1, 100) <= 75)
     {
         bool interrupt;
         Unit const* target;
@@ -17477,9 +18152,9 @@ bool bot_ai::GlobalUpdate(uint32 diff)
                 if (!target->IsAlive() && info->Id != SPELL_CORPSE_EXPLOSION && info->Id != SPELL_RAISE_DEAD)
                     interrupt = true;
                 else if ((info->Mechanic == MECHANIC_POLYMORPH || info->Mechanic == MECHANIC_SHACKLE ||
-                    info->Mechanic == MECHANIC_DISORIENTED || info->Mechanic == MECHANIC_SLEEP ||
-                    info->Mechanic == MECHANIC_CHARM || info->Mechanic == MECHANIC_BANISH ||
-                    info->Mechanic == MECHANIC_STUN || info->Mechanic == MECHANIC_FREEZE) &&
+                        info->Mechanic == MECHANIC_DISORIENTED || info->Mechanic == MECHANIC_SLEEP ||
+                        info->Mechanic == MECHANIC_CHARM || info->Mechanic == MECHANIC_BANISH ||
+                        info->Mechanic == MECHANIC_STUN || info->Mechanic == MECHANIC_FREEZE) &&
                     info->GetFirstRankSpell()->Id != 710 && info->GetFirstRankSpell()->Id != SPELL_SLEEP &&
                     !target->getAttackers().empty() && !IsCasting(target))
                     interrupt = true; //useless control (except banish, checked inside class ai)
@@ -17490,7 +18165,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
                     !(info->AttributesEx & SPELL_ATTR1_NO_REFLECTION) &&
                     !(info->Attributes & SPELL_ATTR0_NO_IMMUNITIES) &&
                     (target->GetTotalAuraModifier(SPELL_AURA_REFLECT_SPELLS) > 60 ||
-                    target->GetTotalAuraModifierByMiscMask(SPELL_AURA_REFLECT_SPELLS_SCHOOL, info->GetSchoolMask()) > 60))
+                        target->GetTotalAuraModifierByMiscMask(SPELL_AURA_REFLECT_SPELLS_SCHOOL, info->GetSchoolMask()) > 60))
                     interrupt = true; // reflect
                 else if (
                     info->Id != 64382 && //shattering throw
@@ -17502,7 +18177,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
                     spell->GetCastTime() < spell->GetTimer() * 3 && // >=33% cast time remains
                     !me->IsWithinLOSInMap(target, VMAP::ModelIgnoreFlags::M2, LINEOFSIGHT_ALL_CHECKS))
                     interrupt = true; //LoS
-                else if (info->Id == 64382 && !target->HasAuraWithMechanic(1<<MECHANIC_IMMUNE_SHIELD))
+                else if (info->Id == 64382 && !target->HasAuraWithMechanic(1 << MECHANIC_IMMUNE_SHIELD))
                     interrupt = true; //Shattering Throw wasting
             }
             if (!interrupt && !(target == master && me->GetDistance(target) < INTERACTION_DISTANCE) &&
@@ -17636,7 +18311,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
         if (me->GetDisplayId() == me->GetNativeDisplayId())
         {
             me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, DEFAULT_WORLD_OBJECT_SIZE * me->GetObjectScale());
-            me->SetFloatValue(UNIT_FIELD_COMBATREACH,  DEFAULT_COMBAT_REACH * me->GetObjectScale());
+            me->SetFloatValue(UNIT_FIELD_COMBATREACH, DEFAULT_COMBAT_REACH * me->GetObjectScale());
 
             //debug: restore offhand visual if needed
             if (me->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + uint32(BOT_SLOT_OFFHAND)) == 0 && _canUseOffHand())
@@ -17694,7 +18369,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
 
             if (_lastZoneId != newzone)
                 _OnZoneUpdate(newzone, newarea); // also updates area
-            else// if (_lastAreaId != newarea)
+            else // if (_lastAreaId != newarea)
                 _OnAreaUpdate(newarea);
 
             if (_wmoAreaUpdateTimer <= diff)
@@ -17716,135 +18391,137 @@ bool bot_ai::GlobalUpdate(uint32 diff)
             }
         }
 
-        //Gathering
-        if (me->IsInWorld() && !IAmFree() && HasRole(BOT_ROLE_MASK_GATHERING) && !me->IsInCombat() && !master->IsInCombat() && !master->IsMounted() && !CCed(me) &&
-            master->GetLootGUID().IsEmpty() && !me->isMoving() && !master->isMoving() && master->IsStandState() && !Feasting() && !IsCasting() && !IsCasting(master) &&
-            !HasBotCommandState(BOT_COMMAND_MASK_UNMOVING) && !me->GetVehicle())
-        {
-            //TC_LOG_ERROR("spells", "bot_ai:UpdateEx by %s, found free master, my skills: %u:", me->GetName().c_str(), uint32(_roleMask & BOT_ROLE_MASK_GATHERING));
-            std::list<WorldObject*> woList;
-            NearbyObjectBySkillCheck check(master, INTERACTION_DISTANCE - 1.0f, (_roleMask & BOT_ROLE_MASK_GATHERING));
-            Acore::WorldObjectListSearcher<NearbyObjectBySkillCheck> searcher(me, woList, check, GRID_MAP_TYPE_MASK_CREATURE|GRID_MAP_TYPE_MASK_GAMEOBJECT);
-            Cell::VisitAllObjects(me, searcher, 20.f);
-            //me->VisitNearbyObject(20.f, searcher);
-            //TC_LOG_ERROR("spells", "bot_ai:UpdateEx: list is %s", woList.empty() ? "empty" : "not empty");
-            if (!woList.empty())
-            {
-                WorldObject* wo = nullptr;
-                float minangle = float(M_PI);
-                for (WorldObject* wob : woList)
-                {
-                    float angle = me->GetAbsoluteAngle(wob);
-                    if (me->GetDistance(wob) <= INTERACTION_DISTANCE * 0.5f && angle < minangle)
-                    {
-                        minangle = angle;
-                        wo = wob;
-                    }
-                }
+        //采集关闭
 
-                wo = wo ? wo : Acore::Containers::SelectRandomContainerElement(woList);
-                //TC_LOG_ERROR("spells", "bot_ai:UpdateEx: processing %s", wo->GetName().c_str());
-                if (me->GetDistance(wo) <= INTERACTION_DISTANCE * 0.5f && me->HasInArc(float(M_PI), wo))
-                {
-                    //cosmetic
-                    //CastSpellExtraArgs args(TRIGGERED_FULL_MASK);
-                    //me->CastSpell(wo->GetTypeId() == TYPEID_UNIT ? wo->ToUnit() : me, SPELL_COMBAT_SPECIAL_2H_ATTACK, args);
-                    me->CastSpell(wo->GetTypeId() == TYPEID_UNIT ? wo->ToUnit() : me, SPELL_COMBAT_SPECIAL_2H_ATTACK, true);
+        ////Gathering
+        //if (me->IsInWorld() && !IAmFree() && HasRole(BOT_ROLE_MASK_GATHERING) && !me->IsInCombat() && !master->IsInCombat() && !master->IsMounted() && !CCed(me) &&
+        //    master->GetLootGUID().IsEmpty() && !me->isMoving() && !master->isMoving() && master->IsStandState() && !Feasting() && !IsCasting() && !IsCasting(master) &&
+        //    !HasBotCommandState(BOT_COMMAND_MASK_UNMOVING) && !me->GetVehicle())
+        //{
+        //    //TC_LOG_ERROR("spells", "bot_ai:UpdateEx by %s, found free master, my skills: %u:", me->GetName().c_str(), uint32(_roleMask & BOT_ROLE_MASK_GATHERING));
+        //    std::list<WorldObject*> woList;
+        //    NearbyObjectBySkillCheck check(master, INTERACTION_DISTANCE - 1.0f, (_roleMask & BOT_ROLE_MASK_GATHERING));
+        //    Acore::WorldObjectListSearcher<NearbyObjectBySkillCheck> searcher(me, woList, check, GRID_MAP_TYPE_MASK_CREATURE|GRID_MAP_TYPE_MASK_GAMEOBJECT);
+        //    Cell::VisitAllObjects(me, searcher, 20.f);
+        //    //me->VisitNearbyObject(20.f, searcher);
+        //    //TC_LOG_ERROR("spells", "bot_ai:UpdateEx: list is %s", woList.empty() ? "empty" : "not empty");
+        //    if (!woList.empty())
+        //    {
+        //        WorldObject* wo = nullptr;
+        //        float minangle = float(M_PI);
+        //        for (WorldObject* wob : woList)
+        //        {
+        //            float angle = me->GetAbsoluteAngle(wob);
+        //            if (me->GetDistance(wob) <= INTERACTION_DISTANCE * 0.5f && angle < minangle)
+        //            {
+        //                minangle = angle;
+        //                wo = wob;
+        //            }
+        //        }
 
-                    if (wo->GetTypeId() == TYPEID_UNIT)
-                        wo->ToUnit()->SetDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
+        //        wo = wo ? wo : Acore::Containers::SelectRandomContainerElement(woList);
+        //        //TC_LOG_ERROR("spells", "bot_ai:UpdateEx: processing %s", wo->GetName().c_str());
+        //        if (me->GetDistance(wo) <= INTERACTION_DISTANCE * 0.5f && me->HasInArc(float(M_PI), wo))
+        //        {
+        //            //cosmetic
+        //            //CastSpellExtraArgs args(TRIGGERED_FULL_MASK);
+        //            //me->CastSpell(wo->GetTypeId() == TYPEID_UNIT ? wo->ToUnit() : me, SPELL_COMBAT_SPECIAL_2H_ATTACK, args);
+        //            me->CastSpell(wo->GetTypeId() == TYPEID_UNIT ? wo->ToUnit() : me, SPELL_COMBAT_SPECIAL_2H_ATTACK, true);
 
-                    master->SendLoot(wo->GetGUID(), LOOT_SKINNING);
+        //            if (wo->GetTypeId() == TYPEID_UNIT)
+        //                wo->ToUnit()->SetDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
 
-                    if (wo->GetTypeId() == TYPEID_UNIT)
-                        wo->ToUnit()->RemoveUnitFlag(UNIT_FLAG_SKINNABLE);
+        //            master->SendLoot(wo->GetGUID(), LOOT_SKINNING);
 
-                    _updateTimerEx1 = urand(1500, 2100);
-                }
-                else
-                {
-                    std::ostringstream msg;
-                    std::string name = wo->GetName();
-                    if (wo->GetTypeId() == TYPEID_UNIT)
-                    {
-                        _LocalizeCreature(master, name, wo->GetEntry());
-                        msg << name << "..."; // TODO
-                    }
-                    else
-                    {
-                        _LocalizeGameObject(master, name, wo->GetEntry());
-                        msg << name << "!";
-                    }
-                    BotWhisper(msg.str().c_str());
+        //            if (wo->GetTypeId() == TYPEID_UNIT)
+        //                wo->ToUnit()->RemoveUnitFlag(UNIT_FLAG_SKINNABLE);
 
-                    if (me->GetDistance(wo) > INTERACTION_DISTANCE * 0.5f)
-                    {
-                        Position pos;
-                        wo->GetNearPoint(me, pos.m_positionX, pos.m_positionY, pos.m_positionZ, 0.f, CONTACT_DISTANCE, wo->GetAbsoluteAngle(me));
-                        BotMovement(BOT_MOVE_POINT, &pos, nullptr, false);
-                        //me->GetMotionMaster()->MovePoint(me->GetMapId(), pos, false);
-                    }
-                    else
-                    {
-                        me->SetFacingTo(me->GetAbsoluteAngle(wo));
-                        _updateTimerEx1 = urand(1500, 1800);
-                    }
-                }
-            }
-        }
+        //            _updateTimerEx1 = urand(1500, 2100);
+        //        }
+        //        else
+        //        {
+        //            std::ostringstream msg;
+        //            std::string name = wo->GetName();
+        //            if (wo->GetTypeId() == TYPEID_UNIT)
+        //            {
+        //                _LocalizeCreature(master, name, wo->GetEntry());
+        //                msg << name << "..."; // TODO
+        //            }
+        //            else
+        //            {
+        //                _LocalizeGameObject(master, name, wo->GetEntry());
+        //                msg << name << "!";
+        //            }
+        //            BotWhisper(msg.str().c_str());
 
-        //Looting
-        if (me->IsInWorld() && !IAmFree() && HasRole(BOT_ROLE_AUTOLOOT) && HasRole(BOT_ROLE_MASK_LOOTING) &&
-            !me->GetVictim() && !master->IsMounted() && !CCed(me) && !Feasting() && !IsCasting() &&
-            !HasBotCommandState(BOT_COMMAND_MASK_UNMOVING))
-        {
-            //TC_LOG_ERROR("scripts", "bot_ai Looting by %s, my mask: %u:", me->GetName().c_str(), uint32(_roleMask & BOT_ROLE_MASK_LOOTING));
-            std::list<Unit*> crList;
-            NearbyLootableCreatureCheck check(master, std::min(30.f, std::max(5.f, sWorld->getFloatConfig(CONFIG_GROUP_XP_DISTANCE) - 10.f)));
-            Acore::UnitListSearcher<NearbyLootableCreatureCheck> searcher(me, crList, check);
-            Cell::VisitAllObjects(me, searcher, 40.f);
-            //me->VisitNearbyObject(40.f, searcher);
-            for (std::list<Unit*>::iterator itr = crList.begin(); itr != crList.end();)
-            {
-                if (!_canLootCreature((*itr)->ToCreature()))
-                {
-                    //TC_LOG_ERROR("scripts", "bot_ai Looting: cannot loot %s (%u)", (*itr)->GetName().c_str(), (*itr)->GetGUIDLow());
-                    crList.erase(itr++);
-                    continue;
-                }
-                ++itr;
-            }
+        //            if (me->GetDistance(wo) > INTERACTION_DISTANCE * 0.5f)
+        //            {
+        //                Position pos;
+        //                wo->GetNearPoint(me, pos.m_positionX, pos.m_positionY, pos.m_positionZ, 0.f, CONTACT_DISTANCE, wo->GetAbsoluteAngle(me));
+        //                BotMovement(BOT_MOVE_POINT, &pos, nullptr, false);
+        //                //me->GetMotionMaster()->MovePoint(me->GetMapId(), pos, false);
+        //            }
+        //            else
+        //            {
+        //                me->SetFacingTo(me->GetAbsoluteAngle(wo));
+        //                _updateTimerEx1 = urand(1500, 1800);
+        //            }
+        //        }
+        //    }
+        //}
 
-            if (!crList.empty())
-            {
-                Unit* un = Acore::Containers::SelectRandomContainerElement(crList);
+        ////Looting
+        //if (me->IsInWorld() && !IAmFree() && HasRole(BOT_ROLE_AUTOLOOT) && HasRole(BOT_ROLE_MASK_LOOTING) &&
+        //    !me->GetVictim() && !master->IsMounted() && !CCed(me) && !Feasting() && !IsCasting() &&
+        //    !HasBotCommandState(BOT_COMMAND_MASK_UNMOVING))
+        //{
+        //    //TC_LOG_ERROR("scripts", "bot_ai Looting by %s, my mask: %u:", me->GetName().c_str(), uint32(_roleMask & BOT_ROLE_MASK_LOOTING));
+        //    std::list<Unit*> crList;
+        //    NearbyLootableCreatureCheck check(master, std::min(30.f, std::max(5.f, sWorld->getFloatConfig(CONFIG_GROUP_XP_DISTANCE) - 10.f)));
+        //    Acore::UnitListSearcher<NearbyLootableCreatureCheck> searcher(me, crList, check);
+        //    Cell::VisitAllObjects(me, searcher, 40.f);
+        //    //me->VisitNearbyObject(40.f, searcher);
+        //    for (std::list<Unit*>::iterator itr = crList.begin(); itr != crList.end();)
+        //    {
+        //        if (!_canLootCreature((*itr)->ToCreature()))
+        //        {
+        //            //TC_LOG_ERROR("scripts", "bot_ai Looting: cannot loot %s (%u)", (*itr)->GetName().c_str(), (*itr)->GetGUIDLow());
+        //            crList.erase(itr++);
+        //            continue;
+        //        }
+        //        ++itr;
+        //    }
 
-                std::ostringstream msg;
-                std::string name = un->GetName();
-                _LocalizeCreature(master, name, un->GetEntry());
-                msg << LocalizedNpcText(master, BOT_TEXT_LOOTING) << ' ' << name;
-                BotWhisper(msg.str().c_str());
+        //    if (!crList.empty())
+        //    {
+        //        Unit* un = Acore::Containers::SelectRandomContainerElement(crList);
 
-                _autoLootCreature(un->ToCreature());
+        //        std::ostringstream msg;
+        //        std::string name = un->GetName();
+        //        _LocalizeCreature(master, name, un->GetEntry());
+        //        msg << LocalizedNpcText(master, BOT_TEXT_LOOTING) << ' ' << name;
+        //        BotWhisper(msg.str().c_str());
 
-                if (crList.size() > 1)
-                    _updateTimerEx1 = urand(400, 600);
-                /*//TC_LOG_ERROR("scripts", "bot_ai Looting: processing %s", un->GetName().c_str());
-                if (me->GetDistance(un) < INTERACTION_DISTANCE + 2.f)
-                {
-                    //TC_LOG_ERROR("scripts", "bot_ai Looting: looting %s", un->GetName().c_str());
-                    _autoLootCreature(un->ToCreature());
-                    _updateTimerEx1 = urand(500, 1000);
-                }
-                else
-                {
-                    //TC_LOG_ERROR("scripts", "bot_ai Looting: moving towards %s", un->GetName().c_str());
-                    Position pos;
-                    un->GetNearPoint(me, pos.m_positionX, pos.m_positionY, pos.m_positionZ, 0.f, CONTACT_DISTANCE, un->GetAbsoluteAngle(me));
-                    me->GetMotionMaster()->MovePoint(me->GetMapId(), pos, false);
-                }*/
-            }
-        }
+        //        _autoLootCreature(un->ToCreature());
+
+        //        if (crList.size() > 1)
+        //            _updateTimerEx1 = urand(400, 600);
+        //        /*//TC_LOG_ERROR("scripts", "bot_ai Looting: processing %s", un->GetName().c_str());
+        //        if (me->GetDistance(un) < INTERACTION_DISTANCE + 2.f)
+        //        {
+        //            //TC_LOG_ERROR("scripts", "bot_ai Looting: looting %s", un->GetName().c_str());
+        //            _autoLootCreature(un->ToCreature());
+        //            _updateTimerEx1 = urand(500, 1000);
+        //        }
+        //        else
+        //        {
+        //            //TC_LOG_ERROR("scripts", "bot_ai Looting: moving towards %s", un->GetName().c_str());
+        //            Position pos;
+        //            un->GetNearPoint(me, pos.m_positionX, pos.m_positionY, pos.m_positionZ, 0.f, CONTACT_DISTANCE, un->GetAbsoluteAngle(me));
+        //            me->GetMotionMaster()->MovePoint(me->GetMapId(), pos, false);
+        //        }*/
+        //    }
+        //}
     }
 
     if (!IsTempBot())
@@ -17956,7 +18633,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
                 if (corpse && me->GetMap() == corpse->FindMap() && !me->IsInCombat() && !me->HasUnitState(UNIT_STATE_MOVING) &&
                     !IsCasting() && !IsShootingWand() && me->GetDistance(corpse) > 5)
                     BotMovement(BOT_MOVE_POINT, corpse);
-                    //me->GetMotionMaster()->MovePoint(corpse->GetMapId(), *corpse);
+                //me->GetMotionMaster()->MovePoint(corpse->GetMapId(), *corpse);
             }
             else
             {
@@ -17970,7 +18647,8 @@ bool bot_ai::GlobalUpdate(uint32 diff)
             if (!mmover && me->GetMap()->IsBattleground() && !IsFlagCarrier(me))
             {
                 //GET BG FOLLOW UNIT
-                static const std::function<bool(Unit const*)> flag_carrier_pred = [](Unit const* u) {
+                static const std::function<bool(Unit const*)> flag_carrier_pred = [](Unit const* u)
+                {
                     return bot_ai::IsFlagCarrier(u);
                 };
 
@@ -17986,7 +18664,7 @@ bool bot_ai::GlobalUpdate(uint32 diff)
                 float speed = 0.0f;
                 _calculatePos(mmover, movepos, &speed);
                 float maxdist = std::max<float>((mmover->IsPlayer() ? mmover->ToPlayer()->GetBotMgr()->GetBotFollowDist() : BotMgr::GetBotFollowDistDefault() / 2) *
-                    ((mmover->m_movementInfo.GetMovementFlags() & MOVEMENTFLAG_FORWARD) ? 0.125f : mmover->isMoving() ? 0.03125f : 0.25f), 3.f);
+                                                ((mmover->m_movementInfo.GetMovementFlags() & MOVEMENTFLAG_FORWARD) ? 0.125f : mmover->isMoving() ? 0.03125f : 0.25f), 3.f);
                 Position destPos;
                 if (me->isMoving())
                     me->GetMotionMaster()->GetDestination(destPos.m_positionX, destPos.m_positionY, destPos.m_positionZ);
@@ -18046,20 +18724,20 @@ void bot_ai::CommonTimers(uint32 diff)
     Events.Update(diff);
     SpellTimers(diff);
 
-    if (GC_Timer > diff)            GC_Timer -= diff;
-    if (checkAurasTimer > diff)     checkAurasTimer -= diff;
-    if (waitTimer > diff)           waitTimer -= diff;
-    if (_moveBehindTimer > diff)    _moveBehindTimer -= diff;
-    if (itemsAutouseTimer > diff)   itemsAutouseTimer -= diff;
-    if (evadeDelayTimer > diff)     evadeDelayTimer -= diff;
-    if (roleTimer > diff)           roleTimer -= diff;
-    if (ordersTimer > diff)         ordersTimer -= diff;
-    if (checkMasterTimer > diff)    checkMasterTimer -= diff;
+    if (GC_Timer > diff) GC_Timer -= diff;
+    if (checkAurasTimer > diff) checkAurasTimer -= diff;
+    if (waitTimer > diff) waitTimer -= diff;
+    if (_moveBehindTimer > diff) _moveBehindTimer -= diff;
+    if (itemsAutouseTimer > diff) itemsAutouseTimer -= diff;
+    if (evadeDelayTimer > diff) evadeDelayTimer -= diff;
+    if (roleTimer > diff) roleTimer -= diff;
+    if (ordersTimer > diff) ordersTimer -= diff;
+    if (checkMasterTimer > diff) checkMasterTimer -= diff;
     if (_checkOwershipTimer > diff) _checkOwershipTimer -= diff;
 
-    if (_powersTimer > diff)        _powersTimer -= diff;
-    if (_chaseTimer > diff)         _chaseTimer -= diff;
-    if (_engageTimer > diff)        _engageTimer -= diff;
+    if (_powersTimer > diff) _powersTimer -= diff;
+    if (_chaseTimer > diff) _chaseTimer -= diff;
+    if (_engageTimer > diff) _engageTimer -= diff;
 
     if (_potionTimer > diff && (_potionTimer < POTION_CD || !me->IsInCombat())) _potionTimer -= diff;
 
@@ -18084,13 +18762,13 @@ void bot_ai::CommonTimers(uint32 diff)
         }
     }
 
-    if (_contestedPvPTimer > diff)  _contestedPvPTimer -= diff;
+    if (_contestedPvPTimer > diff) _contestedPvPTimer -= diff;
 
-    if (_groupUpdateTimer > diff)   _groupUpdateTimer -= diff;
-    else if (_groupUpdateTimer)     _groupUpdateTimer = 0;
+    if (_groupUpdateTimer > diff) _groupUpdateTimer -= diff;
+    else if (_groupUpdateTimer) _groupUpdateTimer = 0;
 
-    if (_updateTimerMedium > diff)  _updateTimerMedium -= diff;
-    if (_updateTimerEx1 > diff)     _updateTimerEx1 -= diff;
+    if (_updateTimerMedium > diff) _updateTimerMedium -= diff;
+    if (_updateTimerEx1 > diff) _updateTimerEx1 -= diff;
 
     if (_saveDisabledSpellsTimer > diff) _saveDisabledSpellsTimer -= diff;
 }
@@ -18100,7 +18778,7 @@ void bot_ai::UpdateReviveTimer(uint32 diff)
     if (me->IsAlive())
         return;
 
-    if (_reviveTimer > diff)        _reviveTimer -= diff;
+    if (_reviveTimer > diff) _reviveTimer -= diff;
     else
     {
         if (IAmFree())
@@ -18117,7 +18795,7 @@ void bot_ai::UpdateReviveTimer(uint32 diff)
                     if (!nextNode)
                     {
                         LOG_FATAL("scripts", "Bot {} ({}) is unable to get next travel node (1)! cur {}, last {}, position: {}. BOT WAS DISABLED",
-                            me->GetName().c_str(), me->GetEntry(), _travel_node_cur->GetWPId(), _travel_node_last ? _travel_node_last->GetWPId() : 0, me->GetPosition().ToString().c_str());
+                                  me->GetName().c_str(), me->GetEntry(), _travel_node_cur->GetWPId(), _travel_node_last ? _travel_node_last->GetWPId() : 0, me->GetPosition().ToString().c_str());
                         canUpdate = false;
                         return;
                     }
@@ -18127,8 +18805,8 @@ void bot_ai::UpdateReviveTimer(uint32 diff)
                         BotMgr::TeleportBot(me, sMapMgr->CreateBaseMap(nextNode->GetMapId()), nextNode, true);
 
                     LOG_TRACE("npcbots", "Bot {} id {} class {} level {} died on the way from node {} to {} ('{}'), NEW {} ('{}'), {}, dist {} yd!",
-                        me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()), _travel_node_last ? _travel_node_last->GetWPId() : 0, _travel_node_cur->GetWPId(),
-                        _travel_node_cur->GetName().c_str(), nextNode->GetWPId(), nextNode->GetName().c_str(), homepos.ToString().c_str(), safePos.GetExactDist(homepos));
+                              me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()), _travel_node_last ? _travel_node_last->GetWPId() : 0, _travel_node_cur->GetWPId(),
+                              _travel_node_cur->GetName().c_str(), nextNode->GetWPId(), nextNode->GetName().c_str(), homepos.ToString().c_str(), safePos.GetExactDist(homepos));
 
                     _travel_node_last = _travel_node_cur;
                     _travel_node_cur = nextNode;
@@ -18137,7 +18815,7 @@ void bot_ai::UpdateReviveTimer(uint32 diff)
             }
         }
         else
-            if (_reviveTimer > 0)   _reviveTimer = 0;
+            if (_reviveTimer > 0) _reviveTimer = 0;
     }
 }
 
@@ -18189,8 +18867,8 @@ void bot_ai::Evade()
             me->GetPositionZ() <= INVALID_HEIGHT || (me->GetExactDist2d(pos) < 20.0f && me->GetExactDist(pos) > 100.0f))
         {
             LOG_DEBUG("npcbots", "Bot {} id {} class {} level {} map {} TELEPORTING to node {} ('{}') map {}, {}, dist {} yd!",
-                me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()), me->GetMapId(), _travel_node_cur->GetWPId(),
-                _travel_node_cur->GetName().c_str(), uint32(mapid), pos.ToString().c_str(), me->GetExactDist(pos));
+                      me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()), me->GetMapId(), _travel_node_cur->GetWPId(),
+                      _travel_node_cur->GetName().c_str(), uint32(mapid), pos.ToString().c_str(), me->GetExactDist(pos));
 
             evadeDelayTimer = 12000;
             me->CastSpell(me, WANDERER_HEARTHSTONE);
@@ -18208,7 +18886,7 @@ void bot_ai::Evade()
             if (mapid != me->GetMapId())
             {
                 teleHomeEvent->ScheduleAbort();
-                teleHomeEvent->Execute(0,0);
+                teleHomeEvent->Execute(0, 0);
             }
         }
         return;
@@ -18234,14 +18912,14 @@ void bot_ai::Evade()
             {
                 bool use_path =
                     !(_travel_node_cur && _travel_node_last &&
-                    _travel_node_cur->HasFlag(BotWPFlags::BOTWP_FLAG_MOVEMENT_IGNORES_PATHING) &&
-                    _travel_node_last->HasFlag(BotWPFlags::BOTWP_FLAG_MOVEMENT_IGNORES_PATHING));
+                        _travel_node_cur->HasFlag(BotWPFlags::BOTWP_FLAG_MOVEMENT_IGNORES_PATHING) &&
+                        _travel_node_last->HasFlag(BotWPFlags::BOTWP_FLAG_MOVEMENT_IGNORES_PATHING));
                 GetNextEvadeMovePoint(pos, use_path);
                 if (pos.m_positionZ <= INVALID_HEIGHT)
                 {
                     LOG_ERROR("npcbots", "Bot {} '{}' class {} level {} evade move point has invalid height {} (usepath: {})!\nWPs: cur {}, last {}\nPositions:\ncurrent: {}\ntarget: {}",
-                        me->GetEntry(), me->GetName().c_str(), uint32(_botclass), uint32(me->GetLevel()), pos.m_positionZ, uint32(use_path),
-                        _travel_node_cur->GetWPId(), _travel_node_last ? _travel_node_last->GetWPId() : 0, me->GetPosition().ToString().c_str(), pos.ToString().c_str());
+                              me->GetEntry(), me->GetName().c_str(), uint32(_botclass), uint32(me->GetLevel()), pos.m_positionZ, uint32(use_path),
+                              _travel_node_cur->GetWPId(), _travel_node_last ? _travel_node_last->GetWPId() : 0, me->GetPosition().ToString().c_str(), pos.ToString().c_str());
                     _evadeCount = 100;
                     return;
                 }
@@ -18261,7 +18939,7 @@ void bot_ai::Evade()
                 if (!nextNode)
                 {
                     LOG_FATAL("npcbots", "Bot {} ({}) is unable to get next travel node! cur {}, last {}, position: {}. BOT WAS DISABLED",
-                        me->GetName().c_str(), me->GetEntry(), _travel_node_cur->GetWPId(), _travel_node_last ? _travel_node_last->GetWPId() : 0, me->GetPosition().ToString().c_str());
+                              me->GetName().c_str(), me->GetEntry(), _travel_node_cur->GetWPId(), _travel_node_last ? _travel_node_last->GetWPId() : 0, me->GetPosition().ToString().c_str());
                     canUpdate = false;
                     return;
                 }
@@ -18277,8 +18955,8 @@ void bot_ai::Evade()
                     homepos.Relocate(nextNode);
 
                 LOG_TRACE("npcbots", "Bot {} id {} class {} level {} wandered from node {} to {}, next {} ('{}'), {}, dist {} yd!",
-                    me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()), _travel_node_last ? _travel_node_last->GetWPId() : 0, _travel_node_cur->GetWPId(),
-                    nextNode->GetWPId(), nextNode->GetName().c_str(), homepos.ToString().c_str(), pos.GetExactDist(homepos));
+                          me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()), _travel_node_last ? _travel_node_last->GetWPId() : 0, _travel_node_cur->GetWPId(),
+                          nextNode->GetWPId(), nextNode->GetName().c_str(), homepos.ToString().c_str(), pos.GetExactDist(homepos));
 
                 if (me->GetMap()->GetEntry()->IsContinent())
                     evadeDelayTimer = urand(3000, 7000);
@@ -18308,6 +18986,7 @@ void bot_ai::Evade()
     me->SetFacingTo(pos.GetOrientation());
     me->SetFaction(me->GetCreatureTemplate()->faction);
 }
+
 void bot_ai::GetNextEvadeMovePoint(Position& pos, bool& use_path) const
 {
     //const uint8 evade_jump_threshold = me->HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING) ? 50 : 25;
@@ -18359,31 +19038,31 @@ void bot_ai::GetNextEvadeMovePoint(Position& pos, bool& use_path) const
 
     switch (path.GetPathType())
     {
-        case PATHFIND_NOT_USING_PATH: //swimming
-        case PATHFIND_NORMAL: //found path
-            if (me->GetExactDist(path.GetEndPosition().x, path.GetEndPosition().y, path.GetEndPosition().z) > 15.0f)
-                path.ShortenPathUntilDist(path.GetEndPosition(), frand(7.5f, 15.0f));
+    case PATHFIND_NOT_USING_PATH: //swimming
+    case PATHFIND_NORMAL: //found path
+        if (me->GetExactDist(path.GetEndPosition().x, path.GetEndPosition().y, path.GetEndPosition().z) > 15.0f)
+            path.ShortenPathUntilDist(path.GetEndPosition(), frand(7.5f, 15.0f));
+        return;
+    case PATHFIND_BLANK: // invalid coords
+    case PATHFIND_NOPATH:
+    case PATHFIND_SHORTCUT:
+    case PATHFIND_SHORT:
+    case PATHFIND_INCOMPLETE:
+    case PATHFIND_FARFROMPOLY: // invalid coords
+    case PATHFIND_FARFROMPOLY_START: //invalid start coords
+    case PATHFIND_FARFROMPOLY_END: //invalid end coords
+        if (path.GetPath().size() > 4)
+        {
+            path.ShortenPathUntilDist(path.GetEndPosition(), frand(5.0f, 15.0f));
             return;
-        case PATHFIND_BLANK: // invalid coords
-        case PATHFIND_NOPATH:
-        case PATHFIND_SHORTCUT:
-        case PATHFIND_SHORT:
-        case PATHFIND_INCOMPLETE:
-        case PATHFIND_FARFROMPOLY: // invalid coords
-        case PATHFIND_FARFROMPOLY_START: //invalid start coords
-        case PATHFIND_FARFROMPOLY_END: //invalid end coords
-            if (path.GetPath().size() > 4)
-            {
-                path.ShortenPathUntilDist(path.GetEndPosition(), frand(5.0f, 15.0f));
-                return;
-            }
-            //log error and use direct point movement
-            LOG_DEBUG("npcbots", "Bot {} id {} class {} level {} can't find full path to node {} (res {}) from pos {}, falling back to default PF!",
-                me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()), IsWanderer() ? _travel_node_cur->GetWPId() : 0, uint32(path.GetPathType()),
-                me->GetPosition().ToString().c_str());
-            break;
-        default:
-            break;
+        }
+    //log error and use direct point movement
+        LOG_DEBUG("npcbots", "Bot {} id {} class {} level {} can't find full path to node {} (res {}) from pos {}, falling back to default PF!",
+                  me->GetName().c_str(), me->GetEntry(), uint32(_botclass), uint32(me->GetLevel()), IsWanderer() ? _travel_node_cur->GetWPId() : 0, uint32(path.GetPathType()),
+                  me->GetPosition().ToString().c_str());
+        break;
+    default:
+        break;
     }
 
     use_path = false;
@@ -18408,6 +19087,7 @@ void bot_ai::GetNextEvadeMovePoint(Position& pos, bool& use_path) const
         mypos.m_positionZ = orig_z;
     pos.Relocate(mypos);
 }
+
 void bot_ai::TeleportHomeStart(bool reset)
 {
     AbortTeleport();
@@ -18418,8 +19098,9 @@ void bot_ai::TeleportHomeStart(bool reset)
     Events.AddEvent(teleHomeEvent, Events.CalculateTime(0)); //make sure event will be deleted
     if (teleHomeEvent->IsActive())
         teleHomeEvent->ScheduleAbort(); //make sure event will not be executed twice
-    teleHomeEvent->Execute(0,0);
+    teleHomeEvent->Execute(0, 0);
 }
+
 //TeleportHome() ONLY CALLED THROUGH EVENTPROCESSOR
 void bot_ai::TeleportHome(bool reset)
 {
@@ -18439,6 +19120,7 @@ void bot_ai::TeleportHome(bool reset)
     spawned = false;
     _evadeCount = 0;
 }
+
 //FinishTeleport(uint32, float, float, float, float) ONLY CALLED THROUGH EVENTPROCESSOR
 bool bot_ai::FinishTeleport(bool reset)
 {
@@ -18447,6 +19129,7 @@ bool bot_ai::FinishTeleport(bool reset)
     ASSERT(!me->IsInWorld());
 
     AbortTeleport();
+
 
     //1) Cannot teleport: master disappeared - return home
     if (IAmFree()/* || master->GetSession()->isLogingOut()*/)
@@ -18457,20 +19140,26 @@ bool bot_ai::FinishTeleport(bool reset)
         return false;
     }
 
-    BotMgr::AddDelayedTeleportCallback([this, reset]() {
+    BotMgr::AddDelayedTeleportCallback([this, reset]()
+    {
         Map* map = master->FindMap();
         //2) Cannot teleport: map not found or forbidden - delay teleport
         /*player_botnpc*/
         bool CanRestrictBots = master->GetBotMgr()->RestrictBots(me, true);
-        if(me->IsPlayerNpcBot())
+        if (me->IsPlayerNpcBot())
         {
-            if((!map  || CanRestrictBots) && master->IsAlive())
+            if ((!map || CanRestrictBots) && master->IsAlive())
             {
-                if(me->GetBotGroup())
+                if (me->GetBotGroup())
                 {
-                    me->GetBotGroup()->RemoveMember(me->GetGUID());
+                    master->GetGroup()->RemoveMember(me->GetGUID());
                 }
-                CheckBotGroup();
+                //BotWhisper("副本满了，我先溜了！",master);
+                //me->Say("副本满了，我先溜了！", Language::LANG_UNIVERSAL, GetBotOwner());
+                // master->GetBotMgr()->UnbindBot(me->GetGUID());
+                // _evadeMode = false;
+                // TeleportHomeStart(true);
+                //CheckBotGroup();
                 // LOG_ERROR("AddDelayedTeleportCallback","GO MAP1 And Delete");
                 return;
             }
@@ -18513,8 +19202,8 @@ bool bot_ai::FinishTeleport(bool reset)
         //master->m_Controlled.insert(me);
         if (me->IsAlive())
         {
-        //CastSpellExtraArgs args(TRIGGERED_FULL_MASK);
-        //me->CastSpell(me, COSMETIC_TELEPORT_EFFECT, args);
+            //CastSpellExtraArgs args(TRIGGERED_FULL_MASK);
+            //me->CastSpell(me, COSMETIC_TELEPORT_EFFECT, args);
             me->CastSpell(me, COSMETIC_TELEPORT_EFFECT, true);
         }
         //me->CastSpell(me, HONORLESS_TARGET, true);
@@ -18590,7 +19279,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
     Battleground* bg = GetBG();
     switch (bg->GetBgTypeID())
     {
-        case BATTLEGROUND_AV:
+    case BATTLEGROUND_AV:
         {
             using NodeList = std::list<WanderNode const*>;
 
@@ -18620,7 +19309,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
 
             BattlegroundAV* av = dynamic_cast<BattlegroundAV*>(bg);
             // Above all: check conditions to rush final boss
-            for (TeamId teamId : { TEAM_ALLIANCE, TEAM_HORDE })
+            for (TeamId teamId : {TEAM_ALLIANCE, TEAM_HORDE})
             {
                 if (myTeamId != teamId)
                     continue;
@@ -18632,22 +19321,22 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                     BG_AV_NodeInfo const& c = av->GetNodes()[counter];
                     switch (counter)
                     {
-                        case BG_AV_NODES_DUNBALDAR_SOUTH:
-                        case BG_AV_NODES_DUNBALDAR_NORTH:
-                        case BG_AV_NODES_ICEWING_BUNKER:
-                        case BG_AV_NODES_STONEHEART_BUNKER:
-                            if (teamId == TEAM_HORDE && c.State != BG_AV_States::POINT_DESTROYED)
-                                all_tb_down = false;
-                            break;
-                        case BG_AV_NODES_ICEBLOOD_TOWER:
-                        case BG_AV_NODES_TOWER_POINT:
-                        case BG_AV_NODES_FROSTWOLF_ETOWER:
-                        case BG_AV_NODES_FROSTWOLF_WTOWER:
-                            if (teamId == TEAM_ALLIANCE && c.State != BG_AV_States::POINT_DESTROYED)
-                                all_tb_down = false;
-                            break;
-                        default:
-                            break;
+                    case BG_AV_NODES_DUNBALDAR_SOUTH:
+                    case BG_AV_NODES_DUNBALDAR_NORTH:
+                    case BG_AV_NODES_ICEWING_BUNKER:
+                    case BG_AV_NODES_STONEHEART_BUNKER:
+                        if (teamId == TEAM_HORDE && c.State != BG_AV_States::POINT_DESTROYED)
+                            all_tb_down = false;
+                        break;
+                    case BG_AV_NODES_ICEBLOOD_TOWER:
+                    case BG_AV_NODES_TOWER_POINT:
+                    case BG_AV_NODES_FROSTWOLF_ETOWER:
+                    case BG_AV_NODES_FROSTWOLF_WTOWER:
+                        if (teamId == TEAM_ALLIANCE && c.State != BG_AV_States::POINT_DESTROYED)
+                            all_tb_down = false;
+                        break;
+                    default:
+                        break;
                     }
                 }
                 if (all_tb_down)
@@ -18686,7 +19375,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                 }
             }
             // Firstly: check a boss room to defend
-            for (auto const& p : { std::pair{TEAM_ALLIANCE, CRETYPE_BOSS_A}, std::pair{TEAM_HORDE, CRETYPE_BOSS_H} })
+            for (auto const& p : {std::pair{TEAM_ALLIANCE, CRETYPE_BOSS_A}, std::pair{TEAM_HORDE, CRETYPE_BOSS_H}})
             {
                 if (myTeamId != p.first)
                     continue;
@@ -18701,7 +19390,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                 }
             }
             // Secondly: check captain room to defend
-            for (auto const& p : { std::pair{TEAM_ALLIANCE, CRETYPE_CAPTAIN_A}, std::pair{TEAM_HORDE, CRETYPE_CAPTAIN_H} })
+            for (auto const& p : {std::pair{TEAM_ALLIANCE, CRETYPE_CAPTAIN_A}, std::pair{TEAM_HORDE, CRETYPE_CAPTAIN_H}})
             {
                 if (myTeamId != p.first)
                     continue;
@@ -18710,7 +19399,8 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                 {
                     WanderNode const* cap_node = nullptr;
                     float mindist = 50000.0f;
-                    WanderNode::DoForAllAreaWPs(captain->GetAreaId(), [&cap_node, &mindist, fac = faction, pos = captain](WanderNode const* wp) {
+                    WanderNode::DoForAllAreaWPs(captain->GetAreaId(), [&cap_node, &mindist, fac = faction, pos = captain](WanderNode const* wp)
+                    {
                         float dist = pos->GetExactDist2d(wp);
                         if (dist < mindist && BotDataMgr::IsWanderNodeAvailableForBotFaction(wp, fac, false))
                         {
@@ -18726,13 +19416,13 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
             // Fourthly: find a currently assaulted point by our team and make sure someone defends it
             // Ex. some GYs to base on are beyound directly accessible tower/bunker or captain room
             // Fithly: find a GY/tower/bunker in non-assaulted state in reach to assault
-            for (TeamId teamId : { TEAM_ALLIANCE, TEAM_HORDE })
+            for (TeamId teamId : {TEAM_ALLIANCE, TEAM_HORDE})
             {
                 if (myTeamId != teamId)
                     continue;
 
-                constexpr std::array<uint8, BG_AV_NODES_MAX> defend_priority_a{ 9, 7, 6, 3, 4, 2, 1, 8, 8, 5, 5, 0, 0, 0, 0 };
-                constexpr std::array<uint8, BG_AV_NODES_MAX> defend_priority_h{ 1, 2, 4, 3, 6, 7, 9, 0, 0, 0, 0, 5, 5, 8, 8 };
+                constexpr std::array<uint8, BG_AV_NODES_MAX> defend_priority_a{9, 7, 6, 3, 4, 2, 1, 8, 8, 5, 5, 0, 0, 0, 0};
+                constexpr std::array<uint8, BG_AV_NODES_MAX> defend_priority_h{1, 2, 4, 3, 6, 7, 9, 0, 0, 0, 0, 5, 5, 8, 8};
 
                 static const std::function flag_wp_pred = [](WanderNode const* wp) { return wp->HasFlag(BotWPFlags::BOTWP_FLAG_BG_FLAG_PICKUP_TARGET); };
                 static const std::function bunker_wp_pred = [](WanderNode const* wp) { return wp->HasFlag(BotWPFlags::BOTWP_FLAG_BG_FLAG_PICKUP_TARGET) && wp->HasFlag(BotWPFlags::BOTWP_FLAG_ALLIANCE_ONLY); };
@@ -18756,21 +19446,22 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                     if (c.State == BG_AV_States::POINT_ASSAULTED)
                     {
                         if (c.OwnerId != myTeamId && def_prio[counter] > 0)
-                            defendable_nodes.insert({ uint8(counter), &c });
+                            defendable_nodes.insert({uint8(counter), &c});
                         else if (c.OwnerId == myTeamId)
-                            assaulted_nodes.insert({ av->GetObjectThroughNodeForBot(counter), &c });
+                            assaulted_nodes.insert({av->GetObjectThroughNodeForBot(counter), &c});
                     }
                     else if (c.State == BG_AV_States::POINT_NEUTRAL || (c.State == BG_AV_States::POINT_CONTROLED && c.OwnerId != myTeamId))
                     {
                         if (c.Tower)
-                            assaultable_nodes.insert({ av->GetObjectThroughNodeForBot(counter), &c });
+                            assaultable_nodes.insert({av->GetObjectThroughNodeForBot(counter), &c});
                         else
-                            assaultable_nodes.insert({ av->GetObjectThroughNodeForBot(counter), &c });
+                            assaultable_nodes.insert({av->GetObjectThroughNodeForBot(counter), &c});
                     }
                     else if (counter == (teamId == TEAM_ALLIANCE ? BG_AV_NODES_FROSTWOLF_HUT : BG_AV_NODES_FIRSTAID_STATION))
-                        assaultable_nodes.insert({ av->GetObjectThroughNodeForBot(counter), &c });
+                        assaultable_nodes.insert({av->GetObjectThroughNodeForBot(counter), &c});
                 }
-                WanderNode::DoForAllMapWPs(av->GetMapId(), [&](WanderNode const* wp) {
+                WanderNode::DoForAllMapWPs(av->GetMapId(), [&](WanderNode const* wp)
+                {
                     if (defe_pred(wp))
                     {
                         for (auto const& vt : defendable_nodes)
@@ -18782,7 +19473,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                             {
                                 if (go->IsWithinDist2d(wp, INTERACTION_DISTANCE * 2.0f))
                                 {
-                                    defNode = { vt.first, wp };
+                                    defNode = {vt.first, wp};
                                     break;
                                 }
                             }
@@ -18795,7 +19486,8 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                     if (!defLinks.empty())
                         return defLinks.size() == 1u ? defLinks.front() : Acore::Containers::SelectRandomContainerElement(defLinks);
                 }
-                WanderNode::DoForContainerWPs(accessible_nodes, [&](WanderNode const* wp) {
+                WanderNode::DoForContainerWPs(accessible_nodes, [&](WanderNode const* wp)
+                {
                     if (flag_wp_pred(wp))
                     {
                         for (auto const& vt : assaulted_nodes)
@@ -18848,7 +19540,8 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                     if (std::find(assdlist.cbegin(), assdlist.cend(), curNode) != assdlist.cend())
                         return curNode;
                     //remove non-empty points
-                    assdlist.remove_if([&team_members, except_wp = curNode](WanderNode const* wp) {
+                    assdlist.remove_if([&team_members, except_wp = curNode](WanderNode const* wp)
+                    {
                         if (wp != except_wp)
                         {
                             for (Unit const* member : team_members)
@@ -18867,7 +19560,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                     return assalist.size() == 1u ? assalist.front() : Acore::Containers::SelectRandomContainerElement(assalist);
             }
             //Last thing: try to capture the mines (2 people at most)
-            for (auto const& p : { std::pair{TEAM_ALLIANCE, std::array{AV_CPLACE_MINE_N_3, AV_CPLACE_MINE_S_3}}, std::pair{TEAM_HORDE, std::array{AV_CPLACE_MINE_S_3, AV_CPLACE_MINE_N_3}} })
+            for (auto const& p : {std::pair{TEAM_ALLIANCE, std::array{AV_CPLACE_MINE_N_3, AV_CPLACE_MINE_S_3}}, std::pair{TEAM_HORDE, std::array{AV_CPLACE_MINE_S_3, AV_CPLACE_MINE_N_3}}})
             {
                 if (myTeamId != p.first)
                     continue;
@@ -18900,7 +19593,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                             if (attackers_count <= 1)
                             {
                                 LOG_DEBUG("npcbots", "Bot {} {} team {} goes for a mine! Cur node: {} {}",
-                                    me->GetName().c_str(), me->GetEntry(), uint32(myTeamId), curNode->GetWPId(), curNode->GetName().c_str());
+                                          me->GetName().c_str(), me->GetEntry(), uint32(myTeamId), curNode->GetWPId(), curNode->GetName().c_str());
                                 return mlinks.size() == 1u ? mlinks.front() : Acore::Containers::SelectRandomContainerElement(mlinks);
                             }
                         }
@@ -18908,7 +19601,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                 }
             }
             //No immediate target: rush enemy captain
-            for (TeamId teamId : { TEAM_ALLIANCE, TEAM_HORDE })
+            for (TeamId teamId : {TEAM_ALLIANCE, TEAM_HORDE})
             {
                 if (myTeamId != teamId)
                     continue;
@@ -18917,7 +19610,8 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                 {
                     WanderNode const* cap_node = nullptr;
                     float mindist = 50000.0f;
-                    WanderNode::DoForAllAreaWPs(captain->GetAreaId(), [&cap_node, &mindist, fac = faction, pos = captain](WanderNode const* wp) {
+                    WanderNode::DoForAllAreaWPs(captain->GetAreaId(), [&cap_node, &mindist, fac = faction, pos = captain](WanderNode const* wp)
+                    {
                         float dist = pos->GetExactDist2d(wp);
                         if (dist < mindist && BotDataMgr::IsWanderNodeAvailableForBotFaction(wp, fac, false))
                         {
@@ -18930,7 +19624,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                 }
             }
             //No immediate target: find a point next to enemy boss and try going there
-            for (TeamId teamId : { TEAM_ALLIANCE, TEAM_HORDE })
+            for (TeamId teamId : {TEAM_ALLIANCE, TEAM_HORDE})
             {
                 if (myTeamId != teamId)
                     continue;
@@ -18947,15 +19641,15 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
             if (links.size() > 1)
             {
                 LOG_DEBUG("npcbots", "Bot {} {} team {} has no target point in BG_AV! Falling back to random (%u links)!. Cur node: {} {}",
-                    me->GetName().c_str(), me->GetEntry(), uint32(myTeamId), uint32(curNode->GetLinks().size()), curNode->GetWPId(), curNode->GetName().c_str());
+                          me->GetName().c_str(), me->GetEntry(), uint32(myTeamId), uint32(curNode->GetLinks().size()), curNode->GetWPId(), curNode->GetName().c_str());
             }
 
             break;
         }
-        case BATTLEGROUND_WS:
-        case BATTLEGROUND_AB:
-        default:
-            break;
+    case BATTLEGROUND_WS:
+    case BATTLEGROUND_AB:
+    default:
+        break;
     }
 
     return nullptr;
@@ -18972,21 +19666,21 @@ void bot_ai::OnWanderNodeReached()
         {
             switch (bg->GetBgTypeID())
             {
-                case BATTLEGROUND_WS:
-                    if (bg->GetBotTeamId(me->GetGUID()) == TEAM_ALLIANCE && _travel_node_cur->HasFlag(BotWPFlags::BOTWP_FLAG_ALLIANCE_ONLY))
-                        bg->HandleBotAreaTrigger(me, 3646);
-                    if (bg->GetBotTeamId(me->GetGUID()) == TEAM_HORDE && _travel_node_cur->HasFlag(BotWPFlags::BOTWP_FLAG_HORDE_ONLY))
-                        bg->HandleBotAreaTrigger(me, 3647);
-                    break;
-                default:
-                    break;
+            case BATTLEGROUND_WS:
+                if (bg->GetBotTeamId(me->GetGUID()) == TEAM_ALLIANCE && _travel_node_cur->HasFlag(BotWPFlags::BOTWP_FLAG_ALLIANCE_ONLY))
+                    bg->HandleBotAreaTrigger(me, 3646);
+                if (bg->GetBotTeamId(me->GetGUID()) == TEAM_HORDE && _travel_node_cur->HasFlag(BotWPFlags::BOTWP_FLAG_HORDE_ONLY))
+                    bg->HandleBotAreaTrigger(me, 3647);
+                break;
+            default:
+                break;
             }
         }
         if (_travel_node_cur->HasFlag(BotWPFlags::BOTWP_FLAG_BG_FLAG_PICKUP_TARGET) && !IsFlagCarrier(me, bg->GetBgTypeID()))
         {
             switch (bg->GetBgTypeID())
             {
-                case BATTLEGROUND_AV:
+            case BATTLEGROUND_AV:
                 {
                     static const uint32 SPELL_OPENING_FLAG = 21651u;
 
@@ -19038,7 +19732,7 @@ void bot_ai::OnWanderNodeReached()
 
                     break;
                 }
-                case BATTLEGROUND_WS:
+            case BATTLEGROUND_WS:
                 {
                     if (bg->GetBotTeamId(me->GetGUID()) == TEAM_ALLIANCE && _travel_node_cur->HasFlag(BotWPFlags::BOTWP_FLAG_HORDE_ONLY))
                     {
@@ -19062,16 +19756,16 @@ void bot_ai::OnWanderNodeReached()
                     }
                     break;
                 }
-                case BATTLEGROUND_AB:
+            case BATTLEGROUND_AB:
                 {
                     static const uint32 SPELL_OPENING_FLAG = 21651u;
 
                     uint8 node = BG_AB_NODE_STABLES;
-                    GameObject* obj = bg->GetBGObject(node*8+BG_AB_OBJECT_BANNER_NEUTRAL);
+                    GameObject* obj = bg->GetBGObject(node * 8 + BG_AB_OBJECT_BANNER_NEUTRAL);
                     while (node < BG_AB_DYNAMIC_NODES_COUNT && (!obj || !me->IsWithinDistInMap(obj, 10.0f)))
                     {
                         ++node;
-                        obj = bg->GetBGObject(node*8+BG_AB_OBJECT_BANNER_NEUTRAL);
+                        obj = bg->GetBGObject(node * 8 + BG_AB_OBJECT_BANNER_NEUTRAL);
                     }
                     if (node < BG_AB_DYNAMIC_NODES_COUNT)
                     {
@@ -19090,7 +19784,7 @@ void bot_ai::OnWanderNodeReached()
                         else
                             new_bg_obj_type = BG_AB_OBJECT_BANNER_NEUTRAL;
 
-                        obj = bg->GetBGObject(node*8+new_bg_obj_type);
+                        obj = bg->GetBGObject(node * 8 + new_bg_obj_type);
                         ASSERT(obj != nullptr);
 
                         bool already_used = false;
@@ -19118,8 +19812,8 @@ void bot_ai::OnWanderNodeReached()
                     }
                     break;
                 }
-                default:
-                    break;
+            default:
+                break;
             }
         }
     }
@@ -19135,7 +19829,8 @@ void bot_ai::OnBotEnterBattleground()
         uint32 mapId = bg->GetBgMap()->GetId();
         float mindist = 50000.0f;
         WanderNode const* startNode = nullptr;
-        WanderNode::DoForAllMapWPs(mapId, [pos = me->GetPosition(), &mindist, &startNode](WanderNode const* wp) {
+        WanderNode::DoForAllMapWPs(mapId, [pos = me->GetPosition(), &mindist, &startNode](WanderNode const* wp)
+        {
             if (wp->HasFlag(BotWPFlags::BOTWP_FLAG_SPAWN))
             {
                 float dist = pos.GetExactDist2d(wp);
@@ -19196,17 +19891,17 @@ void bot_ai::OnBotEnterVehicle(Vehicle const* vehicle)
             //flight mode
             switch (vehicle->GetBase()->GetEntry())
             {
-                case CREATURE_NEXUS_SKYTALON_1:
-                case CREATURE_EOE_SKYTALON_N:
-                case CREATURE_EOE_SKYTALON_H:
-                case CREATURE_OCULUS_DRAKE_RUBY:
-                case CREATURE_OCULUS_DRAKE_EMERALD:
-                case CREATURE_OCULUS_DRAKE_AMBER:
-                    vehicle->GetBase()->SetCanFly(true);
-                    vehicle->GetBase()->SetDisableGravity(true);
-                    break;
-                default:
-                    break;
+            case CREATURE_NEXUS_SKYTALON_1:
+            case CREATURE_EOE_SKYTALON_N:
+            case CREATURE_EOE_SKYTALON_H:
+            case CREATURE_OCULUS_DRAKE_RUBY:
+            case CREATURE_OCULUS_DRAKE_EMERALD:
+            case CREATURE_OCULUS_DRAKE_AMBER:
+                vehicle->GetBase()->SetCanFly(true);
+                vehicle->GetBase()->SetDisableGravity(true);
+                break;
+            default:
+                break;
             }
         }
 
@@ -19223,7 +19918,7 @@ void bot_ai::OnBotEnterVehicle(Vehicle const* vehicle)
             //speed
             if (vehTemplate &&
                 (vehTemplate->Movement.Flight == CreatureFlightMovementType::CanFly ||
-                vehTemplate->Movement.Flight == CreatureFlightMovementType::DisableGravity))
+                    vehTemplate->Movement.Flight == CreatureFlightMovementType::DisableGravity))
             {
                 //hack to use vehicle speed
                 vehicle->GetBase()->RemoveAurasByType(SPELL_AURA_MOD_INCREASE_VEHICLE_FLIGHT_SPEED);
@@ -19281,7 +19976,7 @@ void bot_ai::AfterBotOwnerEnterVehicle()
             if (!creEntry)
             {
                 LOG_DEBUG("scripts", "OnBotOwnerEnterVehicle: no vehicle selected for bot master veh {}!",
-                    master->GetVehicleCreatureBase()->GetName().c_str());
+                          master->GetVehicleCreatureBase()->GetName().c_str());
                 return;
             }
             Unit* veh = SpawnVehicle(creEntry, vehEntry);
@@ -19294,7 +19989,7 @@ void bot_ai::AfterBotOwnerEnterVehicle()
             //veh->HandleSpellClick(me);
             switch (creEntry) //select vehicle ride spell
             {
-                //TODO
+            //TODO
             case CREATURE_EOE_SKYTALON_N:
             case CREATURE_EOE_SKYTALON_H:
                 me->CastSpell(veh, 56071); //Ride Red Dragon Buddy
@@ -19302,14 +19997,14 @@ void bot_ai::AfterBotOwnerEnterVehicle()
             case CREATURE_OCULUS_DRAKE_RUBY:
             case CREATURE_OCULUS_DRAKE_EMERALD:
             case CREATURE_OCULUS_DRAKE_AMBER:
-            {
-                me->EnterVehicle(veh); //cannot cast ride spell (49464, 49346, 49460) due to targeting (TARGET_UNIT_NEARBY_ENTRY)
-                //CastSpellExtraArgs args(true);
-                //args.SetOriginalCaster(me->GetGUID());
-                //veh->CastSpell(veh, 66667, args); //Gear Scaling
-                veh->CastSpell(veh, 66667, true, nullptr, nullptr, me->GetGUID()); //Gear Scaling
-                break;
-            }
+                {
+                    me->EnterVehicle(veh); //cannot cast ride spell (49464, 49346, 49460) due to targeting (TARGET_UNIT_NEARBY_ENTRY)
+                    //CastSpellExtraArgs args(true);
+                    //args.SetOriginalCaster(me->GetGUID());
+                    //veh->CastSpell(veh, 66667, args); //Gear Scaling
+                    veh->CastSpell(veh, 66667, true, nullptr, nullptr, me->GetGUID()); //Gear Scaling
+                    break;
+                }
             //case CREATURE_TOC_STEED_QUELDOREI:
             //case CREATURE_TOC_NIGHTSABER:
             //case CREATURE_TOC_STEED_STORMWIND:
@@ -19415,7 +20110,7 @@ Unit* bot_ai::SpawnVehicle(uint32 creEntry, uint32 vehEntry)
     return vc;
 }
 
-void bot_ai::ChooseVehicleForEncounter(uint32 &creEntry, uint32 &vehEntry) const
+void bot_ai::ChooseVehicleForEncounter(uint32& creEntry, uint32& vehEntry) const
 {
     Vehicle* mVeh = master->GetVehicle();
     ASSERT_NODEBUGINFO(mVeh);
@@ -19424,84 +20119,86 @@ void bot_ai::ChooseVehicleForEncounter(uint32 &creEntry, uint32 &vehEntry) const
     vehEntry = 0; // will be chosen at creature spawn
     switch (mVeh->GetBase()->GetEntry())
     {
-        //TODO
-        case CREATURE_NEXUS_SKYTALON_1:
-        case CREATURE_EOE_SKYTALON_N:
-        case CREATURE_EOE_SKYTALON_H:
-        case CREATURE_ULDUAR_DEMOLISHER:
-        case CREATURE_ULDUAR_SIEGE_ENGINE:
-        case CREATURE_ULDUAR_CHOPPER:
-        case CREATURE_ULDUAR_CHOPPER1:
-        //case CREATURE_TOC_STEED_QUELDOREI:
-        //case CREATURE_TOC_HAWKSTRIDER_SUNREAVER:
-        case CREATURE_TOC5_WARHORSE:
-        case CREATURE_TOC5_BATTLEWORG:
+    //TODO
+    case CREATURE_NEXUS_SKYTALON_1:
+    case CREATURE_EOE_SKYTALON_N:
+    case CREATURE_EOE_SKYTALON_H:
+    case CREATURE_ULDUAR_DEMOLISHER:
+    case CREATURE_ULDUAR_SIEGE_ENGINE:
+    case CREATURE_ULDUAR_CHOPPER:
+    case CREATURE_ULDUAR_CHOPPER1:
+    //case CREATURE_TOC_STEED_QUELDOREI:
+    //case CREATURE_TOC_HAWKSTRIDER_SUNREAVER:
+    case CREATURE_TOC5_WARHORSE:
+    case CREATURE_TOC5_BATTLEWORG:
+        creEntry = mVeh->GetBase()->GetEntry();
+        break;
+    case CREATURE_OCULUS_DRAKE_RUBY:
+    case CREATURE_OCULUS_DRAKE_EMERALD:
+    case CREATURE_OCULUS_DRAKE_AMBER:
+        creEntry = (HasRole(BOT_ROLE_TANK)/* && mVeh->GetBase()->GetEntry() != CREATURE_OCULUS_DRAKE_RUBY*/) ?
+                       CREATURE_OCULUS_DRAKE_RUBY :
+                       (HasRole(BOT_ROLE_HEAL)/* && mVeh->GetBase()->GetEntry() != CREATURE_OCULUS_DRAKE_EMERALD*/) ?
+                       CREATURE_OCULUS_DRAKE_EMERALD :
+                       CREATURE_OCULUS_DRAKE_AMBER;
+        break;
+    //case CREATURE_TOC_NIGHTSABER:
+    //case CREATURE_TOC_STEED_STORMWIND:
+    //case CREATURE_TOC_MECHANOSTRIDER:
+    //case CREATURE_TOC_RAM:
+    //case CREATURE_TOC_ELEKK:
+    //case CREATURE_TOC_RAPTOR:
+    //case CREATURE_TOC_WARHORSE:
+    //case CREATURE_TOC_WOLF:
+    //case CREATURE_TOC_HAWKSTRIDER_SILVERMOON:
+    //case CREATURE_TOC_KODO:
+    //    switch (GetPlayerRace())
+    //    {
+    //        case RACE_HUMAN:         creEntry = CREATURE_TOC_STEED_STORMWIND;        break;
+    //        case RACE_ORC:           creEntry = CREATURE_TOC_WOLF;                   break;
+    //        case RACE_DWARF:         creEntry = CREATURE_TOC_RAM;                    break;
+    //        case RACE_NIGHTELF:      creEntry = CREATURE_TOC_NIGHTSABER;             break;
+    //        case RACE_UNDEAD_PLAYER: creEntry = CREATURE_TOC_WARHORSE;               break;
+    //        case RACE_TAUREN:        creEntry = CREATURE_TOC_KODO;                   break;
+    //        case RACE_GNOME:         creEntry = CREATURE_TOC_MECHANOSTRIDER;         break;
+    //        case RACE_TROLL:         creEntry = CREATURE_TOC_RAPTOR;                 break;
+    //        case RACE_BLOODELF:      creEntry = CREATURE_TOC_HAWKSTRIDER_SILVERMOON; break;
+    //        case RACE_DRAENEI:       creEntry = CREATURE_TOC_ELEKK;                  break;
+    //        default:                 creEntry = CREATURE_TOC_STEED_QUELDOREI;        break;
+    //    }
+    //    break;
+    case CREATURE_ICC_GUNSHIPCANNON_ALLIANCE:
+    case CREATURE_ICC_GUNSHIPCANNON_HORDE:
+        //limited amount of cannons
+        if (!IsTank() && HasRole(BOT_ROLE_DPS) &&
+            master->GetBotMgr()->GetNpcBotsCountByVehicleEntry(mVeh->GetBase()->GetEntry()) <
+            std::max<uint8>(master->GetBotMgr()->GetNpcBotsCount() / 2, 8))
             creEntry = mVeh->GetBase()->GetEntry();
-            break;
-        case CREATURE_OCULUS_DRAKE_RUBY:
-        case CREATURE_OCULUS_DRAKE_EMERALD:
-        case CREATURE_OCULUS_DRAKE_AMBER:
-            creEntry = (HasRole(BOT_ROLE_TANK)/* && mVeh->GetBase()->GetEntry() != CREATURE_OCULUS_DRAKE_RUBY*/) ? CREATURE_OCULUS_DRAKE_RUBY :
-                (HasRole(BOT_ROLE_HEAL)/* && mVeh->GetBase()->GetEntry() != CREATURE_OCULUS_DRAKE_EMERALD*/) ? CREATURE_OCULUS_DRAKE_EMERALD :
-                CREATURE_OCULUS_DRAKE_AMBER;
-            break;
-        //case CREATURE_TOC_NIGHTSABER:
-        //case CREATURE_TOC_STEED_STORMWIND:
-        //case CREATURE_TOC_MECHANOSTRIDER:
-        //case CREATURE_TOC_RAM:
-        //case CREATURE_TOC_ELEKK:
-        //case CREATURE_TOC_RAPTOR:
-        //case CREATURE_TOC_WARHORSE:
-        //case CREATURE_TOC_WOLF:
-        //case CREATURE_TOC_HAWKSTRIDER_SILVERMOON:
-        //case CREATURE_TOC_KODO:
-        //    switch (GetPlayerRace())
-        //    {
-        //        case RACE_HUMAN:         creEntry = CREATURE_TOC_STEED_STORMWIND;        break;
-        //        case RACE_ORC:           creEntry = CREATURE_TOC_WOLF;                   break;
-        //        case RACE_DWARF:         creEntry = CREATURE_TOC_RAM;                    break;
-        //        case RACE_NIGHTELF:      creEntry = CREATURE_TOC_NIGHTSABER;             break;
-        //        case RACE_UNDEAD_PLAYER: creEntry = CREATURE_TOC_WARHORSE;               break;
-        //        case RACE_TAUREN:        creEntry = CREATURE_TOC_KODO;                   break;
-        //        case RACE_GNOME:         creEntry = CREATURE_TOC_MECHANOSTRIDER;         break;
-        //        case RACE_TROLL:         creEntry = CREATURE_TOC_RAPTOR;                 break;
-        //        case RACE_BLOODELF:      creEntry = CREATURE_TOC_HAWKSTRIDER_SILVERMOON; break;
-        //        case RACE_DRAENEI:       creEntry = CREATURE_TOC_ELEKK;                  break;
-        //        default:                 creEntry = CREATURE_TOC_STEED_QUELDOREI;        break;
-        //    }
-        //    break;
-        case CREATURE_ICC_GUNSHIPCANNON_ALLIANCE:
-        case CREATURE_ICC_GUNSHIPCANNON_HORDE:
-            //limited amount of cannons
-            if (!IsTank() && HasRole(BOT_ROLE_DPS) &&
-                master->GetBotMgr()->GetNpcBotsCountByVehicleEntry(mVeh->GetBase()->GetEntry()) <
-                std::max<uint8>(master->GetBotMgr()->GetNpcBotsCount() / 2, 8))
-                creEntry = mVeh->GetBase()->GetEntry();
-            break;
-        case CREATURE_ICC_MUTATED_ABOMINATION1:
-        case CREATURE_ICC_MUTATED_ABOMINATION2:
-        case CREATURE_ICC_MUTATED_ABOMINATION3:
-        case CREATURE_ICC_MUTATED_ABOMINATION4:
-        case CREATURE_ICC_MUTATED_ABOMINATION5:
-        case CREATURE_ICC_MUTATED_ABOMINATION6:
-        case CREATURE_ICC_MUTATED_ABOMINATION7:
-        case CREATURE_ICC_MUTATED_ABOMINATION8:
-            //no abomination bots
-            break;
-        default:
-            if (VehicleSeatEntry const* seat = mVeh->GetSeatForPassenger(master))
+        break;
+    case CREATURE_ICC_MUTATED_ABOMINATION1:
+    case CREATURE_ICC_MUTATED_ABOMINATION2:
+    case CREATURE_ICC_MUTATED_ABOMINATION3:
+    case CREATURE_ICC_MUTATED_ABOMINATION4:
+    case CREATURE_ICC_MUTATED_ABOMINATION5:
+    case CREATURE_ICC_MUTATED_ABOMINATION6:
+    case CREATURE_ICC_MUTATED_ABOMINATION7:
+    case CREATURE_ICC_MUTATED_ABOMINATION8:
+        //no abomination bots
+        break;
+    default:
+        if (VehicleSeatEntry const* seat = mVeh->GetSeatForPassenger(master))
+        {
+            if (seat->m_flags & VEHICLE_SEAT_FLAG_CAN_CONTROL)
             {
-                if (seat->m_flags & VEHICLE_SEAT_FLAG_CAN_CONTROL)
-                {
-                    //can use generic strat for that
-                    creEntry = mVeh->GetBase()->GetEntry();
-                    break;
-                }
+                //can use generic strat for that
+                creEntry = mVeh->GetBase()->GetEntry();
+                break;
             }
+        }
 
-            LOG_ERROR("scripts", "ChooseVehicleForEncounter: unhandled master vehicle creature {} ({})",
-                master->GetVehicleBase()->GetName().c_str(), master->GetVehicleBase()->GetEntry());
-            return;
+        LOG_ERROR("scripts", "ChooseVehicleForEncounter: unhandled master vehicle creature {} ({})",
+                  master->GetVehicleBase()->GetName().c_str(), master->GetVehicleBase()->GetEntry());
+        return;
     }
 
     if (creEntry && creEntry != mVeh->GetBase()->GetEntry())
@@ -19532,8 +20229,8 @@ int32 bot_ai::GetBotResistanceBonus(SpellSchoolMask mask) const
 {
     int32 resist = 0;
     for (uint8 i = SPELL_SCHOOL_HOLY; i != MAX_SPELL_SCHOOL; ++i)
-        if ((mask & (1 << i)) && (resist == 0 || resist > resistbonus[i-1]))
-            resist = resistbonus[i-1];
+        if ((mask & (1 << i)) && (resist == 0 || resist > resistbonus[i - 1]))
+            resist = resistbonus[i - 1];
 
     return resist;
 }
@@ -19576,20 +20273,24 @@ uint32 bot_ai::GetDPSTaken(Unit const* u) const
 {
     return IAmFree() ? 0 : master->GetBotMgr()->GetDPSTaken(u);
 }
+
 int32 bot_ai::GetHPSTaken(Unit const* u) const
 {
     return IAmFree() ? 0 : master->GetBotMgr()->GetHPSTaken(u);
 }
+
 //Health per second
 int32 bot_ai::GetHPS(Unit const* u) const
 {
     return IAmFree() ? 0 : GetHPSTaken(u) - GetDPSTaken(u);
 }
+
 //Health percent per second
 int32 bot_ai::GetHPPCTPS(Unit const* u) const
 {
     return int32(GetHPS(u) * 100.f / float(u->GetMaxHealth()));
 }
+
 //%health unit is going to have after x ms
 //0-100
 uint8 bot_ai::GetExpectedHPPCT(Unit const* u, uint32 mseconds) const
@@ -19614,37 +20315,44 @@ bool bot_ai::IsChanneling(Unit const* u/* = nullptr*/) const
         u = me;
     return u->GetCurrentSpell(CURRENT_CHANNELED_SPELL);
 }
+
 bool bot_ai::IsCasting(Unit const* u/* = nullptr*/) const
 {
     if (!u)
         u = me;
     return (u->HasUnitState(UNIT_STATE_CASTING) || IsChanneling(u) || u->IsNonMeleeSpellCast(false, false, true, false, false));
 }
+
 bool bot_ai::JumpingFlyingOrFalling() const
 {
     return Jumping() || JumpingOrFalling() || me->HasUnitMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION);
 }
+
 bool bot_ai::JumpingOrFalling() const
 {
-    return Jumping() || me->IsFalling() || me->HasUnitMovementFlag(MOVEMENTFLAG_PITCH_UP|MOVEMENTFLAG_PITCH_DOWN|MOVEMENTFLAG_FALLING_SLOW);
+    return Jumping() || me->IsFalling() || me->HasUnitMovementFlag(MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN | MOVEMENTFLAG_FALLING_SLOW);
 }
+
 bool bot_ai::Jumping() const
 {
     return me->HasUnitState(UNIT_STATE_JUMPING);
 }
+
 bool bot_ai::IsIndoors() const
 {
     return indoorsTimer >= INOUTDOORS_ENSURE_TIMER && outdoorsTimer == 0;
 }
+
 bool bot_ai::IsOutdoors() const
 {
     return outdoorsTimer >= INOUTDOORS_ENSURE_TIMER && indoorsTimer == 0;
 }
+
 bool bot_ai::IsInContactWithWater() const
 {
     return me->IsInWorld() &&
-        (me->GetMap()->GetLiquidData(me->GetPhaseMask(), me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetCollisionHeight(), MAP_LIQUID_TYPE_WATER | MAP_LIQUID_TYPE_OCEAN)
-            .Status & MAP_LIQUID_STATUS_IN_CONTACT);
+    (me->GetMap()->GetLiquidData(me->GetPhaseMask(), me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetCollisionHeight(), MAP_LIQUID_TYPE_WATER | MAP_LIQUID_TYPE_OCEAN)
+       .Status & MAP_LIQUID_STATUS_IN_CONTACT);
 }
 
 bool bot_ai::IsTempBot() const
@@ -19656,17 +20364,19 @@ uint32 bot_ai::GetLostHP(Unit const* unit)
 {
     return unit->GetMaxHealth() - unit->GetHealth();
 }
+
 uint8 bot_ai::GetHealthPCT(Unit const* u)
 {
     if (!u || !u->IsAlive() || u->GetMaxHealth() <= 1)
         return 100;
-    return uint8(((float(u->GetHealth()))/u->GetMaxHealth()) * 100);
+    return uint8(((float(u->GetHealth())) / u->GetMaxHealth()) * 100);
 }
+
 uint8 bot_ai::GetManaPCT(Unit const* u)
 {
     if (!u || !u->IsAlive() || u->GetMaxPower(POWER_MANA) <= 1)
         return 100;
-    return (u->GetPower(POWER_MANA)*10/(1 + u->GetMaxPower(POWER_MANA)/10));
+    return (u->GetPower(POWER_MANA) * 10 / (1 + u->GetMaxPower(POWER_MANA) / 10));
 }
 
 MeleeHitOutcome bot_ai::GetNextAttackMeleeOutCome() const
@@ -19683,6 +20393,7 @@ uint8 bot_ai::GetPlayerClass() const
 {
     return BotMgr::GetBotPlayerClass(_botclass);
 }
+
 uint8 bot_ai::GetPlayerRace() const
 {
     return BotMgr::GetBotPlayerRace(_botclass, me->GetRace());
@@ -19711,29 +20422,29 @@ uint32 bot_ai::GetPetOriginalEntry(uint32 entry)
 {
     switch (entry)
     {
-        case BOT_PET_IMP:
-            return ORIGINAL_ENTRY_IMP;
-        case BOT_PET_VOIDWALKER:
-            return ORIGINAL_ENTRY_VOIDWALKER;
-        case BOT_PET_SUCCUBUS:
-            return ORIGINAL_ENTRY_SUCCUBUS;
-        case BOT_PET_FELHUNTER:
-            return ORIGINAL_ENTRY_FELHUNTER;
-        case BOT_PET_FELGUARD:
-            return ORIGINAL_ENTRY_FELGUARD;
-        case BOT_PET_WATER_ELEMENTAL:
-            return ORIGINAL_ENTRY_WATER_ELEMENTAL;
-        case BOT_PET_GHOUL:
-            //doesn't have pet template
-            //return ORIGINAL_ENTRY_GHOUL;
-        case BOT_PET_SHADOWFIEND:
-            //return ORIGINAL_ENTRY_SHADOWFIEND;
-        case BOT_PET_SPIRIT_WOLF:
-            //return ORIGINAL_ENTRY_SPIRIT_WOLF;
-        case BOT_PET_FORCE_OF_NATURE:
-            //return ORIGINAL_ENTRY_FORCE_OF_NATURE;
-        default:
-            return ORIGINAL_ENTRY_HUNTER_PET;
+    case BOT_PET_IMP:
+        return ORIGINAL_ENTRY_IMP;
+    case BOT_PET_VOIDWALKER:
+        return ORIGINAL_ENTRY_VOIDWALKER;
+    case BOT_PET_SUCCUBUS:
+        return ORIGINAL_ENTRY_SUCCUBUS;
+    case BOT_PET_FELHUNTER:
+        return ORIGINAL_ENTRY_FELHUNTER;
+    case BOT_PET_FELGUARD:
+        return ORIGINAL_ENTRY_FELGUARD;
+    case BOT_PET_WATER_ELEMENTAL:
+        return ORIGINAL_ENTRY_WATER_ELEMENTAL;
+    case BOT_PET_GHOUL:
+    //doesn't have pet template
+    //return ORIGINAL_ENTRY_GHOUL;
+    case BOT_PET_SHADOWFIEND:
+    //return ORIGINAL_ENTRY_SHADOWFIEND;
+    case BOT_PET_SPIRIT_WOLF:
+    //return ORIGINAL_ENTRY_SPIRIT_WOLF;
+    case BOT_PET_FORCE_OF_NATURE:
+        //return ORIGINAL_ENTRY_FORCE_OF_NATURE;
+    default:
+        return ORIGINAL_ENTRY_HUNTER_PET;
     }
 }
 
@@ -19741,33 +20452,36 @@ bool bot_ai::IsPetMelee(uint32 entry)
 {
     switch (entry)
     {
-        case BOT_PET_IMP:
-        case BOT_PET_WATER_ELEMENTAL:
-        case BOT_PET_AWATER_ELEMENTAL:
-            return false;
-        default:
-            return true;
+    case BOT_PET_IMP:
+    case BOT_PET_WATER_ELEMENTAL:
+    case BOT_PET_AWATER_ELEMENTAL:
+        return false;
+    default:
+        return true;
     }
 }
 
 bool bot_ai::IsMeleeClass(uint8 m_class)
 {
     return
-        (m_class == CLASS_WARRIOR || m_class == CLASS_ROGUE || m_class == CLASS_PALADIN ||
+    (m_class == CLASS_WARRIOR || m_class == CLASS_ROGUE || m_class == CLASS_PALADIN ||
         m_class == CLASS_DEATH_KNIGHT || m_class == BOT_CLASS_BM || m_class == BOT_CLASS_DREADLORD ||
         m_class == BOT_CLASS_SPELLBREAKER || m_class == BOT_CLASS_CRYPT_LORD);
 }
+
 bool bot_ai::IsTankingClass(uint8 m_class)
 {
     return (m_class == CLASS_WARRIOR || m_class == CLASS_PALADIN ||
         m_class == CLASS_DEATH_KNIGHT || m_class == BOT_CLASS_SPHYNX ||
         m_class == BOT_CLASS_SPELLBREAKER || m_class == BOT_CLASS_CRYPT_LORD);
 }
+
 bool bot_ai::IsBlockingClass(uint8 m_class)
 {
     return (m_class == CLASS_WARRIOR || m_class == CLASS_PALADIN || m_class == CLASS_SHAMAN ||
         m_class == BOT_CLASS_SPELLBREAKER);
 }
+
 bool bot_ai::IsCastingClass(uint8 m_class)
 {
     //Class can benefit from spellpower
@@ -19777,26 +20491,31 @@ bool bot_ai::IsCastingClass(uint8 m_class)
         m_class == BOT_CLASS_SPELLBREAKER || m_class == BOT_CLASS_DARK_RANGER || m_class == BOT_CLASS_NECROMANCER ||
         m_class == BOT_CLASS_SEA_WITCH);
 }
+
 bool bot_ai::IsHealingClass(uint8 m_class)
 {
     return
-        (m_class == BOT_CLASS_PRIEST || m_class == BOT_CLASS_DRUID ||
+    (m_class == BOT_CLASS_PRIEST || m_class == BOT_CLASS_DRUID ||
         m_class == BOT_CLASS_SHAMAN || m_class == BOT_CLASS_PALADIN ||
         m_class == BOT_CLASS_SPHYNX);
 }
+
 bool bot_ai::IsHumanoidClass(uint8 m_class)
 {
     return m_class != BOT_CLASS_SPHYNX;
 }
+
 bool bot_ai::IsHeroExClass(uint8 m_class)
 {
     return m_class == BOT_CLASS_BM || m_class == BOT_CLASS_ARCHMAGE || m_class == BOT_CLASS_DREADLORD ||
         m_class == BOT_CLASS_DARK_RANGER || m_class == BOT_CLASS_SEA_WITCH || m_class == BOT_CLASS_CRYPT_LORD;
 }
+
 bool bot_ai::IsMelee() const
 {
-    return !IsRanged() && HasRole(BOT_ROLE_DPS|BOT_ROLE_TANK);
+    return !IsRanged() && HasRole(BOT_ROLE_DPS | BOT_ROLE_TANK);
 }
+
 bool bot_ai::IsRanged() const
 {
     return HasRole(BOT_ROLE_RANGED) || HasVehicleRoleOverride(BOT_ROLE_RANGED);
@@ -19820,88 +20539,99 @@ bool bot_ai::CanBlock() const
     return me->CanUseAttackType(OFF_ATTACK) &&
         (_botclass == BOT_CLASS_SPELLBREAKER || !(me->GetCreatureTemplate()->flags_extra & CREATURE_FLAG_EXTRA_NO_BLOCK));
 }
+
 bool bot_ai::CanParry() const
 {
     if (me->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID) && me->CanUseAttackType(BASE_ATTACK))
     {
         switch (_botclass)
         {
-            case BOT_CLASS_SPHYNX:
-            case BOT_CLASS_SPELLBREAKER:
-            case BOT_CLASS_SEA_WITCH:
-                return true;
-            case BOT_CLASS_WARRIOR:
-            case BOT_CLASS_PALADIN:
-            case BOT_CLASS_ROGUE:
-            case BOT_CLASS_HUNTER:
-                return me->GetLevel() >= 10;
-            case BOT_CLASS_SHAMAN:
-                return me->GetLevel() >= 30;
-            case BOT_CLASS_DEATH_KNIGHT:
-                return me->GetLevel() >= 55;
-            default:
-                break;
+        case BOT_CLASS_SPHYNX:
+        case BOT_CLASS_SPELLBREAKER:
+        case BOT_CLASS_SEA_WITCH:
+            return true;
+        case BOT_CLASS_WARRIOR:
+        case BOT_CLASS_PALADIN:
+        case BOT_CLASS_ROGUE:
+        case BOT_CLASS_HUNTER:
+            return me->GetLevel() >= 10;
+        case BOT_CLASS_SHAMAN:
+            return me->GetLevel() >= 30;
+        case BOT_CLASS_DEATH_KNIGHT:
+            return me->GetLevel() >= 55;
+        default:
+            break;
         }
     }
     return false;
 }
+
 bool bot_ai::CanDodge() const
 {
     return _botclass != BOT_CLASS_BM;
 }
+
 bool bot_ai::CanCrit() const
 {
     return _botclass != BOT_CLASS_BM;
 }
+
 bool bot_ai::CanMiss() const
 {
     return _botclass < BOT_CLASS_EX_START;
 }
+
 bool bot_ai::CanSheath() const
 {
     return _botclass < BOT_CLASS_EX_START;
 }
+
 bool bot_ai::CanSit() const
 {
     return _botclass < BOT_CLASS_EX_START || _botclass == BOT_CLASS_DARK_RANGER;
 }
+
 bool bot_ai::CanEat() const
 {
     return _botclass != BOT_CLASS_SPHYNX;
 }
+
 bool bot_ai::CanDrink() const
 {
     return _botclass < BOT_CLASS_EX_START;
 }
+
 bool bot_ai::CanRegenInCombat() const
 {
     return _botclass == BOT_CLASS_SPHYNX;
 }
+
 bool bot_ai::CanMount() const
 {
     switch (_botclass)
     {
-        case BOT_CLASS_BM:
-        case BOT_CLASS_SPELLBREAKER:
-        case BOT_CLASS_DARK_RANGER:
-        case BOT_CLASS_NECROMANCER:
-            return true;
-        default:
-            return _botclass < BOT_CLASS_EX_START;
+    case BOT_CLASS_BM:
+    case BOT_CLASS_SPELLBREAKER:
+    case BOT_CLASS_DARK_RANGER:
+    case BOT_CLASS_NECROMANCER:
+        return true;
+    default:
+        return _botclass < BOT_CLASS_EX_START;
     }
 }
+
 bool bot_ai::CanUseAmmo() const
 {
     if ((_botclass == BOT_CLASS_HUNTER || _botclass == BOT_CLASS_ROGUE ||
-        _botclass == BOT_CLASS_WARRIOR || _botclass == BOT_CLASS_DARK_RANGER ||
-        _botclass == BOT_CLASS_SEA_WITCH) &&
+            _botclass == BOT_CLASS_WARRIOR || _botclass == BOT_CLASS_DARK_RANGER ||
+            _botclass == BOT_CLASS_SEA_WITCH) &&
         _equips[BOT_SLOT_RANGED])
     {
         ItemTemplate const* ranged = _equips[BOT_SLOT_RANGED]->GetTemplate();
         if (ranged->Class == ITEM_CLASS_WEAPON &&
             (ranged->SubClass == ITEM_SUBCLASS_WEAPON_BOW ||
-            ranged->SubClass == ITEM_SUBCLASS_WEAPON_CROSSBOW ||
-            ranged->SubClass == ITEM_SUBCLASS_WEAPON_GUN))
+                ranged->SubClass == ITEM_SUBCLASS_WEAPON_CROSSBOW ||
+                ranged->SubClass == ITEM_SUBCLASS_WEAPON_GUN))
             return true;
     }
     return false;
@@ -19911,18 +20641,21 @@ bool bot_ai::RespectEquipsAttackTime() const
 {
     return _botclass < BOT_CLASS_EX_START;
 }
+
 bool bot_ai::CanChangeEquip(uint8 slot) const
 {
     return (_botclass != BOT_CLASS_BM && _botclass != BOT_CLASS_ARCHMAGE &&
-        _botclass != BOT_CLASS_DREADLORD && _botclass != BOT_CLASS_SPELLBREAKER &&
-        _botclass != BOT_CLASS_DARK_RANGER && _botclass != BOT_CLASS_NECROMANCER &&
-        _botclass != BOT_CLASS_SEA_WITCH && _botclass != BOT_CLASS_CRYPT_LORD) ||
+            _botclass != BOT_CLASS_DREADLORD && _botclass != BOT_CLASS_SPELLBREAKER &&
+            _botclass != BOT_CLASS_DARK_RANGER && _botclass != BOT_CLASS_NECROMANCER &&
+            _botclass != BOT_CLASS_SEA_WITCH && _botclass != BOT_CLASS_CRYPT_LORD) ||
         slot > BOT_SLOT_RANGED;
 }
+
 bool bot_ai::CanDisplayNonWeaponEquipmentChanges() const
 {
     return (_botclass < BOT_CLASS_EX_START || _botclass == BOT_CLASS_ARCHMAGE);
 }
+
 bool bot_ai::IsValidTransmog(uint8 slot, ItemTemplate const* source) const
 {
     ASSERT(slot < BOT_TRANSMOG_INVENTORY_SIZE);
@@ -19943,29 +20676,29 @@ bool bot_ai::IsValidTransmog(uint8 slot, ItemTemplate const* source) const
 
     switch (target->InventoryType)
     {
-        case INVTYPE_RELIC:
-        case INVTYPE_NECK:
-        case INVTYPE_FINGER:
-        case INVTYPE_TRINKET:
-        case INVTYPE_THROWN:
-            return false;
-        default:
-            break;
+    case INVTYPE_RELIC:
+    case INVTYPE_NECK:
+    case INVTYPE_FINGER:
+    case INVTYPE_TRINKET:
+    case INVTYPE_THROWN:
+        return false;
+    default:
+        break;
     }
     switch (source->InventoryType)
     {
-        case INVTYPE_RELIC:
-        case INVTYPE_NECK:
-        case INVTYPE_FINGER:
-        case INVTYPE_TRINKET:
-        case INVTYPE_THROWN:
-        case INVTYPE_BAG:
-        case INVTYPE_AMMO:
-        case INVTYPE_QUIVER:
-        case INVTYPE_NON_EQUIP:
-            return false;
-        default:
-            break;
+    case INVTYPE_RELIC:
+    case INVTYPE_NECK:
+    case INVTYPE_FINGER:
+    case INVTYPE_TRINKET:
+    case INVTYPE_THROWN:
+    case INVTYPE_BAG:
+    case INVTYPE_AMMO:
+    case INVTYPE_QUIVER:
+    case INVTYPE_NON_EQUIP:
+        return false;
+    default:
+        break;
     }
 
     if (target->SubClass != source->SubClass)
@@ -20024,16 +20757,16 @@ bool bot_ai::IsDamagingSpell(SpellInfo const* spellInfo)
         {
             switch (spellInfo->Effects[i].Effect)
             {
-                case SPELL_EFFECT_WEAPON_DAMAGE:
-                case SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL:
-                case SPELL_EFFECT_NORMALIZED_WEAPON_DMG:
-                case SPELL_EFFECT_WEAPON_PERCENT_DAMAGE:
-                case SPELL_EFFECT_SCHOOL_DAMAGE:
-                case SPELL_EFFECT_ENVIRONMENTAL_DAMAGE:
-                case SPELL_EFFECT_HEALTH_LEECH:
-                    return true;
-                default:
-                    break;
+            case SPELL_EFFECT_WEAPON_DAMAGE:
+            case SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL:
+            case SPELL_EFFECT_NORMALIZED_WEAPON_DMG:
+            case SPELL_EFFECT_WEAPON_PERCENT_DAMAGE:
+            case SPELL_EFFECT_SCHOOL_DAMAGE:
+            case SPELL_EFFECT_ENVIRONMENTAL_DAMAGE:
+            case SPELL_EFFECT_HEALTH_LEECH:
+                return true;
+            default:
+                break;
             }
         }
     }
@@ -20051,6 +20784,7 @@ bool bot_ai::IsContestedPvP() const
 {
     return me->HasUnitState(UNIT_STATE_ATTACK_PLAYER);
 }
+
 void bot_ai::SetContestedPvP()
 {
     _contestedPvPTimer = 30000;
@@ -20067,6 +20801,7 @@ void bot_ai::SetContestedPvP()
         Cell::VisitWorldObjects(me, notifier, me->GetVisibilityRange());
     }
 }
+
 void bot_ai::ResetContestedPvP()
 {
     _contestedPvPTimer = 0;
@@ -20074,6 +20809,7 @@ void bot_ai::ResetContestedPvP()
     if (botPet && botPet->HasUnitState(UNIT_STATE_ATTACK_PLAYER))
         botPet->ClearUnitState(UNIT_STATE_ATTACK_PLAYER);
 }
+
 void bot_ai::UpdateContestedPvP()
 {
     if (_contestedPvPTimer > 0 && _contestedPvPTimer <= lastdiff && !me->IsInCombat())
@@ -20094,6 +20830,7 @@ void bot_ai::SetGroup(Group* group, int8 subgroup)
 
     me->UpdateObjectVisibility(false);
 }
+
 void bot_ai::SetBattlegroundOrBattlefieldRaid(Group* group, int8 subgroup)
 {
     SetOriginalGroup(GetGroup(), GetSubGroup());
@@ -20101,6 +20838,7 @@ void bot_ai::SetBattlegroundOrBattlefieldRaid(Group* group, int8 subgroup)
     _group.link(group, me);
     _group.setSubGroup((uint8)subgroup);
 }
+
 void bot_ai::RemoveFromBattlegroundOrBattlefieldRaid()
 {
     _group.unlink();
@@ -20111,6 +20849,7 @@ void bot_ai::RemoveFromBattlegroundOrBattlefieldRaid()
     }
     SetOriginalGroup(nullptr, -1);
 }
+
 void bot_ai::SetOriginalGroup(Group* group, int8 subgroup)
 {
     if (group == nullptr)
@@ -20134,8 +20873,10 @@ void bot_ai::SendUpdateToOutOfRangeBotGroupMembers()
 
     _groupUpdateMask = GROUP_UPDATE_FLAG_NONE;
     _auraRaidUpdateMask = 0;
-    if (botPet)
+    if (botPet && botPet->GetBotPetAI())
+    {
         botPet->GetBotPetAI()->ResetAuraUpdateMaskForRaid();
+    }
 }
 
 //BATTLEGROUNDS
@@ -20146,34 +20887,34 @@ bool bot_ai::IsFlagCarrier(Unit const* unit, BattlegroundTypeId bgTypeId)
         uint32 spellId = unit->GetAuraEffectsByType(SPELL_AURA_EFFECT_IMMUNITY).front()->GetBase()->GetId();
         switch (bgTypeId)
         {
-            case BATTLEGROUND_TYPE_NONE: //must contain all possible checks
-                switch (spellId)
-                {
-                    case 23333: // Warsong Flag (WSG)
-                    case 23335: // Silverwing Flag (WSG)
-                        return true;
-                    default:
-                        break;
-                }
-                break;
-            case BATTLEGROUND_AV:
-                break;
-            case BATTLEGROUND_WS:
-                switch (spellId)
-                {
-                    case 23333: // Warsong Flag (WSG)
-                    case 23335: // Silverwing Flag (WSG)
-                        return true;
-                    default:
-                        break;
-                }
-                break;
-            case BATTLEGROUND_AB:
-            case BATTLEGROUND_EY:
-            case BATTLEGROUND_SA:
-            case BATTLEGROUND_IC:
+        case BATTLEGROUND_TYPE_NONE: //must contain all possible checks
+            switch (spellId)
+            {
+            case 23333: // Warsong Flag (WSG)
+            case 23335: // Silverwing Flag (WSG)
+                return true;
             default:
                 break;
+            }
+            break;
+        case BATTLEGROUND_AV:
+            break;
+        case BATTLEGROUND_WS:
+            switch (spellId)
+            {
+            case 23333: // Warsong Flag (WSG)
+            case 23335: // Silverwing Flag (WSG)
+                return true;
+            default:
+                break;
+            }
+            break;
+        case BATTLEGROUND_AB:
+        case BATTLEGROUND_EY:
+        case BATTLEGROUND_SA:
+        case BATTLEGROUND_IC:
+        default:
+            break;
         }
     }
 

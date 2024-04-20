@@ -26,6 +26,11 @@ protected:
     WorldScript(const char* name);
 
 public:
+    // /*VIP系统*/
+    virtual void OnResetDailyQuests() { }
+
+    virtual void OnResetInstance(uint32 /*mapid*/, Difficulty /*difficulty*/) { }
+
     // Called when the open/closed state of the world changes.
     virtual void OnOpenStateChange(bool /*open*/) { }
 

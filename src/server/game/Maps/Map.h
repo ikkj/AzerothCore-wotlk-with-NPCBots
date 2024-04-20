@@ -642,7 +642,9 @@ public:
 
     void AddUpdateObject(Object* obj)
     {
-        _updateObjects.insert(obj);
+        if (obj != nullptr) {
+            _updateObjects.insert(obj);
+        }
     }
 
     void RemoveUpdateObject(Object* obj)

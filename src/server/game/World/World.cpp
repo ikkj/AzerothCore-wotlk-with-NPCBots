@@ -3062,6 +3062,8 @@ void World::ResetDailyQuests()
 
     // change available dailies
     sPoolMgr->ChangeDailyQuests();
+
+    sScriptMgr->OnResetDailyQuests();
 }
 
 void World::LoadDBAllowedSecurityLevel()
@@ -3094,6 +3096,8 @@ void World::ResetWeeklyQuests()
 
     _nextWeeklyQuestReset = Seconds(Acore::Time::GetNextTimeWithDayAndHour(4, 6));
     sWorld->setWorldState(WS_WEEKLY_QUEST_RESET_TIME, _nextWeeklyQuestReset.count());
+
+
 
     // change available weeklies
     sPoolMgr->ChangeWeeklyQuests();

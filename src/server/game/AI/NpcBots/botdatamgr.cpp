@@ -1090,6 +1090,20 @@ std::vector<uint32> BotDataMgr::Player_GetExistingNPCBotIds()
     return existing_ids;
 }
 
+Creature const* BotDataMgr::Player_FindBot(uint32 player_guid, ObjectGuid Guid)
+{
+    std::shared_lock<std::shared_mutex> lock(*GetLock());
+
+    for (NpcBotRegistry::const_iterator ci = _existingBots.cbegin(); ci != _existingBots.cend(); ++ci)
+    {
+        if ((*ci)->IsPlayerNpcBot())
+        {
+            if ((*ci)->GetGUID() == Guid && (*ci)->GetPlayerNpcBotOwnerId() == player_guid)
+                return *ci;
+        }
+    }
+    return nullptr;
+}
 
 Creature const* BotDataMgr::Player_FindBot(uint32 player_guid, uint32 entry)
 {

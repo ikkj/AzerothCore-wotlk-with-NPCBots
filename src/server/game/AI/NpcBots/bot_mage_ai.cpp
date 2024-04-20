@@ -64,7 +64,7 @@ enum MageBaseSpells
     DEEP_FREEZE_1                       = 44572,
     FROST_WARD_1                        = 6143,
     FIRE_WARD_1                         = 543,
-    MIRROR_IMAGE_1                      = 55342,
+    MIRROR_IMAGE_1                      = 55342,//镜像
     //Special
     ARCANE_MISSILES_DAMAGE_1            = 7268,
     BLIZZARD_DAMAGE_1                   = 42208,

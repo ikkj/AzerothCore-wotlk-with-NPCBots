@@ -128,6 +128,11 @@ void TotemAI::UpdateAI(uint32 /*diff*/)
 
 void TotemAI::AttackStart(Unit* /*victim*/)
 {
+    if(!me->GetOwner())
+    {
+        return;
+    }
+
     // Sentry totem sends ping on attack
     if (me->GetEntry() == SENTRY_TOTEM_ENTRY && me->GetOwner()->GetTypeId() == TYPEID_PLAYER)
     {
