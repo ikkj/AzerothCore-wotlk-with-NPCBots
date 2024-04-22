@@ -247,7 +247,13 @@ public:
         void KilledUnit(Unit* u) override { bot_ai::KilledUnit(u); }
         void EnterEvadeMode(EvadeReason why = EVADE_REASON_OTHER) override { bot_ai::EnterEvadeMode(why); }
         void MoveInLineOfSight(Unit* u) override { bot_ai::MoveInLineOfSight(u); }
-        void JustDied(Unit* u) override { Aspect = 0; UnsummonAll(); bot_ai::JustDied(u); }
+
+        void JustDied(Unit* u) override {
+            Aspect = 0;
+            UnsummonAll();
+            bot_ai::JustDied(u);
+        }
+
         void DoNonCombatActions(uint32 /*diff*/) { }
 
         void CheckAspects(uint32 diff)
@@ -1910,7 +1916,7 @@ public:
 
         void UnsummonAll() override
         {
-            if (botPet)
+            if (botPet && botPet->ToTempSummon())
                 botPet->ToTempSummon()->UnSummon();
         }
 
