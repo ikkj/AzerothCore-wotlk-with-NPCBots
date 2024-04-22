@@ -204,6 +204,27 @@ void ScriptMgr::OnPlayerSpellCast(Player* player, Spell* spell, bool skipCheck)
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_SPELL_CAST, script->OnSpellCast(player, spell, skipCheck));
 }
 
+void ScriptMgr::GetVipLevel(Player* player, uint32& level)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_UPDATE, script->GetVipLevel(player, level));
+}
+
+void ScriptMgr::OnCheckInstanceCount(Player* player, uint32 defaultCount, uint32& newCount)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_UPDATE, script->OnCheckInstanceCount(player, defaultCount,newCount));
+}
+
+void ScriptMgr::OnGetSkillCount(Player* player, uint32 defaultCount, uint32& newCount)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_UPDATE, script->OnGetSkillCount(player, defaultCount, newCount));
+}
+
+void ScriptMgr::OnVipLevelChanged(Player* player, uint32 level, uint32 old_level)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_UPDATE, script->OnGetSkillCount(player, level, old_level));
+}
+
+
 void ScriptMgr::OnBeforePlayerUpdate(Player* player, uint32 p_time)
 {
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_UPDATE, script->OnBeforeUpdate(player, p_time));

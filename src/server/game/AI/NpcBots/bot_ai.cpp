@@ -364,8 +364,8 @@ void bot_ai::NewSaveNpcBotStats(NpcBotStats const* stats) const
 
 bot_ai::~bot_ai()
 {
-    LOG_INFO("scripts", "bot_ai destructor call for {} ({})", me->GetName().c_str(), me->GetEntry());
-    LOG_ERROR("scripts", "bot_ai destructor call for {} ({})", me->GetName().c_str(), me->GetEntry());
+  //  LOG_INFO("scripts", "bot_ai destructor call for {} ({})", me->GetName().c_str(), me->GetEntry());
+   // LOG_ERROR("scripts", "bot_ai destructor call for {} ({})", me->GetName().c_str(), me->GetEntry());
 
     while (!_spells.empty())
     {
@@ -3597,7 +3597,7 @@ void bot_ai::SetStats(bool force)
         me->ResetPlayerDamageReq();
     }
 
-    if (botPet)
+    if (botPet && botPet->GetBotPetAI())
         botPet->GetBotPetAI()->SetShouldUpdateStats();
 }
 

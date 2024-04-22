@@ -74,6 +74,16 @@ void ScriptMgr::OnAfterUnloadAllMaps()
     CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_AFTER_UNLOAD_ALL_MAPS, script->OnAfterUnloadAllMaps());
 }
 
+void ScriptMgr::OnResetDailyQuests()
+{
+    CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_AFTER_UNLOAD_ALL_MAPS, script->OnResetDailyQuests());
+}
+
+void ScriptMgr::OnResetInstance(uint32 mapid, Difficulty difficulty)
+{
+    CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_AFTER_UNLOAD_ALL_MAPS, script->OnResetInstance(mapid, difficulty));
+}
+
 void ScriptMgr::OnBeforeFinalizePlayerWorldSession(uint32& cacheVersion)
 {
     CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_BEFORE_FINALIZE_PLAYER_WORLD_SESSION, script->OnBeforeFinalizePlayerWorldSession(cacheVersion));
