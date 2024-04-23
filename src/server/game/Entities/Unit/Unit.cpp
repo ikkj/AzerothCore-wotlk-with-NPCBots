@@ -21789,8 +21789,11 @@ void Unit::SendThreatListUpdate()
         ThreatContainer::StorageType const& tlist = GetThreatMgr().GetThreatList();
         for (ThreatContainer::StorageType::const_iterator itr = tlist.begin(); itr != tlist.end(); ++itr)
         {
-            data << (*itr)->getUnitGuid().WriteAsPacked();
-            data << uint32((*itr)->GetThreat() * 100);
+            if(*itr)
+            {
+                data << (*itr)->getUnitGuid().WriteAsPacked();
+                data << uint32((*itr)->GetThreat() * 100);
+            }
         }
         SendMessageToSet(&data, false);
     }
@@ -21810,8 +21813,11 @@ void Unit::SendChangeCurrentVictimOpcode(HostileReference* pHostileReference)
         ThreatContainer::StorageType const& tlist = GetThreatMgr().GetThreatList();
         for (ThreatContainer::StorageType::const_iterator itr = tlist.begin(); itr != tlist.end(); ++itr)
         {
-            data << (*itr)->getUnitGuid().WriteAsPacked();
-            data << uint32((*itr)->GetThreat() * 100);
+            if((*itr))
+            {
+                data << (*itr)->getUnitGuid().WriteAsPacked();
+                data << uint32((*itr)->GetThreat() * 100);
+            }
         }
         SendMessageToSet(&data, false);
     }
