@@ -2660,10 +2660,11 @@ void Map::SendObjectUpdates()
         }
         else {
             // 处理空数据包异常的逻辑，例如输出错误消息或者进行其他处理
+
         }
     }
 
-
+}
 void Map::DelayedUpdate(const uint32 t_diff)
 {
     for (_transportsUpdateIter = _transports.begin(); _transportsUpdateIter != _transports.end();)
