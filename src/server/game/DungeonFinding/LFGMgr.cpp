@@ -2528,11 +2528,11 @@ namespace lfg
 
             if (player->CanRewardQuest(quest, false))
             {
-                if (player->HasTankSpec() or player->HasHealSpec())
-                {
-                    player->AddItem(61017, 1);//T/N奖励额外随机英雄宝箱
-                    player->SendSystemMessage("|cFFFF0000 坦克奶妈额外奖励【随机英雄宝箱】已发放");
-                }
+                //if (player->HasTankSpec() or player->HasHealSpec())
+                //{
+                //    player->AddItem(61017, 1);//T/N奖励额外随机英雄宝箱
+                //    player->SendSystemMessage("|cFFFF0000 坦克奶妈额外奖励【随机英雄宝箱】已发放");
+                //}
                 player->RewardQuest(quest, 0, nullptr, false, true);
             }
             else
@@ -2542,11 +2542,11 @@ namespace lfg
                 if (!quest)
                     continue;
                 // we give reward without informing client (retail does this)
-                if (player->HasTankSpec() or player->HasHealSpec())
-                {
-                    player->AddItem(61017, 1);//T/N奖励额外随机英雄宝箱
-                    player->SendSystemMessage("|cFFFF0000 坦克奶妈额外奖励【随机英雄宝箱】已发放");
-                }
+                //if (player->HasTankSpec() or player->HasHealSpec())
+                //{
+                //    player->AddItem(61017, 1);//T/N奖励额外随机英雄宝箱
+                //    player->SendSystemMessage("|cFFFF0000 坦克奶妈额外奖励【随机英雄宝箱】已发放");
+                //}
                 player->RewardQuest(quest, 0, nullptr, false, true);
             }
 
