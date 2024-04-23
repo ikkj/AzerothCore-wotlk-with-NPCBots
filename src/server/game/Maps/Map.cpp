@@ -2616,23 +2616,53 @@ void Map::SendObjectUpdates()
     UpdateDataMapType update_players;
     UpdatePlayerSet player_set;
 
+//    while (!_updateObjects.empty())
+//    {
+//        Object* obj = *_updateObjects.begin();
+//        ASSERT(obj->IsInWorld());
+//
+//        _updateObjects.erase(_updateObjects.begin());
+//        obj->BuildUpdate(update_players, player_set);
+//    }
+//
+//    WorldPacket packet;                                     // here we allocate a std::vector with a size of 0x10000
+//    for (UpdateDataMapType::iterator iter = update_players.begin(); iter != update_players.end(); ++iter)
+//    {
+//        iter->second.BuildPacket(packet);
+//        iter->first->GetSession()->SendPacket(&packet);
+//        packet.clear();                                     // clean the string
+//    }
+//}
     while (!_updateObjects.empty())
     {
         Object* obj = *_updateObjects.begin();
-        ASSERT(obj->IsInWorld());
-
-        _updateObjects.erase(_updateObjects.begin());
-        obj->BuildUpdate(update_players, player_set);
+        if (obj != nullptr) {
+            ASSERT(obj->IsInWorld());
+            _updateObjects.erase(_updateObjects.begin());
+            obj->BuildUpdate(update_players, player_set);
+        }
+        else {
+            // 处理空指针异常的逻辑，例如输出错误消息或者进行其他处理
+            // 此处我直接移除了指针为空的对象
+            _updateObjects.erase(_updateObjects.begin());
+        }
     }
 
     WorldPacket packet;                                     // here we allocate a std::vector with a size of 0x10000
     for (UpdateDataMapType::iterator iter = update_players.begin(); iter != update_players.end(); ++iter)
     {
+        if (!packet.empty()) {
+            packet.clear();  // clean the string
+        }
         iter->second.BuildPacket(packet);
-        iter->first->GetSession()->SendPacket(&packet);
-        packet.clear();                                     // clean the string
+        if (!packet.empty()) {
+            iter->first->GetSession()->SendPacket(&packet);
+        }
+        else {
+            // 处理空数据包异常的逻辑，例如输出错误消息或者进行其他处理
+        }
     }
-}
+
 
 void Map::DelayedUpdate(const uint32 t_diff)
 {
