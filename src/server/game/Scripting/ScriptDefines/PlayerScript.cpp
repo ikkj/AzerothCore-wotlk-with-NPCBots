@@ -221,9 +221,8 @@ void ScriptMgr::OnGetSkillCount(Player* player, uint32 defaultCount, uint32& new
 
 void ScriptMgr::OnVipLevelChanged(Player* player, uint32 level, uint32 old_level)
 {
-    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_UPDATE, script->OnGetSkillCount(player, level, old_level));
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_UPDATE, script->OnVipLevelChanged(player, level, old_level));
 }
-
 
 void ScriptMgr::OnBeforePlayerUpdate(Player* player, uint32 p_time)
 {

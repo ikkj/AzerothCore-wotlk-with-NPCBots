@@ -8097,7 +8097,9 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
             {
                 if (me->GetLevel() >= 10)
                     AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_MANAGE_TALENTS), GOSSIP_SENDER_SPEC, GOSSIP_ACTION_INFO_DEF + 1);
-                AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_GIVE_CONSUMABLE), GOSSIP_SENDER_USEITEM, GOSSIP_ACTION_INFO_DEF + 1);
+
+                //吃喝
+                //AddGossipItemFor(player, GOSSIP_ICON_TALK, LocalizedNpcText(player, BOT_TEXT_GIVE_CONSUMABLE), GOSSIP_SENDER_USEITEM, GOSSIP_ACTION_INFO_DEF + 1);
             }
 
             if (!me->IsPlayerNpcBot())
@@ -8121,10 +8123,10 @@ bool bot_ai::OnGossipHello(Player* player, uint32 /*option*/)
             //movement toggle
             if (HasBotCommandState(BOT_COMMAND_MASK_UNMOVING))
                 AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_FOLLOW_ME), GOSSIP_SENDER_FOLLOWME, GOSSIP_ACTION_INFO_DEF + 1);
-            if (!HasBotCommandState(BOT_COMMAND_STAY))
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_HOLD_POSITION), GOSSIP_SENDER_HOLDPOSITION, GOSSIP_ACTION_INFO_DEF + 1);
-            if (!HasBotCommandState(BOT_COMMAND_FULLSTOP))
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_STAY_HERE), GOSSIP_SENDER_DONOTHING, GOSSIP_ACTION_INFO_DEF + 1);
+            // if (!HasBotCommandState(BOT_COMMAND_STAY))
+            //     AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_HOLD_POSITION), GOSSIP_SENDER_HOLDPOSITION, GOSSIP_ACTION_INFO_DEF + 1);
+            // if (!HasBotCommandState(BOT_COMMAND_FULLSTOP))
+            //     AddGossipItemFor(player, GOSSIP_ICON_CHAT, LocalizedNpcText(player, BOT_TEXT_STAY_HERE), GOSSIP_SENDER_DONOTHING, GOSSIP_ACTION_INFO_DEF + 1);
         }
         if (player == master || (gr && gr->IsMember(master->GetGUID())))
         {
@@ -8339,9 +8341,11 @@ std::string bot_ai::GetItemIconAndLink(Item const* item, uint8 slot) const
 {
     std::string icon = item ? GetItemIcon(item->GetEntry(), 30, 30, -18, 0) : GetSlotIcon(slot, 30, 30, -18, 0);
     std::string name = item ? GetItemLink(item->GetEntry()):"";
-    uint32 gs = item ? uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate())):0;
+    // uint32 gs = item ? uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate())):0;
+    uint32 itemlevel = item ?item->GetTemplate()->ItemLevel:0;
 
-    return (gs>0?"GS:"+std::to_string(gs):"") + "\r\n\r\n    "+ icon + name +"\r\n  ";
+    //" GS:"+std::to_string(gs):"") +
+    return "装等:"+std::to_string(itemlevel)+ "\r\n\r\n    "+ icon + name +"\r\n ";
 }
 
 
@@ -9264,6 +9268,8 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 if (!item) continue;
                 std::ostringstream msg;
                 _AddItemLink(player, item, msg/*, false*/);
+                msg << "装等:" << item->GetTemplate()->ItemLevel;
+
                 //uncomment if needed
                 //msg << " in slot " << uint32(i) << " (" << _getNameForSlot(i + 1) << ')';
                 if (i <= BOT_SLOT_RANGED && einfo->ItemEntry[i] == item->GetEntry())
@@ -9516,7 +9522,8 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             if (slot <= BOT_SLOT_RANGED && einfo->ItemEntry[slot] == item->GetEntry())
                 msg << " |cffe6cc80|h[!" << LocalizedNpcText(player, BOT_TEXT_VISUALONLY) << "!]|h|r";
 
-            msg << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate()));
+            msg << " 装等: " << item->GetTemplate()->ItemLevel;
+            // msg << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate()));
 
             BotWhisper(msg.str(), player);
 
@@ -9605,7 +9612,8 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 if (visual_only)
                     str << " |cffe6cc80|h[!" << LocalizedNpcText(player, BOT_TEXT_VISUALONLY) << "!]|h|r";
 
-                str << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate()));
+                str << " 装等: " << item->GetTemplate()->ItemLevel;
+                // str << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate()));
 
                 AddGossipItemFor(player, GOSSIP_ICON_CHAT, str.str().c_str(), GOSSIP_SENDER_EQUIPMENT_INFO, action);
 
@@ -9655,7 +9663,9 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         {
                             std::ostringstream name;
                             _AddItemLink(player, item, name);
-                            name << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate()));
+
+                            name << " 装等: " << item->GetTemplate()->ItemLevel;
+                            // name << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate()));
                             if (BotMgr::SendEquipListItems())
                                 BotWhisper(name.str(), player);
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str().c_str(), GOSSIP_SENDER_EQUIP + slot, GOSSIP_ACTION_INFO_DEF + item->GetGUID().GetCounter());
@@ -9679,7 +9689,9 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                                 {
                                     std::ostringstream name;
                                     _AddItemLink(player, item, name);
-                                    name << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate()));
+
+                                    name << " 装等: " << item->GetTemplate()->ItemLevel;
+                                    // name << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, item->GetTemplate()));
                                     if (BotMgr::SendEquipListItems())
                                         BotWhisper(name.str(), player);
                                     AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str().c_str(), GOSSIP_SENDER_EQUIP + slot, GOSSIP_ACTION_INFO_DEF + item->GetGUID().GetCounter());
@@ -9924,7 +9936,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                             _AddItemLink(player, item, name);
                             if (BotMgr::SendEquipListItems())
                                 BotWhisper(name.str(), player);
-                            AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str().c_str(), GOSSIP_SENDER_EQUIP_AUTOEQUIP_EQUIP + k, GOSSIP_ACTION_INFO_DEF + item->GetGUID().GetCounter());
+                            AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str() + " 装等:"+ std::to_string(item->GetTemplate()->ItemLevel), GOSSIP_SENDER_EQUIP_AUTOEQUIP_EQUIP + k, GOSSIP_ACTION_INFO_DEF + item->GetGUID().GetCounter());
                             ++counter;
                             found = true;
                             break;
@@ -9961,7 +9973,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                                     _AddItemLink(player, item, name);
                                     if (BotMgr::SendEquipListItems())
                                         BotWhisper(name.str(), player);
-                                    AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str().c_str(), GOSSIP_SENDER_EQUIP_AUTOEQUIP_EQUIP + k, GOSSIP_ACTION_INFO_DEF + item->GetGUID().GetCounter());
+                                    AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str() + " 装等:"+ std::to_string(item->GetTemplate()->ItemLevel), GOSSIP_SENDER_EQUIP_AUTOEQUIP_EQUIP + k, GOSSIP_ACTION_INFO_DEF + item->GetGUID().GetCounter());
                                     ++counter;
                                     found = true;
                                     break;
@@ -10108,7 +10120,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         ++counter;
                         std::ostringstream name;
                         _AddItemLink(player, pItem, name);
-                        AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str(), GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT_ITEM, GOSSIP_ACTION_INFO_DEF + pItem->GetGUID().GetCounter());
+                        AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str() + " 装等:"+ std::to_string(pItem->GetTemplate()->ItemLevel), GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT_ITEM, GOSSIP_ACTION_INFO_DEF + pItem->GetGUID().GetCounter());
                     }
                 }
             }
@@ -10135,7 +10147,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                         ++counter;
                         std::ostringstream name;
                         _AddItemLink(player, pItem, name);
-                        AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str(), GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT_ITEM, GOSSIP_ACTION_INFO_DEF + pItem->GetGUID().GetCounter());
+                        AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str() + " 装等:"+ std::to_string(pItem->GetTemplate()->ItemLevel), GOSSIP_SENDER_EQUIPMENT_BANK_DEPOSIT_ITEM, GOSSIP_ACTION_INFO_DEF + pItem->GetGUID().GetCounter());
                     }
                 }
             }
@@ -10232,7 +10244,7 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                 else if (GetBotClass() == BOT_CLASS_WARRIOR && _canEquip(proto, BOT_SLOT_MAINHAND, true))
                     slot = BOT_SLOT_MAINHAND;
 
-                name << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, proto));
+                // name << " GS: " << uint32(CalculateItemGearScore(me->GetEntry(), me->GetLevel(), GetBotClass(), GetSpec(), slot, proto));
                 AddGossipItemFor(player, GOSSIP_ICON_CHAT, name.str(), GOSSIP_SENDER_EQUIPMENT_BANK_WITHDRAW_ITEM, GOSSIP_ACTION_INFO_DEF + item->GetGUID().GetCounter());
             }
 
@@ -10280,6 +10292,8 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
                     continue;
                 if (role == BOT_ROLE_HEAL && !IsHealingClass(_botclass))
                     continue;
+                if(role == BOT_ROLE_TANK_OFF )
+                    continue;
 
                 AddGossipItemFor(player, GetRoleIcon(role), LocalizedNpcText(player, GetRoleString(role)), GOSSIP_SENDER_ROLES_MAIN_TOGGLE, GOSSIP_ACTION_INFO_DEF + role);
             }
@@ -10302,6 +10316,11 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             uint32 role = BOT_ROLE_GATHERING_MINING;
             for (; role != BOT_MAX_ROLE; role <<= 1)
             {
+                // if(role & BOT_ROLE_TANK_OFF )
+                // {
+                //      continue;
+                // }
+
                 if (!(role & BOT_ROLE_MASK_GATHERING)) //hidden
                     continue;
 
@@ -14714,6 +14733,21 @@ void bot_ai::ToggleRole(uint32 role, bool force)
 
     if (HasRole(role))
     {
+        //关输出自动关坦克、关副坦克、 开治疗
+        if (role == BOT_ROLE_DPS)
+        {
+            role  |= BOT_ROLE_TANK;
+            role  |= BOT_ROLE_TANK_OFF;
+
+            _roleMask  |= BOT_ROLE_HEAL;
+        }
+
+        //关治疗自动开输出
+        if (role == BOT_TEXT_HEAL)
+        {
+            _roleMask  |= BOT_ROLE_DPS;
+        }
+
         //linked roles
         if (role & BOT_ROLE_TANK)
             role |= BOT_ROLE_TANK_OFF;
@@ -14723,11 +14757,39 @@ void bot_ai::ToggleRole(uint32 role, bool force)
     else
     {
         //linked roles
+
+        //开远程关坦克
+        if(role == BOT_ROLE_RANGED)
+        {
+            _roleMask  &= ~BOT_ROLE_TANK;
+            _roleMask  &= ~BOT_ROLE_TANK_OFF;
+        }
+
+        /*开坦克自动开输出 关治疗 关远程*/
+        if(role == BOT_ROLE_TANK)
+        {
+            _roleMask  &= ~BOT_ROLE_HEAL;
+            _roleMask  &= ~BOT_ROLE_RANGED;
+        }
+
+        //开治疗自动关坦克、关副坦克  、关输出
+        if(role == BOT_ROLE_HEAL)
+        {
+            _roleMask  &= ~BOT_ROLE_TANK;
+            _roleMask  &= ~BOT_ROLE_TANK_OFF;
+            _roleMask  &= ~BOT_ROLE_DPS;
+        }
+
+        //开输出自动关治疗
+        if(role == BOT_ROLE_DPS)
+        {
+            _roleMask  &= ~BOT_ROLE_HEAL;
+        }
+
         if (role & BOT_ROLE_TANK_OFF)
             role |= BOT_ROLE_TANK;
 
         _roleMask |= role;
-
         if (role == BOT_ROLE_TANK || role == BOT_ROLE_TANK_OFF)
         {
             _roleMask |= BOT_ROLE_DPS;
@@ -19145,25 +19207,30 @@ bool bot_ai::FinishTeleport(bool reset)
         Map* map = master->FindMap();
         //2) Cannot teleport: map not found or forbidden - delay teleport
         /*player_botnpc*/
-        bool CanRestrictBots = master->GetBotMgr()->RestrictBots(me, true);
-        if (me->IsPlayerNpcBot())
-        {
-            if ((!map || CanRestrictBots) && master->IsAlive())
+        bool CanRestrictBots = false;
+        if (master->GetBotMgr()) {
+            CanRestrictBots = master->GetBotMgr()->RestrictBots(me, true);
+
+            if (me->IsPlayerNpcBot())
             {
-                if (me->GetBotGroup())
+                if ((!map || CanRestrictBots) && master->IsAlive())
                 {
-                    master->GetGroup()->RemoveMember(me->GetGUID());
+                    if (me->GetBotGroup())
+                    {
+                        master->GetGroup()->RemoveMember(me->GetGUID());
+                    }
+                    //BotWhisper("副本满了，我先溜了！",master);
+                    //me->Say("副本满了，我先溜了！", Language::LANG_UNIVERSAL, GetBotOwner());
+                    // master->GetBotMgr()->UnbindBot(me->GetGUID());
+                    // _evadeMode = false;
+                    // TeleportHomeStart(true);
+                    //CheckBotGroup();
+                    // LOG_ERROR("AddDelayedTeleportCallback","GO MAP1 And Delete");
+                    return;
                 }
-                //BotWhisper("副本满了，我先溜了！",master);
-                //me->Say("副本满了，我先溜了！", Language::LANG_UNIVERSAL, GetBotOwner());
-                // master->GetBotMgr()->UnbindBot(me->GetGUID());
-                // _evadeMode = false;
-                // TeleportHomeStart(true);
-                //CheckBotGroup();
-                // LOG_ERROR("AddDelayedTeleportCallback","GO MAP1 And Delete");
-                return;
             }
         }
+        
         /*player_botnpc*/
 
         if (!map || !master->IsAlive() || CanRestrictBots)

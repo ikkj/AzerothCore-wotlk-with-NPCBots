@@ -64,7 +64,7 @@ enum MageBaseSpells
     DEEP_FREEZE_1                       = 44572,
     FROST_WARD_1                        = 6143,
     FIRE_WARD_1                         = 543,
-    MIRROR_IMAGE_1                      = 55342,//镜像
+   // MIRROR_IMAGE_1                      = 55342,//镜像
     //Special
     ARCANE_MISSILES_DAMAGE_1            = 7268,
     BLIZZARD_DAMAGE_1                   = 42208,
@@ -489,14 +489,14 @@ public:
                 }
             }
             //MIRROR IMAGE
-            if (IsSpellReady(MIRROR_IMAGE_1, diff) &&
+          /*  if (IsSpellReady(MIRROR_IMAGE_1, diff) &&
                 (mytar->GetTypeId() == TYPEID_PLAYER ||
                 (mytar->GetTypeId() == TYPEID_UNIT && mytar->ToCreature()->GetCreatureTemplate()->rank != CREATURE_ELITE_NORMAL)) &&
                 Rand() < 25)
             {
                 if (doCast(me, GetSpell(MIRROR_IMAGE_1)))
                     return;
-            }
+            }*/
             //CONES
             if (/*fbCasted && */(IsSpellReady(CONE_OF_COLD_1, diff) || IsSpellReady(DRAGON_BREATH_1, diff)) && Rand() < 65)
             {
@@ -1679,7 +1679,7 @@ public:
             InitSpellMap(ICE_LANCE_1);
             //InitSpellMap(FROST_WARD_1);
             //InitSpellMap(FIRE_WARD_1);
-            InitSpellMap(MIRROR_IMAGE_1);
+           // InitSpellMap(MIRROR_IMAGE_1);
 
  /*Special*/InitSpellMap(CONJURE_MANA_GEM_1);
  /*Special*/InitSpellMap(MANA_GEM_1);
@@ -1790,7 +1790,7 @@ public:
                 case SLOW_FALL_1:
                 case CONJURE_MANA_GEM_1:
                 case SUMMON_WATER_ELEMENTAL_1:
-                case MIRROR_IMAGE_1:
+                //case MIRROR_IMAGE_1:
                     return true;
                 case FROST_ARMOR_1:
                     return !GetSpell(ICE_ARMOR_1);
