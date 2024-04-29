@@ -9399,35 +9399,61 @@ bool Unit::HandleProcTriggerSpell(Unit* victim, uint32 damage, AuraEffect* trigg
                         target = victim;
                         break;
                     case 57345:             // Darkmoon Card: Greatness
+                    {
+                        float stat = 0.0f;
+                        // strength
+                        if (GetStat(STAT_STRENGTH) > stat) { trigger_spell_id = 60229; stat = GetStat(STAT_STRENGTH); }
+                        // agility
+                        if (GetStat(STAT_AGILITY) > stat) { trigger_spell_id = 60233; stat = GetStat(STAT_AGILITY); }
+                        // intellect
+                        if (GetStat(STAT_INTELLECT) > stat) { trigger_spell_id = 60234; stat = GetStat(STAT_INTELLECT); }
+                        // spirit
+                        if (GetStat(STAT_SPIRIT) > stat) { trigger_spell_id = 60235; }
+                        //npcbot: try get stats
+                        if (!trigger_spell_id && IsNPCBot())
                         {
-                            float stat = 0.0f;
-                            // strength
-                            if (GetStat(STAT_STRENGTH) > stat) { trigger_spell_id = 60229; stat = GetStat(STAT_STRENGTH); }
-                            // agility
-                            if (GetStat(STAT_AGILITY)  > stat) { trigger_spell_id = 60233; stat = GetStat(STAT_AGILITY);  }
-                            // intellect
-                            if (GetStat(STAT_INTELLECT) > stat) { trigger_spell_id = 60234; stat = GetStat(STAT_INTELLECT);}
-                            // spirit
-                            if (GetStat(STAT_SPIRIT)   > stat) { trigger_spell_id = 60235;                               }
+                            int32 bstat = 0;
+                            int32 bstat_str = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_STRENGTH);
+                            int32 bstat_agi = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_AGILITY);
+                            int32 bstat_int = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_INTELLECT);
+                            int32 bstat_spi = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_SPIRIT);
 
-                            //npcbot: try get stats
-                            if (!trigger_spell_id && IsNPCBot())
-                            {
-                                int32 bstat = 0;
-                                int32 bstat_str = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_STRENGTH);
-                                int32 bstat_agi = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_AGILITY);
-                                int32 bstat_int = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_INTELLECT);
-                                int32 bstat_spi = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_SPIRIT);
-
-                                if (bstat_str > bstat) { trigger_spell_id = 60229; bstat = bstat_str; }
-                                if (bstat_agi > bstat) { trigger_spell_id = 60233; bstat = bstat_agi; }
-                                if (bstat_int > bstat) { trigger_spell_id = 60234; bstat = bstat_int; }
-                                if (bstat_spi > bstat) { trigger_spell_id = 60235; bstat = bstat_spi; }
-                            }
-                            //end npcbot
-
-                            break;
+                            if (bstat_str > bstat) { trigger_spell_id = 60229; bstat = bstat_str; }
+                            if (bstat_agi > bstat) { trigger_spell_id = 60233; bstat = bstat_agi; }
+                            if (bstat_int > bstat) { trigger_spell_id = 60234; bstat = bstat_int; }
+                            if (bstat_spi > bstat) { trigger_spell_id = 60235; bstat = bstat_spi; }
                         }
+                        //end npcbot
+                        break; // 添加了一个break语句
+                    }
+                    case 101021:            // VIP7的祝福
+                    {
+                        float stat = 0.0f;
+                        // strength
+                        if (GetStat(STAT_STRENGTH) > stat) { trigger_spell_id = 101022; stat = GetStat(STAT_STRENGTH); }
+                        // agility
+                        if (GetStat(STAT_AGILITY) > stat) { trigger_spell_id = 101023; stat = GetStat(STAT_AGILITY); }
+                        // intellect
+                        if (GetStat(STAT_INTELLECT) > stat) { trigger_spell_id = 101024; stat = GetStat(STAT_INTELLECT); }
+                        // spirit
+                        if (GetStat(STAT_SPIRIT) > stat) { trigger_spell_id = 101025; }
+                        //npcbot: try get stats
+                        if (!trigger_spell_id && IsNPCBot())
+                        {
+                            int32 bstat = 0;
+                            int32 bstat_str = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_STRENGTH);
+                            int32 bstat_agi = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_AGILITY);
+                            int32 bstat_int = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_INTELLECT);
+                            int32 bstat_spi = BotMgr::GetBotStat(ToCreature(), BOT_STAT_MOD_SPIRIT);
+
+                            if (bstat_str > bstat) { trigger_spell_id = 101022; bstat = bstat_str; }
+                            if (bstat_agi > bstat) { trigger_spell_id = 101023; bstat = bstat_agi; }
+                            if (bstat_int > bstat) { trigger_spell_id = 101024; bstat = bstat_int; }
+                            if (bstat_spi > bstat) { trigger_spell_id = 101025; bstat = bstat_spi; }
+                        }
+                        //end npcbot
+                        break;
+                    }
                     case 67702:             // Death's Choice, Item - Coliseum 25 Normal Melee Trinket
                         {
                             if (!damage)

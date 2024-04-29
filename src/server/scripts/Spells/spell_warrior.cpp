@@ -665,6 +665,9 @@ class spell_warr_sweeping_strikes : public AuraScript
     void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
     {
         PreventDefaultAction();
+        if (!_procTarget) {
+            return;
+        }
         if (DamageInfo* damageInfo = eventInfo.GetDamageInfo())
         {
             SpellInfo const* spellInfo = damageInfo->GetSpellInfo();
@@ -764,6 +767,9 @@ class spell_warr_vigilance : public AuraScript
     void HandleProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
     {
         PreventDefaultAction();
+        if (!_procTarget) {
+            return;
+        }
         GetTarget()->CastSpell(_procTarget, SPELL_WARRIOR_VIGILANCE_PROC, true, nullptr, aurEff);
     }
 
