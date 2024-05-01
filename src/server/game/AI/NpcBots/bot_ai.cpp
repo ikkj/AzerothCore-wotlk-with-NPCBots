@@ -19230,7 +19230,7 @@ bool bot_ai::FinishTeleport(bool reset)
                 }
             }
         }
-        
+
         /*player_botnpc*/
 
         if (!map || !master->IsAlive() || CanRestrictBots)
