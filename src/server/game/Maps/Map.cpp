@@ -2648,18 +2648,17 @@ void Map::SendObjectUpdates()
 //        packet.clear();                                     // clean the string
 //    }
 //}
-    while (!_updateObjects.empty())
-    {
-        Object* obj = *_updateObjects.begin();
+    for (auto it = _updateObjects.begin(); it != _updateObjects.end(); ) {
+        Object* obj = *it;
         if (obj != nullptr) {
             ASSERT(obj->IsInWorld());
-            _updateObjects.erase(_updateObjects.begin());
+            it = _updateObjects.erase(it);
             obj->BuildUpdate(update_players, player_set);
         }
         else {
             // 处理空指针异常的逻辑，例如输出错误消息或者进行其他处理
             // 此处我直接移除了指针为空的对象
-            _updateObjects.erase(_updateObjects.begin());
+            it = _updateObjects.erase(it);
         }
     }
 
