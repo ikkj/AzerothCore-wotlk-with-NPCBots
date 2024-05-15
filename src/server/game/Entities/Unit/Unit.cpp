@@ -12517,6 +12517,10 @@ uint32 Unit::SpellDamageBonusTaken(Unit* caster, SpellInfo const* spellProto, ui
             if (!spellProto->ValidateAttribute6SpellDamageMods(caster, *i, damagetype == DOT))
                 continue;
 
+            if (!(*i)->GetSpellInfo()) {
+                continue;
+            }
+
             // Only death knight spell with this aura
             if ((*i)->GetSpellInfo()->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT)
                 if (!caster || caster->GetGUID() != (*i)->GetCasterGUID())

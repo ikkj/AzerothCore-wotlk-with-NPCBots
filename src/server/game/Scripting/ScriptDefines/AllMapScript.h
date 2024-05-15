@@ -82,6 +82,9 @@ public:
      * @param diff Contains information about the diff time
      */
     virtual void OnMapUpdate(Map* /*map*/, uint32 /*diff*/) { }
+
+
+    virtual void OnMapProgressUpdates(Map* /*map*/) { }
 };
 
 #endif

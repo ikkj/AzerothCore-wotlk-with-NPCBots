@@ -20,6 +20,7 @@
 #include "InstanceMapScript.h"
 #include "Player.h"
 #include "ScriptedCreature.h"
+#include "ScriptMgr.h"
 #include "Transport.h"
 #include "Vehicle.h"
 #include "WorldPacket.h"
@@ -37,7 +38,7 @@ public:
 
     struct instance_ulduar_InstanceMapScript : public InstanceScript
     {
-        instance_ulduar_InstanceMapScript(Map* pMap) : InstanceScript(pMap)
+        instance_ulduar_InstanceMapScript(Map* pMap) : InstanceScript(pMap),ulduar_boos_progress(0)
         {
             Initialize();
             SetHeaders(DataHeader);
@@ -48,6 +49,8 @@ public:
 
         uint32 m_auiEncounter[MAX_ENCOUNTER];
         uint32 C_of_Ulduar_MASK;
+
+        uint32 ulduar_boos_progress;
 
         int m_difficulty;
 
@@ -1104,14 +1107,22 @@ public:
 
             data >> C_of_Ulduar_MASK;
             data >> m_mageBarrier;
-
+            /*当前进度*/
+            uint32 temp_ulduar_boos_progress=0;
             for (uint8 i = 0; i < (MAX_ENCOUNTER - 1); ++i)
             {
                 if (m_auiEncounter[i] == IN_PROGRESS)
                 {
                     m_auiEncounter[i] = NOT_STARTED;
                 }
+
+                if(m_auiEncounter[i] == DONE)
+                {
+                    temp_ulduar_boos_progress++;
+                }
             }
+            ulduar_boos_progress = temp_ulduar_boos_progress;
+            // LOG_ERROR("A","奥多初始进度：{}",ulduar_boos_progress);
         }
 
         void WriteSaveDataMore(std::ostringstream& data) override
@@ -1121,6 +1132,24 @@ public:
                 << m_auiEncounter[8] << ' ' << m_auiEncounter[9] << ' ' << m_auiEncounter[10] << ' ' << m_auiEncounter[11] << ' '
                 << m_auiEncounter[12] << ' ' << m_auiEncounter[13] << ' ' << m_auiEncounter[14] << ' ' << m_conspeedatoryAttempt << ' '
                 << m_unbrokenAchievement << ' ' << m_algalonTimer << ' ' << C_of_Ulduar_MASK << ' ' << m_mageBarrier;
+
+            uint32 temp_ulduar_boos_progress=0;
+            for (uint8 i = 0; i < (MAX_ENCOUNTER - 1); ++i)
+            {
+                if(m_auiEncounter[i] == DONE)
+                {
+                    temp_ulduar_boos_progress++;
+                }
+            }
+
+            if(temp_ulduar_boos_progress > ulduar_boos_progress)
+            {
+                // LOG_ERROR("A", "进度差值: {}", temp_ulduar_boos_progress - ulduar_boos_progress);
+                sScriptMgr->OnMapProgressUpdates(instance);
+            }
+
+            ulduar_boos_progress = temp_ulduar_boos_progress;
+            // LOG_ERROR("A","奥多进度更新：{}",ulduar_boos_progress);
         }
 
         void Update(uint32 diff) override

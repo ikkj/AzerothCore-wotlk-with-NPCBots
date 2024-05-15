@@ -199,6 +199,7 @@ public: /* MapScript */
     void OnPlayerEnterMap(Map* map, Player* player);
     void OnPlayerLeaveMap(Map* map, Player* player);
     void OnMapUpdate(Map* map, uint32 diff);
+    void OnMapProgressUpdates(Map* map);
 
 public: /* InstanceMapScript */
     InstanceScript* CreateInstanceScript(InstanceMap* map);

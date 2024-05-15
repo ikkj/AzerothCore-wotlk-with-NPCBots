@@ -362,6 +362,11 @@ void bot_ai::NewSaveNpcBotStats(NpcBotStats const* stats) const
     }
 }
 
+void bot_ai::GiveAura(uint32 spell_id)
+{
+    RefreshAura(spell_id);
+}
+
 bot_ai::~bot_ai()
 {
   //  LOG_INFO("scripts", "bot_ai destructor call for {} ({})", me->GetName().c_str(), me->GetEntry());
@@ -14942,6 +14947,7 @@ void bot_ai::DefaultInit()
 
 void bot_ai::ApplyRacials()
 {
+
     uint8 myrace = me->GetRace();
     switch (myrace)
     {

@@ -21,6 +21,7 @@
 #include "SpellScript.h"
 #include "SpellScriptLoader.h"
 #include "obsidian_sanctum.h"
+#include "ScriptMgr.h"
 
 enum Says
 {
@@ -353,6 +354,7 @@ public:
             RespawnDragons(true);
             _JustDied();
             Talk(SAY_SARTHARION_DEATH);
+            sScriptMgr->OnMapProgressUpdates(me->FindMap());
         }
 
         void SetData(uint32 type, uint32 data) override

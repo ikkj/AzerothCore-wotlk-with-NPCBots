@@ -201,25 +201,25 @@ void InstanceScript::UpdateMinionState(Creature* minion, EncounterState state)
 {
     switch (state)
     {
-        case NOT_STARTED:
-            if (!minion->IsAlive())
-                minion->Respawn();
-            else if (minion->IsInCombat())
-                minion->AI()->EnterEvadeMode();
-            break;
-        case IN_PROGRESS:
-            if (!minion->IsAlive())
-                minion->Respawn();
-            else
+    case NOT_STARTED:
+        if (!minion->IsAlive())
+            minion->Respawn();
+        else if (minion->IsInCombat())
+            minion->AI()->EnterEvadeMode();
+        break;
+    case IN_PROGRESS:
+        if (!minion->IsAlive())
+            minion->Respawn();
+        else
+        {
+            if (minion->GetReactState() == REACT_AGGRESSIVE)
             {
-                if (minion->GetReactState() == REACT_AGGRESSIVE)
-                {
-                    minion->AI()->DoZoneInCombat(nullptr, 100.0f);
-                }
+                minion->AI()->DoZoneInCombat(nullptr, 100.0f);
             }
-            break;
-        default:
-            break;
+        }
+        break;
+    default:
+        break;
     }
 }
 
@@ -241,17 +241,17 @@ void InstanceScript::UpdateDoorState(GameObject* door)
         DoorInfo const& info = range.first->second;
         switch (info.type)
         {
-            case DOOR_TYPE_ROOM:
-                open &= (info.bossInfo->state != IN_PROGRESS);
-                break;
-            case DOOR_TYPE_PASSAGE:
-                open &= (info.bossInfo->state == DONE);
-                break;
-            case DOOR_TYPE_SPAWN_HOLE:
-                open &= (info.bossInfo->state == IN_PROGRESS);
-                break;
-            default:
-                break;
+        case DOOR_TYPE_ROOM:
+            open &= (info.bossInfo->state != IN_PROGRESS);
+            break;
+        case DOOR_TYPE_PASSAGE:
+            open &= (info.bossInfo->state == DONE);
+            break;
+        case DOOR_TYPE_SPAWN_HOLE:
+            open &= (info.bossInfo->state == IN_PROGRESS);
+            break;
+        default:
+            break;
         }
     }
 
@@ -454,6 +454,7 @@ bool InstanceScript::ReadSaveDataHeaders(std::istringstream& data)
 void InstanceScript::ReadSaveDataBossStates(std::istringstream& data)
 {
     uint32 bossId = 0;
+    int32 temp_boos_progress = 0;
     for (std::vector<BossInfo>::iterator i = bosses.begin(); i != bosses.end(); ++i, ++bossId)
     {
         uint32 buff;
@@ -463,7 +464,15 @@ void InstanceScript::ReadSaveDataBossStates(std::istringstream& data)
 
         if (buff < TO_BE_DECIDED)
             SetBossState(bossId, EncounterState(buff));
+
+        if (EncounterState(buff) == EncounterState::DONE)
+        {
+            temp_boos_progress++;
+        }
     }
+
+    boos_progress = temp_boos_progress;
+    // LOG_ERROR("A", "初始进度: {}", boos_progress);
 }
 
 void InstanceScript::ReadSavePersistentData(std::istringstream& data)
@@ -500,10 +509,33 @@ void InstanceScript::WriteSaveDataHeaders(std::ostringstream& data)
 
 void InstanceScript::WriteSaveDataBossStates(std::ostringstream& data)
 {
+    int32 temp_boos_progress = 0;
+
     for (BossInfo const& bossInfo : bosses)
     {
         data << uint32(bossInfo.state) << ' ';
+
+        if (bossInfo.state == EncounterState::DONE)
+        {
+            temp_boos_progress++;
+        }
     }
+
+    if (temp_boos_progress > boos_progress &&
+        (
+            instance->GetId() == 533 ||
+            instance->GetId() == 249 ||
+            instance->GetId() == 616 ||
+            instance->GetId() == 631
+        )
+    )
+    {
+      //  LOG_ERROR("A", "进度差值: {} {}", temp_boos_progress - boos_progress, instance->GetId());
+        sScriptMgr->OnMapProgressUpdates(instance);
+    }
+
+    boos_progress = temp_boos_progress;
+    // LOG_ERROR("A", "WriteSaveDataBossStates 当前进度: {}/{} 所有boss: {} header: {}", temp_boos_progress, boos_progress, bosses.size(), headers.size());
 }
 
 void InstanceScript::WritePersistentData(std::ostringstream& data)
@@ -541,15 +573,15 @@ void InstanceScript::DoRespawnGameObject(ObjectGuid uiGuid, uint32 uiTimeToDespa
     {
         switch (go->GetGoType())
         {
-            case GAMEOBJECT_TYPE_DOOR:
-            case GAMEOBJECT_TYPE_BUTTON:
-            case GAMEOBJECT_TYPE_TRAP:
-            case GAMEOBJECT_TYPE_FISHINGNODE:
-                // not expect any of these should ever be handled
-                LOG_ERROR("scripts", "InstanceScript: DoRespawnGameObject can't respawn gameobject entry {}, because type is {}.", go->GetEntry(), go->GetGoType());
-                return;
-            default:
-                break;
+        case GAMEOBJECT_TYPE_DOOR:
+        case GAMEOBJECT_TYPE_BUTTON:
+        case GAMEOBJECT_TYPE_TRAP:
+        case GAMEOBJECT_TYPE_FISHINGNODE:
+            // not expect any of these should ever be handled
+            LOG_ERROR("scripts", "InstanceScript: DoRespawnGameObject can't respawn gameobject entry {}, because type is {}.", go->GetEntry(), go->GetGoType());
+            return;
+        default:
+            break;
         }
 
         if (go->isSpawned())
@@ -646,14 +678,14 @@ void InstanceScript::DoRemoveAurasDueToSpellOnPlayers(uint32 spell)
         player->RemoveAurasDueToSpell(spell);
         if (Pet* pet = player->GetPet())
             pet->RemoveAurasDueToSpell(spell);
-                //npcbot: include bots
-                if (player->HaveBot())
-                {
-                    for (auto const& bitr : *player->GetBotMgr()->GetBotMap())
-                        if (bitr.second && bitr.second->IsInWorld())
-                            DoRemoveAurasDueToSpellOnNPCBot(bitr.second, spell);
-                }
-                //end npcbot
+        //npcbot: include bots
+        if (player->HaveBot())
+        {
+            for (auto const& bitr : *player->GetBotMgr()->GetBotMap())
+                if (bitr.second && bitr.second->IsInWorld())
+                    DoRemoveAurasDueToSpellOnNPCBot(bitr.second, spell);
+        }
+        //end npcbot
     });
 }
 
@@ -690,6 +722,7 @@ void InstanceScript::DoCastSpellOnNPCBot(Creature* bot, uint32 spell)
     if (Unit* botpet = bot->GetBotsPet())
         botpet->CastSpell(botpet, spell, true);
 }
+
 //end npcbot
 
 void InstanceScript::DoCastSpellOnPlayer(Player* player, uint32 spell, bool includePets /*= false*/, bool includeControlled /*= false*/)
@@ -724,7 +757,7 @@ void InstanceScript::DoCastSpellOnPlayer(Player* player, uint32 spell, bool incl
 bool InstanceScript::CheckAchievementCriteriaMeet(uint32 criteria_id, Player const* /*source*/, Unit const* /*target*/ /*= nullptr*/, uint32 /*miscvalue1*/ /*= 0*/)
 {
     LOG_ERROR("scripts.ai", "Achievement system call InstanceScript::CheckAchievementCriteriaMeet but instance script for map {} not have implementation for achievement criteria {}",
-                   instance->GetId(), criteria_id);
+              instance->GetId(), criteria_id);
     return false;
 }
 
@@ -755,24 +788,24 @@ void InstanceScript::SendEncounterUnit(uint32 type, Unit* unit /*= nullptr*/, ui
 
     switch (type)
     {
-        case ENCOUNTER_FRAME_ENGAGE:
-        case ENCOUNTER_FRAME_DISENGAGE:
-        case ENCOUNTER_FRAME_UPDATE_PRIORITY:
-            data << unit->GetPackGUID();
-            data << uint8(param1);
-            break;
-        case ENCOUNTER_FRAME_ADD_TIMER:
-        case ENCOUNTER_FRAME_ENABLE_OBJECTIVE:
-        case ENCOUNTER_FRAME_DISABLE_OBJECTIVE:
-            data << uint8(param1);
-            break;
-        case ENCOUNTER_FRAME_UPDATE_OBJECTIVE:
-            data << uint8(param1);
-            data << uint8(param2);
-            break;
-        case ENCOUNTER_FRAME_REFRESH_FRAMES:
-        default:
-            break;
+    case ENCOUNTER_FRAME_ENGAGE:
+    case ENCOUNTER_FRAME_DISENGAGE:
+    case ENCOUNTER_FRAME_UPDATE_PRIORITY:
+        data << unit->GetPackGUID();
+        data << uint8(param1);
+        break;
+    case ENCOUNTER_FRAME_ADD_TIMER:
+    case ENCOUNTER_FRAME_ENABLE_OBJECTIVE:
+    case ENCOUNTER_FRAME_DISABLE_OBJECTIVE:
+        data << uint8(param1);
+        break;
+    case ENCOUNTER_FRAME_UPDATE_OBJECTIVE:
+        data << uint8(param1);
+        data << uint8(param2);
+        break;
+    case ENCOUNTER_FRAME_REFRESH_FRAMES:
+    default:
+        break;
     }
 
     instance->SendToPlayers(&data);
@@ -793,8 +826,8 @@ void InstanceScript::LoadInstanceSavedGameobjectStateData()
         {
             fields = result->Fetch();
             StoreGameObjectState(fields[0].Get<uint32>(), fields[1].Get<uint8>());
-
-        } while (result->NextRow());
+        }
+        while (result->NextRow());
     }
 }
 
@@ -803,20 +836,20 @@ std::string InstanceScript::GetBossStateName(uint8 state)
     // See enum EncounterState in InstanceScript.h
     switch (state)
     {
-        case NOT_STARTED:
-            return "NOT_STARTED";
-        case IN_PROGRESS:
-            return "IN_PROGRESS";
-        case FAIL:
-            return "FAIL";
-        case DONE:
-            return "DONE";
-        case SPECIAL:
-            return "SPECIAL";
-        case TO_BE_DECIDED:
-            return "TO_BE_DECIDED";
-        default:
-            return "INVALID";
+    case NOT_STARTED:
+        return "NOT_STARTED";
+    case IN_PROGRESS:
+        return "IN_PROGRESS";
+    case FAIL:
+        return "FAIL";
+    case DONE:
+        return "DONE";
+    case SPECIAL:
+        return "SPECIAL";
+    case TO_BE_DECIDED:
+        return "TO_BE_DECIDED";
+    default:
+        return "INVALID";
     }
 }
 

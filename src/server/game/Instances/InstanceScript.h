@@ -140,8 +140,10 @@ typedef std::map<ObjectGuid::LowType /*spawnId*/, uint8 /*state*/> ObjectStateMa
 
 class InstanceScript : public ZoneScript
 {
+private:
+    int32 boos_progress;
 public:
-    explicit InstanceScript(Map* map) : instance(map), completedEncounters(0) {}
+    explicit InstanceScript(Map* map) : boos_progress(0), instance(map),completedEncounters(0) {}
 
     ~InstanceScript() override {}
 

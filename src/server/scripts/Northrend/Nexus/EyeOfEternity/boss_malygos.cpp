@@ -779,6 +779,8 @@ public:
                 pInstance->DoUpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE, NPC_MALYGOS, 1);
                 pInstance->SetData(DATA_ENCOUNTER_STATUS, DONE);
             }
+
+            sScriptMgr->OnMapProgressUpdates(me->GetMap());
         }
 
         void KilledUnit(Unit* victim) override

@@ -69,7 +69,7 @@ class bot_ai : public CreatureAI
         }
 
        bool waitDestory = false;
-
+        void GiveAura(uint32 spell_id);
 private:
         ObjectGuid Player_target = ObjectGuid::Empty;
         // bool GroupIned = false;
