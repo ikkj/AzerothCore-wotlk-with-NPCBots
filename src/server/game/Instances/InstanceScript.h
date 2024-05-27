@@ -194,6 +194,8 @@ public:
     void DoRemoveAurasDueToSpellOnNPCBot(Creature* bot, uint32 spell);
     void DoCastSpellOnNPCBot(Creature* bot, uint32 spell);
     //end npcbot
+    //Called when a player enters/leaves water bodies.
+    virtual void OnPlayerInWaterStateUpdate(Player* /*player*/, bool /*inWater*/) {}
 
     //Handle open / close objects
     //use HandleGameObject(ObjectGuid::Empty, boolen, GO); in OnObjectCreate in instance scripts
