@@ -44,6 +44,7 @@
 #define MOD_PRESENT_NPCBOTS 1
 
 
+class DMJfbenConfigItem;
 class AuctionHouseObject;
 class AuraScript;
 class Battleground;
@@ -130,8 +131,8 @@ public: /* Initialization */
     void DecreaseScriptCount() { --_scriptCount; }
     [[nodiscard]] uint32 GetScriptCount() const { return _scriptCount; }
 
-    typedef void(*ScriptLoaderCallbackType)();
-    typedef void(*ModulesLoaderCallbackType)();
+    typedef void (*ScriptLoaderCallbackType)();
+    typedef void (*ModulesLoaderCallbackType)();
 
     /// Sets the script loader callback which is invoked to load scripts
     /// (Workaround for circular dependency game <-> scripts)
@@ -200,6 +201,9 @@ public: /* MapScript */
     void OnPlayerLeaveMap(Map* map, Player* player);
     void OnMapUpdate(Map* map, uint32 diff);
     void OnMapProgressUpdates(Map* map);
+    /*大秘境*/
+    bool OnStartDMJ(Player* player, uint32 ItemId);
+    bool OnGetDmjYoaShiInfo(Map* map, uint32 ItemId, DMJfbenConfigItem*& YoaShiConfig);
 
 public: /* InstanceMapScript */
     InstanceScript* CreateInstanceScript(InstanceMap* map);
@@ -299,11 +303,11 @@ public: /* AchievementCriteriaScript */
     bool OnCriteriaCheck(uint32 scriptId, Player* source, Unit* target, uint32 criteria_id);
 
 public: /* PlayerScript */
-    void OnCheckInstanceCount(Player* player,uint32 defaultCount,uint32& newCount);
-    void OnGetSkillCount(Player* player,uint32 defaultCount,uint32& newCount);
-    void OnVipLevelChanged(Player* player,uint32 level,uint32 old_level);
+    void OnCheckInstanceCount(Player* player, uint32 defaultCount, uint32& newCount);
+    void OnGetSkillCount(Player* player, uint32 defaultCount, uint32& newCount);
+    void OnVipLevelChanged(Player* player, uint32 level, uint32 old_level);
 
-    void GetVipLevel(Player* player,uint32& level);
+    void GetVipLevel(Player* player, uint32& level);
 
     void OnBeforePlayerUpdate(Player* player, uint32 p_time);
     void OnPlayerUpdate(Player* player, uint32 p_time);
@@ -352,7 +356,7 @@ public: /* PlayerScript */
     bool OnBeforePlayerTeleport(Player* player, uint32 mapid, float x, float y, float z, float orientation, uint32 options, Unit* target);
     void OnPlayerUpdateFaction(Player* player);
     void OnPlayerAddToBattleground(Player* player, Battleground* bg);
-    void OnPlayerQueueRandomDungeon(Player* player, uint32 & rDungeonId);
+    void OnPlayerQueueRandomDungeon(Player* player, uint32& rDungeonId);
     void OnPlayerRemoveFromBattleground(Player* player, Battleground* bg);
     void OnAchievementComplete(Player* player, AchievementEntry const* achievement);
     bool OnBeforeAchievementComplete(Player* player, AchievementEntry const* achievement);
@@ -593,7 +597,7 @@ public: /* BGScript */
     void OnBattlegroundRemovePlayerAtLeave(Battleground* bg, Player* player);
     void OnQueueUpdate(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketId bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating);
     void OnAddGroup(BattlegroundQueue* queue, GroupQueueInfo* ginfo, uint32& index, Player* leader, Group* group, BattlegroundTypeId bgTypeId, PvPDifficultyEntry const* bracketEntry,
-        uint8 arenaType, bool isRated, bool isPremade, uint32 arenaRating, uint32 matchmakerRating, uint32 arenaTeamId, uint32 opponentsArenaTeamId);
+                    uint8 arenaType, bool isRated, bool isPremade, uint32 arenaRating, uint32 matchmakerRating, uint32 arenaTeamId, uint32 opponentsArenaTeamId);
     bool CanFillPlayersToBG(BattlegroundQueue* queue, Battleground* bg, BattlegroundBracketId bracket_id);
     bool IsCheckNormalMatch(BattlegroundQueue* queue, Battleground* bgTemplate, BattlegroundBracketId bracket_id, uint32 minPlayers, uint32 maxPlayers);
     bool CanSendMessageBGQueue(BattlegroundQueue* queue, Player* leader, Battleground* bg, PvPDifficultyEntry const* bracketEntry);
@@ -714,14 +718,14 @@ private:
 
 #define sScriptMgr ScriptMgr::instance()
 
-template<class TScript>
+template <class TScript>
 class ScriptRegistry
 {
 public:
     typedef std::map<uint32, TScript*> ScriptMap;
     typedef typename ScriptMap::iterator ScriptMapIterator;
 
-    typedef std::vector<std::pair<TScript*,std::vector<uint16>>> ScriptVector;
+    typedef std::vector<std::pair<TScript*, std::vector<uint16>>> ScriptVector;
     typedef typename ScriptVector::iterator ScriptVectorIterator;
 
     typedef std::vector<std::vector<TScript*>> EnabledHooksVector;
@@ -829,7 +833,7 @@ public:
                     // The script uses a script name from database, but isn't assigned to anything.
                     if (script->GetName().find("Smart") == std::string::npos)
                         LOG_ERROR("sql.sql", "Script named '{}' is not assigned in the database.",
-                                         script->GetName());
+                              script->GetName());
                 }
             }
             else
@@ -866,7 +870,7 @@ private:
             if (it->second == script)
             {
                 LOG_ERROR("scripts", "Script '{}' has same memory pointer as '{}'.",
-                               script->GetName(), it->second->GetName());
+                          script->GetName(), it->second->GetName());
 
                 return false;
             }
@@ -880,9 +884,13 @@ private:
 };
 
 // Instantiate static members of ScriptRegistry.
-template<class TScript> std::map<uint32, TScript*> ScriptRegistry<TScript>::ScriptPointerList;
-template<class TScript> std::vector<std::pair<TScript*,std::vector<uint16>>> ScriptRegistry<TScript>::ALScripts;
-template<class TScript> std::vector<std::vector<TScript*>> ScriptRegistry<TScript>::EnabledHooks;
-template<class TScript> uint32 ScriptRegistry<TScript>::_scriptIdCounter = 0;
+template <class TScript>
+std::map<uint32, TScript*> ScriptRegistry<TScript>::ScriptPointerList;
+template <class TScript>
+std::vector<std::pair<TScript*, std::vector<uint16>>> ScriptRegistry<TScript>::ALScripts;
+template <class TScript>
+std::vector<std::vector<TScript*>> ScriptRegistry<TScript>::EnabledHooks;
+template <class TScript>
+uint32 ScriptRegistry<TScript>::_scriptIdCounter = 0;
 
 #endif

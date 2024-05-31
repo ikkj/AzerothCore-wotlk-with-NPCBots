@@ -20,6 +20,8 @@
 
 #include "ScriptObject.h"
 
+class DMJfbenConfigItem;
+
 class AllMapScript : public ScriptObject
 {
 protected:
@@ -41,6 +43,9 @@ public:
      * @param player Contains information about the Player
      */
     virtual void OnPlayerLeaveAll(Map* /*map*/, Player* /*player*/) { }
+
+    virtual bool OnStartDMJ(Player* /*map*/, uint32 /*ItemId*/) { return false;}
+    virtual bool OnGetDmjYoaShiInfo(Map* /*map*/, uint32 /*ItemId*/, DMJfbenConfigItem*& /*YoaShiConfig*/) { return false;}
 
     /**
      * @brief This hook called before create instance script
