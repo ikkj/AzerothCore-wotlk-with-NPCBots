@@ -574,7 +574,7 @@ public:
             }
 
             BossAI::EnterEvadeMode();
-            instance->SetBossState(DATA_BLOOD_QUEEN_LANA_THEL, FAIL);//增加女王灭团检测
+           // instance->SetBossState(DATA_BLOOD_QUEEN_LANA_THEL, FAIL);//增加女王灭团检测
         }
 
         bool CanAIAttack(Unit const*  /*target*/) const override
