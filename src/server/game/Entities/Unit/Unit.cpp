@@ -1119,14 +1119,15 @@ uint32 Unit::DealDamage(Unit* attacker, Unit* victim, uint32 damage, CleanDamage
             victim->ToCreature()->SetLootRecipient(attacker);
 
         if (!attacker || attacker->IsControlledByPlayer() || attacker->IsCreatedByPlayer())
-        {
-            uint32 unDamage = health < damage ? health : damage;
-            bool damagedByPlayer = unDamage && attacker && (attacker->IsPlayer() || attacker->m_movedByPlayer != nullptr);
-            //npcbot: npcbots' damage allways counts towards damage requirement
-            damagedByPlayer |= attacker && attacker->IsNPCBotOrPet();
-            //end npcbot
-            victim->ToCreature()->LowerPlayerDamageReq(unDamage, damagedByPlayer);
-        }
+        //{
+        //    uint32 unDamage = health < damage ? health : damage;
+        //    bool damagedByPlayer = unDamage && attacker && (attacker->IsPlayer() || attacker->m_movedByPlayer != nullptr);
+        //    //npcbot: npcbots' damage allways counts towards damage requirement
+        //    damagedByPlayer |= attacker && attacker->IsNPCBotOrPet();
+        //    //end npcbot
+        //    victim->ToCreature()->LowerPlayerDamageReq(unDamage, damagedByPlayer);
+        //}
+            victim->ToCreature()->LowerPlayerDamageReq(health < damage ? health : damage);
     }
 
     if (health <= damage)

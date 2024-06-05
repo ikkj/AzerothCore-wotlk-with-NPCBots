@@ -418,11 +418,19 @@ public:
 
     void SetDisableReputationGain(bool disable) { DisableReputationGain = disable; }
     [[nodiscard]] bool IsReputationGainDisabled() const { return DisableReputationGain; }
-    [[nodiscard]] bool IsDamageEnoughForLootingAndReward() const;
+    /*[[nodiscard]] bool IsDamageEnoughForLootingAndReward() const;
     void LowerPlayerDamageReq(uint32 unDamage, bool damagedByPlayer = true);
     void ResetPlayerDamageReq();
-    [[nodiscard]] uint32 GetPlayerDamageReq() const;
-
+    [[nodiscard]] uint32 GetPlayerDamageReq() const;*/
+    [[nodiscard]] bool IsDamageEnoughForLootingAndReward() const { return (m_creatureInfo->flags_extra & CREATURE_FLAG_EXTRA_NO_PLAYER_DAMAGE_REQ) || (m_PlayerDamageReq == 0); }
+    void LowerPlayerDamageReq(uint32 unDamage)
+    {
+        if (m_PlayerDamageReq)
+            m_PlayerDamageReq > unDamage ? m_PlayerDamageReq -= unDamage : m_PlayerDamageReq = 0;
+    }
+    void ResetPlayerDamageReq() { m_PlayerDamageReq = GetHealth() / 2; }
+    uint32 m_PlayerDamageReq;
+    //修改宠物伤害可掉落
     [[nodiscard]] uint32 GetOriginalEntry() const { return m_originalEntry; }
     void SetOriginalEntry(uint32 entry) { m_originalEntry = entry; }
 
@@ -655,8 +663,9 @@ private:
 
     uint32 m_assistanceTimer;
 
-    uint32 _playerDamageReq;
-    bool _damagedByPlayer;
+  /*  uint32 _playerDamageReq;
+    bool _damagedByPlayer;*/
+    //修改宠物伤害可掉落
     bool _isCombatMovementAllowed;
 };
 

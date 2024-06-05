@@ -220,13 +220,15 @@ bool TemporaryThreatModifierEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     return true;
 }
 
-Creature::Creature(bool isWorldObject): Unit(isWorldObject), MovableMapObject(), m_groupLootTimer(0), lootingGroupLowGUID(0), m_lootRecipientGroup(0),
+//Creature::Creature(bool isWorldObject): Unit(isWorldObject), MovableMapObject(), m_groupLootTimer(0), lootingGroupLowGUID(0), m_lootRecipientGroup(0),
+Creature::Creature(bool isWorldObject) : Unit(isWorldObject), MovableMapObject(), m_groupLootTimer(0), lootingGroupLowGUID(0), m_PlayerDamageReq(0), m_lootRecipientGroup(0),//修改宠物伤害可掉落
     m_corpseRemoveTime(0), m_respawnTime(0), m_respawnDelay(300), m_corpseDelay(60), m_wanderDistance(0.0f), m_boundaryCheckTime(2500),
     m_transportCheckTimer(1000), lootPickPocketRestoreTime(0), m_combatPulseTime(0), m_combatPulseDelay(0), m_reactState(REACT_AGGRESSIVE), m_defaultMovementType(IDLE_MOTION_TYPE),
     m_spawnId(0), m_equipmentId(0), m_originalEquipmentId(0), m_AlreadyCallAssistance(false),
     m_AlreadySearchedAssistance(false), m_regenHealth(true), m_regenPower(true), m_AI_locked(false), m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL), m_originalEntry(0), m_moveInLineOfSightDisabled(false), m_moveInLineOfSightStrictlyDisabled(false),
     m_homePosition(), m_transportHomePosition(), m_creatureInfo(nullptr), m_creatureData(nullptr), m_detectionDistance(20.0f), m_waypointID(0), m_path_id(0), m_formation(nullptr), _lastDamagedTime(nullptr), m_cannotReachTimer(0),
-    _isMissingSwimmingFlagOutOfCombat(false), m_assistanceTimer(0), _playerDamageReq(0), _damagedByPlayer(false), _isCombatMovementAllowed(true)
+   // _isMissingSwimmingFlagOutOfCombat(false), m_assistanceTimer(0), _playerDamageReq(0), _damagedByPlayer(false), _isCombatMovementAllowed(true)
+    _isMissingSwimmingFlagOutOfCombat(false), m_assistanceTimer(0), _isCombatMovementAllowed(true)//修改宠物伤害可掉落
 {
     m_regenTimer = CREATURE_REGEN_INTERVAL;
     m_valuesCount = UNIT_END;
@@ -540,7 +542,8 @@ bool Creature::UpdateEntry(uint32 Entry, const CreatureData* data, bool changele
 
     uint32 previousHealth = GetHealth();
     uint32 previousMaxHealth = GetMaxHealth();
-    uint32 previousPlayerDamageReq = _playerDamageReq;
+    //uint32 previousPlayerDamageReq = _playerDamageReq;
+    uint32 previousPlayerDamageReq = m_PlayerDamageReq;//修改宠物伤害可掉落
 
     SelectLevel(changelevel);
     if (previousHealth > 0)
@@ -549,11 +552,13 @@ bool Creature::UpdateEntry(uint32 Entry, const CreatureData* data, bool changele
 
         if (previousMaxHealth && previousMaxHealth > GetMaxHealth())
         {
-            _playerDamageReq = (uint32)(previousPlayerDamageReq * GetMaxHealth() / previousMaxHealth);
+            //_playerDamageReq = (uint32)(previousPlayerDamageReq * GetMaxHealth() / previousMaxHealth);
+            m_PlayerDamageReq = (uint32)(previousPlayerDamageReq * GetMaxHealth() / previousMaxHealth);//修改宠物伤害可掉落
         }
         else
         {
-            _playerDamageReq = previousPlayerDamageReq;
+            //_playerDamageReq = previousPlayerDamageReq;
+            m_PlayerDamageReq = previousPlayerDamageReq;//修改宠物伤害可掉落
         }
     }
 
@@ -3974,32 +3979,33 @@ void Creature::ModifyThreatPercentTemp(Unit* victim, int32 percent, Milliseconds
     }
 }
 
-bool Creature::IsDamageEnoughForLootingAndReward() const
-{
-    return (m_creatureInfo->flags_extra & CREATURE_FLAG_EXTRA_NO_PLAYER_DAMAGE_REQ) || (_playerDamageReq == 0 && _damagedByPlayer);
-}
-
-void Creature::LowerPlayerDamageReq(uint32 unDamage, bool damagedByPlayer /*= true*/)
-{
-    if (_playerDamageReq)
-        _playerDamageReq > unDamage ? _playerDamageReq -= unDamage : _playerDamageReq = 0;
-
-    if (!_damagedByPlayer)
-    {
-        _damagedByPlayer = damagedByPlayer;
-    }
-}
-
-void Creature::ResetPlayerDamageReq()
-{
-    _playerDamageReq = GetHealth() / 2;
-    _damagedByPlayer = false;
-}
-
-uint32 Creature::GetPlayerDamageReq() const
-{
-    return _playerDamageReq;
-}
+//bool Creature::IsDamageEnoughForLootingAndReward() const
+//{
+//    return (m_creatureInfo->flags_extra & CREATURE_FLAG_EXTRA_NO_PLAYER_DAMAGE_REQ) || (_playerDamageReq == 0 && _damagedByPlayer);
+//}
+//
+//void Creature::LowerPlayerDamageReq(uint32 unDamage, bool damagedByPlayer /*= true*/)
+//{
+//    if (_playerDamageReq)
+//        _playerDamageReq > unDamage ? _playerDamageReq -= unDamage : _playerDamageReq = 0;
+//
+//    if (!_damagedByPlayer)
+//    {
+//        _damagedByPlayer = damagedByPlayer;
+//    }
+//}
+//
+//void Creature::ResetPlayerDamageReq()
+//{
+//    _playerDamageReq = GetHealth() / 2;
+//    _damagedByPlayer = false;
+//}
+//
+//uint32 Creature::GetPlayerDamageReq() const
+//{
+//    return _playerDamageReq;
+//}
+//修改宠物伤害可掉落
 
 bool Creature::CanCastSpell(uint32 spellID) const
 {
