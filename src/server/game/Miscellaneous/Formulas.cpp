@@ -124,13 +124,11 @@ uint32 Acore::XP::Gain(Player* player, Unit* unit, bool isBattleGround /*= false
         }
 
         // if players dealt less than 50% of the damage and were credited anyway (due to CREATURE_FLAG_EXTRA_NO_PLAYER_DAMAGE_REQ), scale XP gained appropriately (linear scaling)
-        //if (creature && creature->GetPlayerDamageReq())
-        if (creature && creature->m_PlayerDamageReq)
+        if (creature && creature->GetPlayerDamageReq())
         {
-           // xpMod *= 1.0f - 2.0f * creature->GetPlayerDamageReq() / creature->GetMaxHealth();
-            xpMod *= 1.0f - 2.0f * creature->m_PlayerDamageReq / creature->GetMaxHealth();
+            xpMod *= 1.0f - 2.0f * creature->GetPlayerDamageReq() / creature->GetMaxHealth();
         }
-        //修改宠物伤害可掉落
+
         gain = uint32(gain * xpMod);
     }
 
