@@ -2509,7 +2509,9 @@ public:
                     if (Unit* passenger = vehicle->GetPassenger(0))
                         sCreatureTextMgr->SendChat(caster->ToCreature(), SAY_OVERHEAT, passenger);
             }
-   }
+
+        }
+
         void PreventPowerGainOnHit(SpellEffIndex effIndex)
         {
             PreventHitDefaultEffect(effIndex);
@@ -2519,7 +2521,6 @@ public:
         {
             OnCast += SpellCastFn(spell_igb_cannon_blast_SpellScript::CalculatePower);
             OnEffectHitTarget += SpellEffectFn(spell_igb_cannon_blast_SpellScript::PreventPowerGainOnHit, EFFECT_1, SPELL_EFFECT_ENERGIZE);
-            
         }
     };
 

@@ -30,6 +30,11 @@ enum Spells
     SPELL_BERSERK               = 26662
 };
 
+enum Misc
+{
+    NPC_LESSER_DOOMGUARD   = 17864
+};
+
 enum Texts
 {
     SAY_ONDEATH             = 0,
@@ -50,6 +55,22 @@ public:
             {
                 return !me->HasUnitState(UNIT_STATE_CASTING);
             });
+    }
+
+    void EnterEvadeMode(EvadeReason why) override
+    {
+        std::list<Creature* > doomguardList;
+        me->GetCreatureListWithEntryInGrid(doomguardList, NPC_LESSER_DOOMGUARD, 100.0f);
+        if (doomguardList.size() > 0)
+        {
+            for (Creature* doomguard : doomguardList)
+            {
+                doomguard->DespawnOrUnsummon();
+            }
+        }
+        doomguardList.clear();
+        instance->SetData(DATA_RESET_HORDE, 0);
+        me->DespawnOrUnsummon();
     }
 
     void JustEngagedWith(Unit * who) override
@@ -152,6 +173,25 @@ class spell_azgalor_doom_aura : public AuraScript
     void Register() override
     {
         OnEffectRemove += AuraEffectRemoveFn(spell_azgalor_doom_aura::OnRemove, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+class spell_azgalor_doom : public AuraScript
+{
+    PrepareAuraScript(spell_azgalor_doom);
+
+    void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        Unit* target = GetTarget();
+        if (GetTargetApplication()->GetRemoveMode() == AURA_REMOVE_BY_DEATH && !IsExpired())
+        {
+            target->CastSpell(target, GetSpellInfo()->Effects[EFFECT_0].TriggerSpell, true);
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectRemove += AuraEffectRemoveFn(spell_azgalor_doom::OnRemove, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL, AURA_EFFECT_HANDLE_REAL);
     }
 };
 
