@@ -155,25 +155,6 @@ class spell_azgalor_doom_aura : public AuraScript
     }
 };
 
-class spell_azgalor_doom_aura : public AuraScript
-{
-    PrepareAuraScript(spell_azgalor_doom_aura);
-
-    void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
-    {
-        Unit* target = GetTarget();
-        if (GetTargetApplication()->GetRemoveMode() == AURA_REMOVE_BY_DEATH && !IsExpired())
-        {
-            target->CastSpell(target, GetSpellInfo()->Effects[EFFECT_0].TriggerSpell, true);
-        }
-    }
-
-    void Register() override
-    {
-        OnEffectRemove += AuraEffectRemoveFn(spell_azgalor_doom_aura::OnRemove, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL, AURA_EFFECT_HANDLE_REAL);
-    }
-};
-
 void AddSC_boss_azgalor()
 {
     RegisterHyjalAI(boss_azgalor);
