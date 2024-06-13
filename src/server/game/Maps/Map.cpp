@@ -708,9 +708,6 @@ void Map::VisitNearbyCellsOf(WorldObject* obj, TypeContainerVisitor<Acore::Objec
     // Check for valid position
     if (!obj->IsPositionValid())
         return;
-    //删除阻止 GO 更新被设置为活动状态的黑客修复
-    if (obj->GetGridActivationRange() <= 0.0f) // pussywizard: gameobjects for example are on active lists, but range is equal to 0 (they just prevent grid unloading)
-        return;
 
     // Update mobs/objects in ALL visible cells around object!
     CellArea area = Cell::CalculateCellArea(obj->GetPositionX(), obj->GetPositionY(), obj->GetGridActivationRange());
@@ -2465,6 +2462,14 @@ bool Map::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, floa
     if (!sWorld->getBoolConfig(CONFIG_VMAP_BLIZZLIKE_PVP_LOS))
     {
         if (IsBattlegroundOrArena())
+        {
+            ignoreFlags = VMAP::ModelIgnoreFlags::Nothing;
+        }
+    }
+
+    if (!sWorld->getBoolConfig(CONFIG_VMAP_BLIZZLIKE_LOS_OPEN_WORLD))
+    {
+        if (IsWorldMap())
         {
             ignoreFlags = VMAP::ModelIgnoreFlags::Nothing;
         }

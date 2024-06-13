@@ -2758,22 +2758,22 @@ void bot_ai::SetStats(bool force)
         if (mylevel >= 20 && (_botclass == BOT_CLASS_WARRIOR || _botclass == BOT_CLASS_PALADIN || _botclass == BOT_CLASS_DEATH_KNIGHT))
             armor_mod += 0.1f;
         //Frost Presence
-        if (GetBotStance() == DEATH_KNIGHT_FROST_PRESENCE)
-            armor_mod += 0.6f;
+        //if (GetBotStance() == DEATH_KNIGHT_FROST_PRESENCE)
+        //    armor_mod += 0.6f;
         if (_botclass == BOT_CLASS_DRUID)
         {
             //Thick Hide
             if (mylevel >= 15)
                 armor_mod += 0.1f;
-            //Survival of the Fittest
-            if (myclass == DRUID_BEAR_FORM && GetSpec() == BOT_SPEC_DRUID_FERAL)
-                armor_mod += 0.33f + (me->GetShapeshiftForm() == FORM_BEAR ? 1.8f : 3.7f);
-                //Moonkin Form innate
-            else if (myclass == DRUID_MOONKIN_FORM && GetSpec() == BOT_SPEC_DRUID_BALANCE)
-                armor_mod += 3.7f;
-                //Improved Tree Form
-            else if (myclass == DRUID_TREE_FORM && GetSpec() == BOT_SPEC_DRUID_RESTORATION)
-                armor_mod += 2.0f;
+            ////Survival of the Fittest
+            //if (myclass == DRUID_BEAR_FORM)
+            //    armor_mod += (GetSpec() == BOT_SPEC_DRUID_FERAL ? 0.33f : 0.0f) + (me->GetShapeshiftForm() == FORM_BEAR ? 1.8f : 3.7f);
+            ////Moonkin Form innate
+            //else if (myclass == DRUID_MOONKIN_FORM)
+            //    armor_mod += 3.7f;
+            ////Improved Tree Form
+            //else if (myclass == DRUID_TREE_FORM)
+            //    armor_mod += 2.0f;
             //Improved Barkskin
             //else if (myclass == DRUID_TRAVEL_FORM || GetBotStance() == BOT_STANCE_NONE)
             //    armor_mod += 1.6f;
@@ -5367,6 +5367,23 @@ void bot_ai::CalculateAoeSpots(Unit const* unit, AoeSpotsVec& spots)
         {
             float radius = (*ci)->GetObjectScale() * 2.5f + DEFAULT_COMBAT_REACH * 3.f; //grows
             spots.push_back(AoeSpotsVec::value_type(*(*ci), radius));
+        }
+    }
+    //Molten Core
+    if (unit->GetMapId() == 409)  
+    {
+        std::list<GameObject*> gListMC;
+        Acore::AllGameObjectsWithEntryInRange checkMC(unit, 178164, 60.f);  
+        Acore::GameObjectListSearcher<Acore::AllGameObjectsWithEntryInRange> searcherMC(unit, gListMC, checkMC);
+        Cell::VisitAllObjects(unit, searcherMC, 60.f);
+
+        for (auto* gameObject : gListMC)
+        {
+            if (!gameObject)
+                continue;
+
+            float radius = 15.0f + DEFAULT_COMBAT_REACH;  
+            spots.push_back(AoeSpotsVec::value_type(*gameObject, radius));
         }
     }
 
@@ -19645,7 +19662,7 @@ WanderNode const* bot_ai::GetNextBGTravelNode() const
                     Creature const* mboss = ASSERT_NOTNULL(av->GetBGCreature(uint32(sptype)));
                     if (mboss->IsAlive() && !mboss->IsInCombat() && me->IsWithinDist2d(mboss, SIZE_OF_GRIDS * 0.75f))
                     {
-                        WanderNode const* mineWP = ASSERT_NOTNULL(WanderNode::FindInAreaWPs(mboss->GetAreaId(), mine_pred));
+                        WanderNode const* mineWP = ASSERT_NOTNULL(WanderNode::FindInMapWPs(mboss->GetMapId(), mine_pred));
                         WanderNode const* mineLink = mineWP->GetLinks().front();
                         NodeList mlinks = curNode->GetShortestPathLinks(mineWP, links);
                         if (!mlinks.empty())
