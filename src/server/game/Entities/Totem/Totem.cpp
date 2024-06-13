@@ -45,7 +45,7 @@ void Totem::Update(uint32 time)
 
     if (botOwner)
     {
-        if (!botOwner->IsAlive() || !IsAlive() || m_duration <= time)
+        if (!botOwner->IsAlive() || !IsAlive())
         {
             UnSummon();
             return;
