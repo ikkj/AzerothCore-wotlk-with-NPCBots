@@ -622,7 +622,7 @@ void bot_ai::ResetBotAI(uint8 resetType)
 
     if ((resetType == BOTAI_RESET_DISMISS || resetType == BOTAI_RESET_LOGOUT) && !IsTempBot())
     {
-        EnableAllSpells(resetType == BOTAI_RESET_DISMISS);
+        EnableAllSpells();
         InitRoles();
     }
 
@@ -6864,14 +6864,11 @@ void bot_ai::RemoveSpell(uint32 basespell)
 //    for (BotSpellMap::const_iterator itr = _spells.begin(); itr != _spells.end(); ++itr)
 //        itr->second->spellId = 0;
 //}
-void bot_ai::EnableAllSpells(bool save)
+void bot_ai::EnableAllSpells()
 {
-    if (save)
-    {
-        NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
-        npcBotData->disabled_spells.clear();
-        _saveDisabledSpells = true;
-    }
+    NpcBotData* npcBotData = const_cast<NpcBotData*>(BotDataMgr::SelectNpcBotData(me->GetEntry()));
+    npcBotData->disabled_spells.clear();
+    _saveDisabledSpells = true;
 
     for (BotSpellMap::const_iterator itr = _spells.begin(); itr != _spells.end(); ++itr)
         if (itr->second->enabled == false)
