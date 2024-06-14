@@ -11114,7 +11114,7 @@ void Unit::RemoveAllAttackers()
     while (!m_attackers.empty())
     {
         AttackerSet::iterator iter = m_attackers.begin();
-        if (!(*iter)->AttackStop())
+        if (!(*iter) || !(*iter)->AttackStop())
         {
             LOG_ERROR("entities.unit", "WORLD: Unit has an attacker that isn't attacking it!");
             m_attackers.erase(iter);
