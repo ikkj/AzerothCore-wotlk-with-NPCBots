@@ -1721,24 +1721,24 @@ public:
         {
             if (!bot->IsInWorld())
             {
-                handler->PSendSysMessage("Bot %s is not found!", bot_name->c_str());
+                handler->PSendSysMessage("机器人 %s 找不到！", bot_name->c_str());
                 return true;
             }
             if (!bot->IsAlive())
             {
-                handler->PSendSysMessage("%s is dead!", bot->GetName().c_str());
+                handler->PSendSysMessage("%s 死了！", bot->GetName().c_str());
                 return true;
             }
 
             base_spell = bot->GetBotAI()->GetBaseSpell(*spell_name, handler->GetSessionDbcLocale());
             if (!base_spell)
             {
-                handler->PSendSysMessage("%s doesn't have spell named '%s'!", bot->GetName().c_str(), spell_name->c_str());
+                handler->PSendSysMessage("%s 没有学会这个技能 '%s'!", bot->GetName().c_str(), spell_name->c_str());
                 return true;
             }
             if (!canBotUseSpell(bot, base_spell))
             {
-                handler->PSendSysMessage("%s's %s is not ready yet!", bot->GetName().c_str(), sSpellMgr->GetSpellInfo(base_spell)->SpellName[handler->GetSessionDbcLocale()]);
+                handler->PSendSysMessage("%s %s 还没有准备好！", bot->GetName().c_str(), sSpellMgr->GetSpellInfo(base_spell)->SpellName[handler->GetSessionDbcLocale()]);
                 return true;
             }
         }
@@ -1866,7 +1866,7 @@ public:
         Unit* target = target_guid ? ObjectAccessor::GetUnit(*owner, target_guid) : nullptr;
         if (!target || !bot->FindMap() || target->FindMap() != bot->FindMap())
         {
-            handler->PSendSysMessage("Invalid target '%s'!", target ? target->GetName().c_str() : "unknown");
+            handler->PSendSysMessage("无效目标 '%s'!", target ? target->GetName().c_str() : "unknown");
             return true;
         }
 
