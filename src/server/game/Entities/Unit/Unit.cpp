@@ -10787,7 +10787,7 @@ ReputationRank Unit::GetReactionTo(Unit const* target, bool checkOriginalFaction
 ReputationRank Unit::GetFactionReactionTo(FactionTemplateEntry const* factionTemplateEntry, Unit const* target) const
 {
     // always neutral when no template entry found
-    if (!factionTemplateEntry)
+    if (!factionTemplateEntry || !target)
         return REP_NEUTRAL;
 
     FactionTemplateEntry const* targetFactionTemplateEntry = target->GetFactionTemplateEntry();

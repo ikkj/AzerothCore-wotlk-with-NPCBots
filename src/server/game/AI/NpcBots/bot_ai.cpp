@@ -15045,18 +15045,18 @@ void bot_ai::InitFaction()
     NpcBotData const* npcBotData = NewSelectNpcBotData();
     // NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
     /*player_npcbot end*/
+        ASSERT(npcBotData, "bot_ai::InitFaction(): data not found!");
 
-    ASSERT(npcBotData, "bot_ai::InitFaction(): data not found!");
+        uint32 faction = npcBotData->faction;
 
-    uint32 faction = npcBotData->faction;
+        //if (faction == 14)
+        //    faction = 35;
 
-    //if (faction == 14)
-    //    faction = 35;
-
-    me->SetFaction(faction);
-    if (botPet)
-        botPet->SetFaction(faction);
-    const_cast<CreatureTemplate*>(me->GetCreatureTemplate())->faction = faction;
+        me->SetFaction(faction);
+        if (botPet)
+            botPet->SetFaction(faction);
+        const_cast<CreatureTemplate*>(me->GetCreatureTemplate())->faction = faction;
+   
 }
 
 void bot_ai::InitRace()
