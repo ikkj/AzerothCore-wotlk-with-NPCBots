@@ -1513,8 +1513,8 @@ void Creature::player_npcbot_init(uint32 mapid, uint8 spawnMask,uint32 phaseMask
     CreatureTemplate const* cinfo = GetCreatureTemplate();
     if (cinfo)
     {
-        if (displayId == cinfo->Modelid1 || displayId == cinfo->Modelid2 ||
-                displayId == cinfo->Modelid3 || displayId == cinfo->Modelid4)
+        for (CreatureModel model : cinfo->Models)
+            if (displayId && displayId == model.CreatureDisplayID)
             displayId = 0;
 
         if (npcflag == cinfo->npcflag)
