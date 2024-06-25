@@ -11548,7 +11548,7 @@ std::string bot_ai::getBotInfoText()
         }
         if( bot_hastePct > 0)
         {
-            msg <<  bot_hastePct <<"急速，";
+            msg <<  bot_hastePct <<"％急速，";
         }
         if( bot_hitBonusPct > 0)
         {
