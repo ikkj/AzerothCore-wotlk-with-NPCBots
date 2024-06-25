@@ -399,6 +399,8 @@ void bot_ai::GenerateRand() const
     __rand = urand(0, IAmFree() ? 100 : 100 + (master->GetNpcBotsCount() - 1) * 2);
 }
 
+
+
 const std::string& bot_ai::LocalizedNpcText(Player const* forPlayer, uint32 textId)
 {
     LocaleConstant loc = forPlayer ? forPlayer->GetSession()->GetSessionDbLocaleIndex() : sWorld->GetDefaultDbcLocale();
@@ -5370,10 +5372,10 @@ void bot_ai::CalculateAoeSpots(Unit const* unit, AoeSpotsVec& spots)
         }
     }
     //Molten Core
-    if (unit->GetMapId() == 409)  
+    if (unit->GetMapId() == 409)
     {
         std::list<GameObject*> gListMC;
-        Acore::AllGameObjectsWithEntryInRange checkMC(unit, 178164, 60.f);  
+        Acore::AllGameObjectsWithEntryInRange checkMC(unit, 178164, 60.f);
         Acore::GameObjectListSearcher<Acore::AllGameObjectsWithEntryInRange> searcherMC(unit, gListMC, checkMC);
         Cell::VisitAllObjects(unit, searcherMC, 60.f);
 
@@ -5382,7 +5384,7 @@ void bot_ai::CalculateAoeSpots(Unit const* unit, AoeSpotsVec& spots)
             if (!gameObject)
                 continue;
 
-            float radius = 15.0f + DEFAULT_COMBAT_REACH;  
+            float radius = 15.0f + DEFAULT_COMBAT_REACH;
             spots.push_back(AoeSpotsVec::value_type(*gameObject, radius));
         }
     }
@@ -9302,6 +9304,11 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
             std::ostringstream msg2;
             msg2 << "GS: " << uint32(GetBotGearScores().first);
             BotWhisper(msg2.str(), player);
+            std::string zbxx = getBotInfoText();
+            if(!zbxx.empty())
+            {
+                BotWhisper(zbxx, player);
+            }
 
             break;
         }
@@ -11499,6 +11506,69 @@ bool bot_ai::OnGossipSelect(Player* player, Creature* creature/* == me*/, uint32
         player->PlayerTalkClass->SendCloseGossip();
 
     return true;
+}
+
+std::string bot_ai::getBotInfoText()
+{
+    QueryResult result = CharacterDatabase.Query("SELECT defense,attackPower,spellPower,critPct,hastePct,hitBonusPct,expertise,armorPenPct FROM characters_player_npcbot_stats WHERE owner = {} AND entry = {}", me->GetPlayerNpcBotOwnerId(),me->GetEntry());
+    if (result)
+    {
+        if(result->GetRowCount() == 0)
+        {
+            return "";
+        }
+
+        Field* fields = result->Fetch();
+        uint32 bot_defense = fields[0].Get<uint32>();
+        uint32  bot_attackPower = fields[1].Get<uint32>();
+        uint32  bot_spellPower = fields[2].Get<uint32>();
+        float  bot_critPct = fields[3].Get<float>();
+        float  bot_hastePct = fields[4].Get<float>();
+        float  bot_hitBonusPct = fields[5].Get<float>();
+        uint32  bot_expertise = fields[6].Get<uint32>();
+        float  bot_armorPenPct = fields[7].Get<float>();
+        std::ostringstream msg;
+        msg << "属性：";
+        if( bot_defense >= 401)
+        {
+            msg <<  bot_defense <<"防御值，";
+        }
+
+        if( bot_attackPower > 0)
+        {
+            msg <<  bot_attackPower <<"攻强，";
+        }
+        if( bot_spellPower > 0)
+        {
+            msg <<  bot_spellPower <<"法强，";
+        }
+        if( bot_critPct > 0)
+        {
+            msg <<  bot_critPct <<"％暴击，";
+        }
+        if( bot_hastePct > 0)
+        {
+            msg <<  bot_hastePct <<"急速，";
+        }
+        if( bot_hitBonusPct > 0)
+        {
+            msg <<  bot_hitBonusPct <<"％命中，";
+        }
+        if( bot_expertise > 0)
+        {
+            msg <<  bot_expertise <<"精准，";
+        }
+
+        if( bot_armorPenPct > 0)
+        {
+            msg <<  bot_armorPenPct <<"％护甲穿透（非实时数据）";
+        }
+
+        return msg.str();
+        //xxx防御值，xxx攻强，xxx 法强，xxx %暴击，xxx 急速，xxx %命中，xxx 精准，xxx %护甲穿透
+    }
+
+    return "";
 }
 
 //GossipSelectCode
@@ -15043,8 +15113,9 @@ void bot_ai::InitFaction()
 {
     /*player_npcbot*/
     NpcBotData const* npcBotData = NewSelectNpcBotData();
-    // NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
-    /*player_npcbot end*/
+    if (npcBotData) {
+        // NpcBotData const* npcBotData = BotDataMgr::SelectNpcBotData(me->GetEntry());
+        /*player_npcbot end*/
         ASSERT(npcBotData, "bot_ai::InitFaction(): data not found!");
 
         uint32 faction = npcBotData->faction;
@@ -15056,7 +15127,10 @@ void bot_ai::InitFaction()
         if (botPet)
             botPet->SetFaction(faction);
         const_cast<CreatureTemplate*>(me->GetCreatureTemplate())->faction = faction;
-   
+    }
+    else {
+        LOG_ERROR("InitFaction", "InitFaction 错误 {} {}!", me->GetEntry(), me->GetPlayerNpcBotOwnerId());
+    }
 }
 
 void bot_ai::InitRace()

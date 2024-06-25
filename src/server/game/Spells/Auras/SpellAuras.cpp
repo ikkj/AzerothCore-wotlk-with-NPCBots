@@ -2451,6 +2451,12 @@ bool Aura::CallScriptCheckAreaTargetHandlers(Unit* target)
     bool result = true;
     for (std::list<AuraScript*>::iterator scritr = m_loadedScripts.begin(); scritr != m_loadedScripts.end(); ++scritr)
     {
+        //存在空脚本
+        if(!(*scritr) || !(*scritr)->_GetScriptName() ||(*scritr)->_GetScriptName()->empty())
+        {
+            continue;
+        }
+
         (*scritr)->_PrepareScriptCall(AURA_SCRIPT_HOOK_CHECK_AREA_TARGET);
         std::list<AuraScript::CheckAreaTargetHandler>::iterator hookItrEnd = (*scritr)->DoCheckAreaTarget.end(), hookItr = (*scritr)->DoCheckAreaTarget.begin();
         for (; hookItr != hookItrEnd; ++hookItr)
