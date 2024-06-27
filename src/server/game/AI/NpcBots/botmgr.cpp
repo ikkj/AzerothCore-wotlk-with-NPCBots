@@ -1517,6 +1517,8 @@ void BotMgr::_teleportBot(Creature* bot, Map* newMap, float x, float y, float z,
         if (bot->IsFreeBot())
         {
             bot->Relocate(x, y, z, ori);
+            if (bot->FindMap())
+                bot->ResetMap();
             bot->SetMap(newMap);
             newMap->AddToMap(bot);
             if (reset)
