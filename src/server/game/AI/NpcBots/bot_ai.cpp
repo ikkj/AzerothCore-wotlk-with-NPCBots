@@ -19336,6 +19336,9 @@ bool bot_ai::FinishTeleport(bool reset)
             return;
         }
 
+        if (me->FindMap())
+            me->ResetMap();
+
         me->SetMap(map);
         if (master->GetTransport())
         {
