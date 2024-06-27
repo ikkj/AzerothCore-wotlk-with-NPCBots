@@ -642,6 +642,8 @@ void bot_ai::CheckOwnerExpiry()
                 draft.SendMailTo(trans, MailReceiver(npcBotData->owner), MailSender(me, MAIL_STATIONERY_GM));
             }
             CharacterDatabase.CommitTransaction(trans);
+             for (uint8 slot = BOT_SLOT_MAINHAND; slot <= BOT_SLOT_RANGED; ++slot)
+                _resetEquipment(slot, ObjectGuid::Empty);
             /*player_npcbot*/
             NewUpdateNpcBotData(NPCBOT_UPDATE_EQUIPS, _equips);
             //old  BotDataMgr::UpdateNpcBotData(me->GetEntry(), NPCBOT_UPDATE_EQUIPS, _equips);
