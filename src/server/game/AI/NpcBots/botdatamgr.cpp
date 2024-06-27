@@ -912,10 +912,10 @@ void BotDataMgr::Player_UpdateNpcBotData(uint32 player_guid, uint32 entry,NpcBot
         }
         case NPCBOT_UPDATE_ERASE:
         {
-            NpcBotDataMap::iterator bitr = _playerBotsData.find(Player_MapKey(player_guid,entry));
-            ASSERT(bitr != _playerBotsData.end());
-            delete bitr->second;
-            _playerBotsData.erase(bitr);
+            // NpcBotDataMap::iterator bitr = _playerBotsData.find(Player_MapKey(player_guid,entry));
+            // ASSERT(bitr != _playerBotsData.end());
+            // delete bitr->second;
+            // _playerBotsData.erase(bitr);
             // bstmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_PLAYER_NPCBOT);
             // //"DELETE FROM characters_player_npcbot WHERE entry = ? AND owner = ?", CONNECTION_ASYNC
             // bstmt->SetData(0, entry);
