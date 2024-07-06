@@ -412,7 +412,8 @@ void WorldSession::HandleWhoOpcode(WorldPacket& recvData)
 
     if ((matchCount > displaycount) && (AccountMgr::IsPlayerAccount(security)))
     {
-      //  matchCount = 999000+ matchCount/100+ matchCount%100/10*10+ matchCount%10*100;//超过人数后修改
+       // matchCount = 999000+ matchCount/100+ matchCount%100/10*10+ matchCount%10*100;//超过人数后修改
+        matchCount = 999999;//超过人数后修改
     }
 
     data.put(4, matchCount);                              // insert right count, count of matches
