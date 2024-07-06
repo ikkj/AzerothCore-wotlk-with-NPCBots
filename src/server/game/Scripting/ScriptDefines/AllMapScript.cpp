@@ -287,37 +287,7 @@ void ScriptMgr::OnMapProgressUpdates(Map* map)
     });
 }
 
-bool ScriptMgr::OnStartDMJ(Player* player, uint32 ItemId)
-{
-    auto ret = IsValidBoolScript<AllMapScript>([&](AllMapScript* script)
-    {
-        return script->OnStartDMJ(player, ItemId);
-    });
-
-    if (ret && *ret)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-bool ScriptMgr::OnGetDmjYoaShiInfo(Map* map, uint32 ItemId, DMJfbenConfigItem*& YoaShiConfig)
-{
-    auto ret = IsValidBoolScript<AllMapScript>([&](AllMapScript* script)
-    {
-        return script->OnGetDmjYoaShiInfo(map, ItemId,YoaShiConfig);
-    });
-
-    if (ret && *ret)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-void ScriptMgr::OnBeforeCreateInstanceScript(InstanceMap* instanceMap, InstanceScript* instanceData, bool load, std::string data, uint32 completedEncounterMask)
+void ScriptMgr::OnBeforeCreateInstanceScript(InstanceMap* instanceMap, InstanceScript** instanceData, bool load, std::string data, uint32 completedEncounterMask)
 {
     ExecuteScript<AllMapScript>([&](AllMapScript* script)
     {
