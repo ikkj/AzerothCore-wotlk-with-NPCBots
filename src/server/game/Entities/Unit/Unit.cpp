@@ -5363,20 +5363,18 @@ void Unit::RemoveNotOwnSingleTargetAuras()
             ++iter;
     }
 
-    // 单目标光环在其他目标上
+    // single target auras at other targets
     AuraList& scAuras = GetSingleCastAuras();
-    for (auto iter = scAuras.begin(); iter != scAuras.end();)
+    for (AuraList::iterator iter = scAuras.begin(); iter != scAuras.end();)
     {
         Aura* aura = *iter;
-        if (aura && aura->GetUnitOwner() != this) // 增加错误检测
+        if (aura->GetUnitOwner() != this)
         {
             aura->Remove();
-            iter = scAuras.erase(iter); // 使用 erase 方法移除元素并更新迭代器
+            iter = scAuras.begin();
         }
         else
-        {
             ++iter;
-        }
     }
 }
 void Unit::RemoveAurasWithInterruptFlags(uint32 flag, uint32 except, bool isAutoshot /*= false*/)
