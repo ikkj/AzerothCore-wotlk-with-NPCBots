@@ -954,6 +954,10 @@ void Map::RemoveFromMap(T* obj, bool remove)
     if (!inWorld) // pussywizard: if was in world, RemoveFromWorld() called DestroyForNearbyPlayers()
         obj->DestroyForNearbyPlayers(); // pussywizard: previous player->UpdateObjectVisibility()
 
+    if (!obj->IsInGrid()) {
+        // 可以选择在此返回或抛出异常，以避免继续执行会导致断言失败
+        return;
+    }
 
     obj->RemoveFromGrid();
     obj->ResetMap();
