@@ -72,6 +72,7 @@ enum PaladinBaseSpells// all orignals
     CRUSADER_AURA_1                     = 32223,
 
     DIVINE_INTERVENTION_1               = 19752,
+
     AURA_MASTERY_1                      = 31821,
     DIVINE_FAVOR_1                      = 20216,
     DIVINE_ILLUMINATION_1               = 31842,
@@ -2190,6 +2191,8 @@ public:
             bool isRetr = GetSpec() == BOT_SPEC_PALADIN_RETRIBUTION;
 
             InitSpellMap(FLASH_OF_LIGHT_1);
+            //强效干涉
+            InitSpellMap(130010);
             InitSpellMap(HOLY_LIGHT_1);
             InitSpellMap(LAY_ON_HANDS_1);
             InitSpellMap(SACRED_SHIELD_1);
