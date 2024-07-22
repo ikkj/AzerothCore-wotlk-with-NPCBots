@@ -831,10 +831,6 @@ bool BotMgr::IsWanderingClassEnabled(uint8 m_class)
     }
 }
 
-bool BotMgr::HideBotSpawns()
-{
-    return _hideSpawns;
-}
 bool BotMgr::IsEnrageOnDimissEnabled()
 {
     return _enrageOnDismiss;
