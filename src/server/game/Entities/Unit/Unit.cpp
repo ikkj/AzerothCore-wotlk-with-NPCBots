@@ -23149,12 +23149,6 @@ void Unit::SetUInt32Value(uint16 index, uint32 value)
         // Invalidating the cache on health change should fix an issue where the client sees dead NPCs when they are not.
         // We might also need to invalidate the cache for some other fields as well.
         case UNIT_FIELD_HEALTH:
-        case UNIT_FIELD_MAXHEALTH:
-        case UNIT_FIELD_POWER1:
-        case UNIT_FIELD_MAXPOWER1:
-        case UNIT_FIELD_DISPLAYID:
-        case UNIT_FIELD_MOUNTDISPLAYID:
-        case UNIT_FIELD_BYTES_1:
             InvalidateValuesUpdateCache();
             break;
     }
