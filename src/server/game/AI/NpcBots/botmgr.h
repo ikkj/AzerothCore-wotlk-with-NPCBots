@@ -113,6 +113,7 @@ class AC_GAME_API BotMgr
         static bool MixWeaponInventoryTypes();
         static bool TransmogUseEquipmentSlots();
         static bool IsClassEnabled(uint8 m_class);
+        static bool IsWanderingClassEnabled(uint8 m_class);
         static bool IsEnrageOnDimissEnabled();
         static bool IsBotStatsLimitsEnabled();
         static bool IsPvPEnabled();
