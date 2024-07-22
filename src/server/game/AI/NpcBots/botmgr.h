@@ -114,6 +114,7 @@ class AC_GAME_API BotMgr
         static bool TransmogUseEquipmentSlots();
         static bool IsClassEnabled(uint8 m_class);
         static bool IsWanderingClassEnabled(uint8 m_class);
+        static bool HideBotSpawns();
         static bool IsEnrageOnDimissEnabled();
         static bool IsBotStatsLimitsEnabled();
         static bool IsPvPEnabled();
