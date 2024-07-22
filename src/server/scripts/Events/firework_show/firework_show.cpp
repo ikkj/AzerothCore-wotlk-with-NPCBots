@@ -177,6 +177,7 @@ struct go_firework_show : public GameObjectAI
             // trigger despawn animation for firework explosion
             if (go)
             {
+                go->setActive(true);
                 go->DespawnOrUnsummon();
                 go->AddObjectToRemoveList();
             }
